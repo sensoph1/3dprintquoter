@@ -302,8 +302,8 @@ const PrintingApp = () => {
                      <td className="p-4 font-black text-blue-600 text-2xl">${item.unitPrice}</td>
                      <td className="p-4 text-right space-x-2">
                         <button onClick={() => {setActiveId(item.id); setJob(item.details); setSelectedStrategy(item.details.strategy || 'markup'); window.scrollTo({top:0, behavior:'smooth'})}} className="p-2 text-blue-400 hover:bg-white rounded-xl shadow-sm border border-transparent hover:border-blue-100 transition"><Download size={18}/></button>
-                        <button onClick={() => handlePrint({ ...item, filament: item.details.filamentName })} className="p-2 text-slate-300 hover:text-slate-600 transition"><Printer size={18}/></button>
-                        <button onClick={() => setHistory(history.filter(h=>h.id!==item.id))} className="p-2 text-red-100 hover:text-red-400 transition"><Trash2 size={18}/></button>
+                        <button onClick={() => handlePrint({ ...item, filament: item.details.filamentName })} className="p-2 text-slate-300 hover😯:text-slate-600 transition"><Printer size={18}/></&& >
+                        <button onClick={() => setHistory(history.😃😘(h=>h.id!==item.id))} className=":-2 text-red-100 hover:text-red-400 transition"><Trash2 size={18}/></button>
                      </td>
                    </tr>
                  ))}
