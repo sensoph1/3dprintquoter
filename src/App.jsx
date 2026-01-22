@@ -105,18 +105,53 @@ const PrintingApp = () => {
   const totalJobPrice = pricing[selectedStrategy] * job.qty;
   const totalJobProfit = totalJobPrice - (unitInternalCost * job.qty);
 
-  const handleSaveHistory = () => {
-    const finalUnitPrice = pricing[selectedStrategy];
-    const newEntry = {
-      id: Date.now(),
-      quoteNo: `Q-${library.nextQuoteNo}`,
-      date: new Date().toLocaleDateString(),
-      name: job.name || "Untitled Part",
-      unitPrice: finalUnitPrice,
-      details: { ...job, strategy: selectedStrategy, totalJobPrice }
-    };
-    saveToDisk({ ...library, nextQuoteNo: library.nextQuoteNo + 1 }, [newEntry, ...history]);
+ const handleSaveHistory = () => {
+  const finalUnitPrice = pricing[selectedStrategy];
+  
+  // 1. Create the History Entry
+  const newEntry = {
+    id: Date.now(),
+    quoteNo: `Q-${library.nextQuoteNo}`,
+    date: new Date().toLocaleDateString(),
+    name: job.name || "Untitled Part",
+    unitPrice: finalUnitPrice,
+    details: { ...job, strategy: selectedStrategy, totalJobPrice }
   };
+
+  // 2. AUTO-SUBTRACT LOGIC
+  // We create a copy of the filaments and subtract the grams used in this job
+  const updatedFilaments = library.filaments.map(filament => {
+    // Find if this filament was used in the current job
+    const materialUsed = job.materials.find(m => m.filamentId === filament.id);
+    
+    if (materialUsed) {
+      // Subtract grams (and ensure we don't go below zero if you don't want to)
+      const remainingGrams = Math.max(0, filament.grams - materialUsed.grams);
+      return { ...filament, grams: remainingGrams };
+    }
+    return filament;
+  });
+
+  // 3. Update Printed Parts Inventory (Optional helper)
+  let newParts = [...library.printedParts];
+  const idx = newParts.findIndex(p => p.name.toLowerCase() === (job.name || "").toLowerCase());
+  if (idx > -1) {
+    newParts[idx].qty += Number(job.qty);
+  } else if (job.name) {
+    newParts.push({ id: Date.now(), name: job.name, qty: Number(job.qty), unitPrice: finalUnitPrice });
+  }
+
+  // 4. Save everything to Cloud
+  saveToDisk(
+    { 
+      ...library, 
+      filaments: updatedFilaments, // The new inventory levels
+      nextQuoteNo: library.nextQuoteNo + 1, 
+      printedParts: newParts 
+    }, 
+    [newEntry, ...history]
+  );
+};
 
   const TabButton = ({ id, icon: Icon, label }) => (
     <button onClick={() => setActiveTab(id)} className={`flex items-center gap-2 px-4 py-4 font-black text-[10px] tracking-widest uppercase transition-all border-b-2 ${activeTab === id ? 'border-blue-600 text-blue-600 bg-blue-50/50' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>

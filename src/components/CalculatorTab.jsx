@@ -1,197 +1,130 @@
 import React from 'react';
-import { Clock, Weight, Percent, Settings2, Plus, Trash2, Layers, Info } from 'lucide-react';
+import { Package, Clock, Plus, Trash2, Settings2, Wrench, Info } from 'lucide-react';
 
 const CalculatorTab = ({ job, setJob, library }) => {
-  const handleChange = (field, value) => {
-    setJob({ ...job, [field]: value });
+  
+  const totalGrams = (job.materials || []).reduce((sum, m) => sum + (parseFloat(m.grams) || 0), 0);
+
+  const handleMaterialChange = (index, field, value) => {
+    const updatedMaterials = [...job.materials];
+    updatedMaterials[index] = { 
+      ...updatedMaterials[index], 
+      [field]: field === 'filamentId' ? parseInt(value) : parseFloat(value) || 0 
+    };
+    setJob({ ...job, materials: updatedMaterials });
   };
 
-  const addMaterialRow = () => {
-    const newMaterials = [...(job.materials || []), { filamentId: library.filaments[0].id, grams: 0 }];
-    handleChange('materials', newMaterials);
+  const addMaterial = () => {
+    setJob({ 
+      ...job, 
+      materials: [...job.materials, { filamentId: library.filaments[0]?.id || 1, grams: 0 }] 
+    });
   };
 
-  const updateMaterialRow = (index, field, value) => {
-    const newMaterials = job.materials.map((m, i) => 
-      i === index ? { ...m, [field]: value } : m
-    );
-    handleChange('materials', newMaterials);
+  const removeMaterial = (index) => {
+    const updated = job.materials.filter((_, i) => i !== index);
+    setJob({ ...job, materials: updated });
   };
 
-  const removeMaterialRow = (index) => {
-    const newMaterials = job.materials.filter((_, i) => i !== index);
-    handleChange('materials', newMaterials);
-  };
-
-  const totalWeight = (job.materials || []).reduce((sum, m) => sum + (Number(m.grams) || 0), 0);
+  const InputLabel = ({ text, icon: Icon }) => (
+    <label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 ml-1 mb-2 flex items-center gap-2">
+      {Icon && <Icon size={12} />} {text}
+    </label>
+  );
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-      
-      {/* 1. PART IDENTITY */}
-      <div className="bg-white rounded-[2rem] border p-8 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-2">Part Name</label>
-            <input 
-              className="text-2xl font-black uppercase w-full bg-slate-50 p-6 rounded-3xl border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all"
-              placeholder="e.g. TURBO FAN HOUSING"
-              value={job.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-            />
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+      <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 space-y-10">
+        
+        {/* SECTION A: PROJECT IDENTITY */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-2">
+            <InputLabel text="Project / Part Name" icon={Info} />
+            <input type="text" value={job.name} onChange={(e) => setJob({...job, name: e.target.value})} placeholder="e.g. Industrial Housing" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" />
           </div>
-          <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-2">Print Quantity</label>
-            <input 
-              type="number" 
-              className="text-2xl font-black w-full bg-slate-50 p-6 rounded-3xl border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all"
-              value={job.qty}
-              onChange={(e) => handleChange('qty', parseInt(e.target.value) || 1)}
-            />
+          <div className="space-y-2">
+            <InputLabel text="Quantity" />
+            <input type="number" value={job.qty} onChange={(e) => setJob({...job, qty: parseInt(e.target.value) || 1})} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" />
           </div>
         </div>
-      </div>
 
-      {/* 2. DYNAMIC MATERIALS SECTION */}
-      <div className="bg-white rounded-[2rem] border p-8 shadow-sm">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <Weight size={14}/> Material Consumption
-            </label>
-            <span className="bg-blue-100 text-blue-700 text-[10px] font-black px-2 py-0.5 rounded-full">
-              {totalWeight}g TOTAL
-            </span>
-          </div>
-          <button 
-            onClick={addMaterialRow}
-            className="flex items-center gap-1 text-[10px] font-black text-blue-600 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl transition shadow-sm"
-          >
-            <Plus size={14}/> ADD FILAMENT
-          </button>
-        </div>
+        <hr className="border-slate-50" />
 
-        <div className="space-y-4">
-          {job.materials?.map((mat, index) => (
-            <div key={index} className="flex gap-3 items-end p-4 bg-slate-50 rounded-[1.5rem] border border-slate-100">
-              <div className="flex-grow">
-                <span className="text-[9px] font-black text-slate-400 ml-2 uppercase">Filament Type</span>
-                <select 
-                  className="w-full p-3 bg-white rounded-xl border font-bold uppercase text-xs outline-none focus:border-blue-500 shadow-sm"
-                  value={mat.filamentId}
-                  onChange={(e) => updateMaterialRow(index, 'filamentId', parseInt(e.target.value))}
-                >
-                  {library.filaments.map(f => (
-                    <option key={f.id} value={f.id}>{f.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="w-32">
-                <span className="text-[9px] font-black text-slate-400 ml-2 uppercase">Grams Used</span>
-                <input 
-                  type="number" 
-                  className="w-full p-3 bg-white rounded-xl border font-bold text-center shadow-sm"
-                  value={mat.grams}
-                  onChange={(e) => updateMaterialRow(index, 'grams', parseFloat(e.target.value) || 0)}
-                />
-              </div>
-              {job.materials.length > 1 && (
-                <button 
-                  onClick={() => removeMaterialRow(index)}
-                  className="p-3 text-slate-300 hover:text-red-500 transition mb-0.5"
-                >
-                  <Trash2 size={20}/>
-                </button>
-              )}
+        {/* SECTION B: MATERIALS */}
+        <div className="space-y-6">
+          <div className="flex justify-between items-end">
+            <InputLabel text="Material Consumption" icon={Package} />
+            <div className="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-widest">
+              Total: {totalGrams}g
             </div>
-          ))}
+          </div>
+          <div className="space-y-3">
+            {job.materials.map((m, index) => {
+              const selectedFilament = library.filaments.find(f => f.id === m.filamentId) || library.filaments[0];
+              return (
+                <div key={index} className="flex flex-col md:flex-row gap-3 p-3 bg-slate-50 rounded-[2rem] items-center border border-slate-100">
+                  <div className="w-10 h-10 rounded-2xl shadow-inner border-4 border-white flex-shrink-0" style={{ backgroundColor: selectedFilament?.color || '#3b82f6' }} />
+                  <select value={m.filamentId} onChange={(e) => handleMaterialChange(index, 'filamentId', e.target.value)} className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-xs outline-none appearance-none">
+                    {library.filaments.map(f => <option key={f.id} value={f.id}>{f.name} — {f.colorName}</option>)}
+                  </select>
+                  <div className="flex items-center gap-2 w-full md:w-32 bg-white px-3 py-1 rounded-xl border border-slate-200">
+                    <input type="number" value={m.grams} onChange={(e) => handleMaterialChange(index, 'grams', e.target.value)} className="w-full py-2 bg-transparent font-bold text-sm outline-none text-right" />
+                    <span className="text-[10px] font-black text-slate-300 uppercase">g</span>
+                  </div>
+                  {job.materials.length > 1 ? (
+                    <button onClick={() => removeMaterial(index)} className="p-3 text-slate-300 hover:text-red-500"><Trash2 size={18} /></button>
+                  ) : (
+                    <button onClick={addMaterial} className="p-3 text-blue-400 hover:text-blue-600"><Plus size={18} /></button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      {/* 3. HARDWARE & TIME STATS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-[2rem] border p-8 shadow-sm space-y-4">
-          <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-2"><Settings2 size={14}/> Machine</label>
-          <select 
-            className="w-full p-4 bg-slate-50 rounded-2xl border font-bold uppercase text-sm outline-none focus:border-blue-500"
-            value={job.selectedPrinterId}
-            onChange={(e) => handleChange('selectedPrinterId', parseInt(e.target.value))}
-          >
+        <hr className="border-slate-50" />
+
+        {/* SECTION C: SLICER & PRINT SPECS */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="space-y-6">
+            <InputLabel text="Slicer Settings" icon={Settings2} />
+            <div className="grid grid-cols-2 gap-3">
+              {['infill', 'walls', 'layerHeight', 'supports'].map((field) => (
+                <div key={field} className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">{field}</span>
+                  <input type="text" value={job[field] || ''} onChange={e => setJob({...job, [field]: e.target.value})} className="w-full bg-transparent font-bold text-sm outline-none" placeholder="--" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <InputLabel text="Time & Labor" icon={Clock} />
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <div className="flex-1 bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                  <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block mb-1 italic">Print Time (Hrs)</span>
+                  <input type="number" value={job.hours} onChange={e => setJob({...job, hours: parseFloat(e.target.value) || 0})} className="w-full bg-transparent font-black text-blue-600 text-lg outline-none" />
+                </div>
+                <div className="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Labor (Hrs)</span>
+                  <input type="number" value={job.laborHours} onChange={e => setJob({...job, laborHours: parseFloat(e.target.value) || 0})} className="w-full bg-transparent font-bold text-lg outline-none" />
+                </div>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Hardware / Extra Costs ($)</span>
+                <input type="number" value={job.extraCosts} onChange={e => setJob({...job, extraCosts: parseFloat(e.target.value) || 0})} className="w-full bg-transparent font-bold text-sm outline-none" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION D: PRINTER */}
+        <div className="pt-4">
+          <InputLabel text="Assigned Hardware" icon={Wrench} />
+          <select value={job.selectedPrinterId} onChange={(e) => setJob({...job, selectedPrinterId: parseInt(e.target.value)})} className="w-full px-6 py-4 bg-slate-900 text-white rounded-2xl outline-none font-bold text-sm appearance-none cursor-pointer hover:bg-slate-800 transition-colors">
             {library.printers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-        </div>
-
-        <div className="bg-white rounded-[2rem] border p-8 shadow-sm space-y-4">
-          <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-2"><Clock size={14}/> Production Time</label>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <span className="text-[9px] font-black text-slate-400 ml-1 uppercase">Print Hours</span>
-              <input type="number" className="w-full p-3 bg-slate-50 rounded-xl border font-bold" value={job.hours} onChange={(e) => handleChange('hours', parseFloat(e.target.value) || 0)}/>
-            </div>
-            <div>
-              <span className="text-[9px] font-black text-slate-400 ml-1 uppercase">Labor (Mins)</span>
-              <input type="number" className="w-full p-3 bg-slate-50 rounded-xl border font-bold" value={job.laborHours * 60} onChange={(e) => handleChange('laborHours', (parseFloat(e.target.value) / 60) || 0)}/>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. PRICING STRATEGY OVERRIDES (Now with Direct Inputs) */}
-      <div className="bg-white rounded-[2rem] border p-8 shadow-sm space-y-8">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-          <Percent size={14}/> Strategy Adjustments
-        </label>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <span className="text-[9px] font-black uppercase text-slate-500 ml-2">Material Markup (x)</span> 
-            <div className="relative">
-              <input 
-                type="number" 
-                step="0.1"
-                className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none font-black text-blue-600 transition-all"
-                value={job.materialMarkup} 
-                onChange={(e) => handleChange('materialMarkup', parseFloat(e.target.value) || 0)}
-              />
-              <span className="absolute right-4 top-4 text-[10px] font-bold text-slate-300 uppercase">Multiplier</span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <span className="text-[9px] font-black uppercase text-slate-500 ml-2">Desired Margin (%)</span> 
-            <div className="relative">
-              <input 
-                type="number" 
-                className="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none font-black text-blue-600 transition-all"
-                value={job.desiredMargin} 
-                onChange={(e) => handleChange('desiredMargin', parseInt(e.target.value) || 0)}
-              />
-              <span className="absolute right-4 top-4 text-[10px] font-bold text-slate-300 uppercase">%</span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <span className="text-[9px] font-black uppercase text-slate-500 ml-2">Print Hour Multiplier</span> 
-            <div className="relative">
-              <input 
-                type="number" 
-                placeholder={library.shopHourlyRate}
-                className={`w-full p-4 rounded-2xl border-2 outline-none font-black transition-all ${
-                  job.hourlyRateOverride > 0 ? 'bg-white border-blue-500 text-blue-600' : 'bg-slate-50 border-transparent text-slate-400'
-                }`}
-                value={job.hourlyRateOverride || ''} 
-                onChange={(e) => handleChange('hourlyRateOverride', parseFloat(e.target.value) || 0)}
-              />
-              {job.hourlyRateOverride > 0 && (
-                <button 
-                  onClick={() => handleChange('hourlyRateOverride', 0)}
-                  className="absolute right-4 top-4 text-[8px] font-black text-red-500 uppercase bg-red-50 px-2 py-1 rounded-md border border-red-100"
-                >
-                  Reset
-                </button>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>
