@@ -1,110 +1,107 @@
-import React from 'react';
-import { Plus, FlaskConical, Trash2, Weight, DollarSign } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Trash2, Cloud, Edit2, Check, X } from 'lucide-react';
 
 const FilamentTab = ({ library, saveToDisk }) => {
-  const addFilament = () => {
-    const newFilament = { 
-      id: Date.now(), 
-      name: 'New Material', 
-      price: 25.00, 
-      grams: 1000, 
-      color: '#64748b' 
-    };
-    saveToDisk({ ...library, filaments: [...library.filaments, newFilament] });
+  const [newFilament, setNewFilament] = useState({ name: '', price: '', grams: 1000, color: '#3b82f6' });
+  
+  // State to track which item is being edited
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
+
+  const handleAdd = () => {
+    if (!newFilament.name || !newFilament.price) return;
+    const updatedFilaments = [
+      ...library.filaments,
+      { ...newFilament, id: Date.now(), price: parseFloat(newFilament.price) }
+    ];
+    saveToDisk({ ...library, filaments: updatedFilaments });
+    setNewFilament({ name: '', price: '', grams: 1000, color: '#3b82f6' });
   };
 
-  const updateFilament = (id, field, value) => {
-    const newFilaments = library.filaments.map(f => 
-      f.id === id ? { ...f, [field]: value } : f
+  const startEdit = (f) => {
+    setEditingId(f.id);
+    setEditData({ ...f });
+  };
+
+  const saveEdit = () => {
+    const updatedFilaments = library.filaments.map(f => 
+      f.id === editingId ? { ...editData, price: parseFloat(editData.price) } : f
     );
-    saveToDisk({ ...library, filaments: newFilaments });
+    saveToDisk({ ...library, filaments: updatedFilaments });
+    setEditingId(null);
   };
 
-  const removeFilament = (id) => {
-    const newFilaments = library.filaments.filter(f => f.id !== id);
-    saveToDisk({ ...library, filaments: newFilaments });
+  const handleDelete = (id) => {
+    if (window.confirm("Delete this filament?")) {
+      const updatedFilaments = library.filaments.filter(f => f.id !== id);
+      saveToDisk({ ...library, filaments: updatedFilaments });
+    }
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
-      <div className="bg-white rounded-[2rem] border p-8 shadow-sm">
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 p-2 rounded-xl text-blue-600">
-              <FlaskConical size={20} />
-            </div>
-            <h2 className="font-black text-xl uppercase tracking-tighter text-slate-800">Material Library</h2>
-          </div>
-          <button 
-            onClick={addFilament} 
-            className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-[10px] flex items-center gap-2 hover:bg-blue-700 transition shadow-lg shadow-blue-200"
-          >
-            <Plus size={16}/> ADD MATERIAL
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* HEADER SECTION */}
+      <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-black uppercase tracking-tight text-slate-800">Material Library</h2>
+          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Manage stock and pricing</p>
+        </div>
+        <button onClick={() => saveToDisk(library)} className="flex items-center gap-2 px-6 py-3 bg-blue-50 text-blue-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-blue-100 transition-all">
+          <Cloud size={16} /> Sync Cloud
+        </button>
+      </div>
+
+      {/* QUICK ADD FORM */}
+      <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <input placeholder="Material Name" value={newFilament.name} onChange={(e) => setNewFilament({...newFilament, name: e.target.value})} className="px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
+          <input type="number" placeholder="Price ($)" value={newFilament.price} onChange={(e) => setNewFilament({...newFilament, price: e.target.value})} className="px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
+          <input type="number" placeholder="Grams" value={newFilament.grams} onChange={(e) => setNewFilament({...newFilament, grams: e.target.value})} className="px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
+          <button onClick={handleAdd} className="bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all">
+            <Plus size={18} /> Add
           </button>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {library.filaments.map(f => (
-            <div key={f.id} className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 hover:border-blue-200 transition-colors group">
-              <div className="flex items-center gap-4 mb-4">
-                <input 
-                  type="color" 
-                  value={f.color} 
-                  onChange={(e) => updateFilament(f.id, 'color', e.target.value)}
-                  className="w-8 h-8 rounded-full border-none cursor-pointer bg-transparent"
-                />
-                <input 
-                  className="font-black uppercase text-lg w-full bg-transparent border-b-2 border-transparent focus:border-blue-500 outline-none pb-1" 
-                  value={f.name} 
-                  onChange={(e) => updateFilament(f.id, 'name', e.target.value)}
-                  placeholder="Material Name"
-                />
-                <button 
-                  onClick={() => removeFilament(f.id)}
-                  className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white p-3 rounded-2xl border border-slate-100">
-                  <label className="text-[9px] font-black text-slate-400 uppercase flex items-center gap-1 mb-1">
-                    <DollarSign size={10}/> Spool Cost
-                  </label>
-                  <div className="flex items-center">
-                    <span className="text-slate-400 font-bold mr-1">$</span>
-                    <input 
-                      type="number" 
-                      className="w-full bg-transparent font-bold text-slate-700 outline-none" 
-                      value={f.price} 
-                      onChange={(e) => updateFilament(f.id, 'price', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-white p-3 rounded-2xl border border-slate-100">
-                  <label className="text-[9px] font-black text-slate-400 uppercase flex items-center gap-1 mb-1">
-                    <Weight size={10}/> Total Grams
-                  </label>
-                  <div className="flex items-center">
-                    <input 
-                      type="number" 
-                      className="w-full bg-transparent font-bold text-slate-700 outline-none text-right mr-1" 
-                      value={f.grams} 
-                      onChange={(e) => updateFilament(f.id, 'grams', parseFloat(e.target.value) || 0)}
-                    />
-                    <span className="text-slate-400 font-bold">g</span>
-                  </div>
+      {/* FILAMENT LIST */}
+      <div className="grid grid-cols-1 gap-4">
+        {library.filaments.map((f) => (
+          <div key={f.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 flex items-center justify-between">
+            {editingId === f.id ? (
+              /* EDIT MODE UI */
+              <div className="flex flex-1 gap-4 items-center">
+                <input className="flex-1 px-4 py-2 bg-slate-50 rounded-xl border font-bold outline-none focus:ring-2 focus:ring-blue-500" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} />
+                <input type="number" className="w-24 px-4 py-2 bg-slate-50 rounded-xl border font-bold outline-none focus:ring-2 focus:ring-blue-500" value={editData.price} onChange={e => setEditData({...editData, price: e.target.value})} />
+                <input type="number" className="w-24 px-4 py-2 bg-slate-50 rounded-xl border font-bold outline-none focus:ring-2 focus:ring-blue-500" value={editData.grams} onChange={e => setEditData({...editData, grams: e.target.value})} />
+                <div className="flex gap-2">
+                  <button onClick={saveEdit} className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700"><Check size={18}/></button>
+                  <button onClick={() => setEditingId(null)} className="p-3 bg-slate-200 text-slate-600 rounded-xl hover:bg-slate-300"><X size={18}/></button>
                 </div>
               </div>
-
-              <div className="mt-4 px-2 text-[10px] font-bold text-blue-500 uppercase tracking-widest">
-                Cost per gram: ${(f.price / (f.grams || 1)).toFixed(4)}
-              </div>
-            </div>
-          ))}
-        </div>
+            ) : (
+              /* VIEW MODE UI */
+              <>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl shadow-inner border-2 border-white" style={{ backgroundColor: f.color || '#3b82f6' }} />
+                  <div>
+                    <h3 className="font-black text-slate-800 uppercase text-sm">{f.name}</h3>
+                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                      ${f.price} / {f.grams}g — <span className="text-blue-500">${(f.price / f.grams).toFixed(4)}/g</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => startEdit(f)} className="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
+                    <Edit2 size={18} />
+                  </button>
+                  <button onClick={() => handleDelete(f.id)} className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
