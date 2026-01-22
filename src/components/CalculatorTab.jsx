@@ -1,130 +1,99 @@
 import React from 'react';
-import { Package, Clock, Plus, Trash2, Settings2, Wrench, Info } from 'lucide-react';
 
 const CalculatorTab = ({ job, setJob, library }) => {
+  const update = (field, val) => setJob({ ...job, [field]: val });
   
-  const totalGrams = (job.materials || []).reduce((sum, m) => sum + (parseFloat(m.grams) || 0), 0);
-
-  const handleMaterialChange = (index, field, value) => {
-    const updatedMaterials = [...job.materials];
-    updatedMaterials[index] = { 
-      ...updatedMaterials[index], 
-      [field]: field === 'filamentId' ? parseInt(value) : parseFloat(value) || 0 
-    };
-    setJob({ ...job, materials: updatedMaterials });
+  const updateMat = (index, field, val) => {
+    const newMats = [...job.materials];
+    newMats[index][field] = val;
+    setJob({ ...job, materials: newMats });
   };
-
-  const addMaterial = () => {
-    setJob({ 
-      ...job, 
-      materials: [...job.materials, { filamentId: library.filaments[0]?.id || 1, grams: 0 }] 
-    });
-  };
-
-  const removeMaterial = (index) => {
-    const updated = job.materials.filter((_, i) => i !== index);
-    setJob({ ...job, materials: updated });
-  };
-
-  const InputLabel = ({ text, icon: Icon }) => (
-    <label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 ml-1 mb-2 flex items-center gap-2">
-      {Icon && <Icon size={12} />} {text}
-    </label>
-  );
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 space-y-10">
+    <div className="space-y-8">
+      {/* SECTION 1: CORE PROJECT DETAILS */}
+      <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+        <div className="col-span-2">
+          <label>Project Name</label>
+          <input type="text" className="w-full shadow-sm" value={job.name} onChange={(e) => update('name', e.target.value)} placeholder="e.g. Prototype_V1" />
+        </div>
         
-        {/* SECTION A: PROJECT IDENTITY */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-2">
-            <InputLabel text="Project / Part Name" icon={Info} />
-            <input type="text" value={job.name} onChange={(e) => setJob({...job, name: e.target.value})} placeholder="e.g. Industrial Housing" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" />
+        <div>
+          <label>Print Time (Hours)</label>
+          <input type="number" className="w-full shadow-sm" value={job.hours} onChange={(e) => update('hours', parseFloat(e.target.value) || 0)} />
+        </div>
+        
+        <div>
+          <label>Quantity to Produce</label>
+          <input type="number" className="w-full shadow-sm" value={job.qty} onChange={(e) => update('qty', parseInt(e.target.value) || 1)} />
+        </div>
+
+        <div>
+          <label>Select Filament</label>
+          <select className="w-full shadow-sm" value={job.materials[0].filamentId} onChange={(e) => updateMat(0, 'filamentId', e.target.value)}>
+            {library.filaments.map(f => (
+              <option key={f.id} value={f.id}>{f.name} ({f.colorName})</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label>Usage (Grams)</label>
+          <input type="number" className="w-full shadow-sm" value={job.materials[0].grams} onChange={(e) => updateMat(0, 'grams', parseFloat(e.target.value) || 0)} />
+        </div>
+      </div>
+
+      {/* SECTION 2: TECHNICAL SPECS & NOTES */}
+      <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner">
+        <div className="mb-4 px-1">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Technical Specs & Notes</h4>
+        </div>
+        
+        <div className="grid grid-cols-3 gap-6 mb-6">
+          <div><label>Infill %</label>
+            <select value={job.infill} onChange={(e) => update('infill', e.target.value)} className="w-full border-none shadow-sm">
+              <option>10%</option><option>15%</option><option>20%</option><option>40%</option><option>100%</option>
+            </select>
           </div>
-          <div className="space-y-2">
-            <InputLabel text="Quantity" />
-            <input type="number" value={job.qty} onChange={(e) => setJob({...job, qty: parseInt(e.target.value) || 1})} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" />
+          <div><label>Wall Count</label>
+            <select value={job.walls} onChange={(e) => update('walls', e.target.value)} className="w-full border-none shadow-sm">
+              <option>2</option><option>3</option><option>4</option><option>6</option>
+            </select>
+          </div>
+          <div><label>Layer Height</label>
+            <select value={job.layerHeight} onChange={(e) => update('layerHeight', e.target.value)} className="w-full border-none shadow-sm">
+              <option>0.12mm</option><option>0.16mm</option><option>0.2mm</option><option>0.28mm</option>
+            </select>
           </div>
         </div>
 
-        <hr className="border-slate-50" />
-
-        {/* SECTION B: MATERIALS */}
-        <div className="space-y-6">
-          <div className="flex justify-between items-end">
-            <InputLabel text="Material Consumption" icon={Package} />
-            <div className="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-widest">
-              Total: {totalGrams}g
-            </div>
-          </div>
-          <div className="space-y-3">
-            {job.materials.map((m, index) => {
-              const selectedFilament = library.filaments.find(f => f.id === m.filamentId) || library.filaments[0];
-              return (
-                <div key={index} className="flex flex-col md:flex-row gap-3 p-3 bg-slate-50 rounded-[2rem] items-center border border-slate-100">
-                  <div className="w-10 h-10 rounded-2xl shadow-inner border-4 border-white flex-shrink-0" style={{ backgroundColor: selectedFilament?.color || '#3b82f6' }} />
-                  <select value={m.filamentId} onChange={(e) => handleMaterialChange(index, 'filamentId', e.target.value)} className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-xs outline-none appearance-none">
-                    {library.filaments.map(f => <option key={f.id} value={f.id}>{f.name} — {f.colorName}</option>)}
-                  </select>
-                  <div className="flex items-center gap-2 w-full md:w-32 bg-white px-3 py-1 rounded-xl border border-slate-200">
-                    <input type="number" value={m.grams} onChange={(e) => handleMaterialChange(index, 'grams', e.target.value)} className="w-full py-2 bg-transparent font-bold text-sm outline-none text-right" />
-                    <span className="text-[10px] font-black text-slate-300 uppercase">g</span>
-                  </div>
-                  {job.materials.length > 1 ? (
-                    <button onClick={() => removeMaterial(index)} className="p-3 text-slate-300 hover:text-red-500"><Trash2 size={18} /></button>
-                  ) : (
-                    <button onClick={addMaterial} className="p-3 text-blue-400 hover:text-blue-600"><Plus size={18} /></button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+        <div>
+          <label>Production Notes</label>
+          <textarea 
+            className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm"
+            rows="3"
+            placeholder="Support settings, nozzle temp, or client notes..."
+            value={job.notes || ""}
+            onChange={(e) => update('notes', e.target.value)}
+          />
         </div>
+      </div>
 
-        <hr className="border-slate-50" />
-
-        {/* SECTION C: SLICER & PRINT SPECS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          <div className="space-y-6">
-            <InputLabel text="Slicer Settings" icon={Settings2} />
-            <div className="grid grid-cols-2 gap-3">
-              {['infill', 'walls', 'layerHeight', 'supports'].map((field) => (
-                <div key={field} className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">{field}</span>
-                  <input type="text" value={job[field] || ''} onChange={e => setJob({...job, [field]: e.target.value})} className="w-full bg-transparent font-bold text-sm outline-none" placeholder="--" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <InputLabel text="Time & Labor" icon={Clock} />
-            <div className="space-y-3">
-              <div className="flex gap-3">
-                <div className="flex-1 bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                  <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block mb-1 italic">Print Time (Hrs)</span>
-                  <input type="number" value={job.hours} onChange={e => setJob({...job, hours: parseFloat(e.target.value) || 0})} className="w-full bg-transparent font-black text-blue-600 text-lg outline-none" />
-                </div>
-                <div className="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Labor (Hrs)</span>
-                  <input type="number" value={job.laborHours} onChange={e => setJob({...job, laborHours: parseFloat(e.target.value) || 0})} className="w-full bg-transparent font-bold text-lg outline-none" />
-                </div>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Hardware / Extra Costs ($)</span>
-                <input type="number" value={job.extraCosts} onChange={e => setJob({...job, extraCosts: parseFloat(e.target.value) || 0})} className="w-full bg-transparent font-bold text-sm outline-none" />
-              </div>
-            </div>
-          </div>
+      {/* SECTION 3: HARDWARE & EXTRAS */}
+      <div className="grid grid-cols-3 gap-8">
+        <div>
+          <label>Labor (Minutes)</label>
+          <input type="number" className="w-full shadow-sm" value={job.laborMinutes} onChange={(e) => update('laborMinutes', parseFloat(e.target.value) || 0)} />
         </div>
-
-        {/* SECTION D: PRINTER */}
-        <div className="pt-4">
-          <InputLabel text="Assigned Hardware" icon={Wrench} />
-          <select value={job.selectedPrinterId} onChange={(e) => setJob({...job, selectedPrinterId: parseInt(e.target.value)})} className="w-full px-6 py-4 bg-slate-900 text-white rounded-2xl outline-none font-bold text-sm appearance-none cursor-pointer hover:bg-slate-800 transition-colors">
+        <div>
+          <label>Printer</label>
+          <select className="w-full shadow-sm" value={job.selectedPrinterId} onChange={(e) => update('selectedPrinterId', parseInt(e.target.value))}>
             {library.printers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
+        </div>
+        <div>
+          <label>Extra ($)</label>
+          <input type="number" className="w-full shadow-sm" value={job.extraCosts} onChange={(e) => update('extraCosts', parseFloat(e.target.value) || 0)} />
         </div>
       </div>
     </div>

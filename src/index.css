@@ -1,1 +1,65 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap');
+
+:root {
+  font-family: 'Inter', sans-serif;
+  background-color: #F8FAFC;
+}
+
+.studio-cockpit {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 32px !important; /* Balanced gap */
+  align-items: flex-start !important;
+  width: 100% !important;
+}
+
+.left-workbench {
+  flex: 8 !important; /* Balanced ratio */
+  min-width: 0;
+  padding: 2.5rem !important; /* Comfortable padding */
+}
+
+.right-engine {
+  flex: 4 !important;
+  position: sticky !important;
+  top: 32px;
+  min-width: 360px; /* Stronger sidebar presence */
+}
+
+/* BALANCED INPUTS */
+input, select {
+  height: 44px !important; /* Bumbed up from 34px */
+  font-size: 0.95rem !important;
+  padding: 0 1rem !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #ffffff !important; /* White inputs look cleaner */
+}
+
+label {
+  font-size: 0.75rem !important; /* Readable but still "technical" */
+  font-weight: 800 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 6px !important;
+  display: block;
+}
+
+.rounded-studio {
+  border-radius: 2.5rem;
+}
+textarea {
+  font-family: inherit;
+  resize: none;
+  border: 1px solid #e2e8f0 !important;
+}
+
+@media (max-width: 1200px) {
+  .studio-cockpit { flex-direction: column !important; }
+  .right-engine { min-width: 100%; position: static !important; }
+}

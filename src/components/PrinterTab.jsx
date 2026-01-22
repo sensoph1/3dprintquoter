@@ -1,57 +1,131 @@
-import React from 'react';
-import { Plus, Printer as PrinterIcon, Trash2, Zap, Hourglass } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Plus, Trash2, Cloud, Edit2, Check, X, 
+  Cpu, Zap, Gauge, Settings, HardDrive 
+} from 'lucide-react';
 
 const PrinterTab = ({ library, saveToDisk }) => {
-  const addPrinter = () => {
-    const newPrinter = { 
-      id: Date.now(), 
-      name: 'New Printer', 
-      watts: 350, 
-      cost: 500, 
-      lifespan: 10000 
-    };
-    saveToDisk({ ...library, printers: [...library.printers, newPrinter] });
+  const [newPrinter, setNewPrinter] = useState({ name: '', watts: 300, cost: 0 });
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
+
+  const handleAdd = () => {
+    if (!newPrinter.name) return;
+    const updatedPrinters = [
+      ...library.printers,
+      { ...newPrinter, id: Date.now(), watts: parseFloat(newPrinter.watts), cost: parseFloat(newPrinter.cost) }
+    ];
+    saveToDisk({ ...library, printers: updatedPrinters });
+    setNewPrinter({ name: '', watts: 300, cost: 0 });
   };
 
-  const updatePrinter = (id, field, value) => {
-    const newPrinters = library.printers.map(p => 
-      p.id === id ? { ...p, [field]: value } : p
+  const saveEdit = () => {
+    const updated = library.printers.map(p => 
+      p.id === editingId ? { ...editData, watts: parseFloat(editData.watts), cost: parseFloat(editData.cost) } : p
     );
-    saveToDisk({ ...library, printers: newPrinters });
+    saveToDisk({ ...library, printers: updated });
+    setEditingId(null);
   };
 
   return (
-    <div className="bg-white rounded-[2rem] border p-8 shadow-sm animate-in fade-in duration-300">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="font-black text-xl uppercase tracking-tighter text-slate-800">Printer Fleet</h2>
-        <button onClick={addPrinter} className="px-4 py-2 bg-blue-600 text-white rounded-xl font-black text-[10px] flex items-center gap-2 hover:bg-blue-700 transition">
-          <Plus size={16}/> ADD PRINTER
-        </button>
-      </div>
-      <div className="grid grid-cols-1 gap-4">
-        {library.printers.map(p => (
-          <div key={p.id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex flex-col md:flex-row gap-6 items-center">
-            <div className="bg-white p-4 rounded-2xl shadow-sm border text-blue-600">
-              <PrinterIcon size={24} />
-            </div>
-            <div className="flex-grow">
-              <input className="font-black uppercase w-full bg-transparent border-b-2 border-transparent focus:border-blue-500 outline-none pb-1" value={p.name} onChange={(e) => updatePrinter(p.id, 'name', e.target.value)}/>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="text-[9px] font-black text-slate-400 uppercase flex items-center gap-1 mb-1"><Zap size={10}/> Watts</label>
-                <input type="number" className="w-full bg-white p-2 rounded-lg border text-sm font-bold" value={p.watts} onChange={(e) => updatePrinter(p.id, 'watts', parseInt(e.target.value))}/>
-              </div>
-              <div>
-                <label className="text-[9px] font-black text-slate-400 uppercase flex items-center gap-1 mb-1"><Hourglass size={10}/> Life (Hrs)</label>
-                <input type="number" className="w-full bg-white p-2 rounded-lg border text-sm font-bold" value={p.lifespan} onChange={(e) => updatePrinter(p.id, 'lifespan', parseInt(e.target.value))}/>
-              </div>
-              <div className="flex items-end">
-                <button onClick={() => saveToDisk({...library, printers: library.printers.filter(x => x.id !== p.id)})} className="p-2 text-slate-300 hover:text-red-500 transition"><Trash2 size={20}/></button>
-              </div>
-            </div>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+      <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 space-y-10">
+        
+        {/* HEADER */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
+              <Cpu className="text-blue-600" size={28} /> Hardware Fleet
+            </h2>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Manage active machines & power consumption</p>
           </div>
-        ))}
+          <button onClick={() => saveToDisk(library)} className="flex items-center gap-2 px-6 py-3 bg-blue-50 text-blue-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-100 transition-all">
+            <Cloud size={16} /> Sync Fleet
+          </button>
+        </div>
+
+        {/* ADD NEW PRINTER */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
+            <Plus size={12} /> Add Machine
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input 
+              placeholder="Printer Name (e.g. Voron 2.4)" 
+              value={newPrinter.name} 
+              onChange={(e) => setNewPrinter({...newPrinter, name: e.target.value})} 
+              className="px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm col-span-1 md:col-span-2" 
+            />
+            <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <Zap size={14} className="text-slate-400" />
+              <input 
+                type="number" 
+                placeholder="Watts" 
+                value={newPrinter.watts} 
+                onChange={(e) => setNewPrinter({...newPrinter, watts: e.target.value})} 
+                className="w-full py-4 bg-transparent outline-none font-bold text-sm" 
+              />
+            </div>
+            <button onClick={handleAdd} className="bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all">
+              Deploy Machine
+            </button>
+          </div>
+        </div>
+
+        <hr className="border-slate-50" />
+
+        {/* PRINTER LIST */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full mb-2">
+            <HardDrive size={12} /> Active Hardware
+          </div>
+          
+          <div className="grid grid-cols-1 gap-3">
+            {library.printers.map((p) => (
+              <div key={p.id} className="p-5 bg-slate-50/50 rounded-[2rem] border border-slate-100 transition-all flex items-center justify-between">
+                {editingId === p.id ? (
+                  /* EDIT MODE */
+                  <div className="flex flex-1 gap-3 items-center">
+                    <input className="flex-1 px-4 py-3 bg-white rounded-xl border font-bold text-sm outline-none" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} />
+                    <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-xl border border-slate-200">
+                      <Zap size={12} className="text-slate-300" />
+                      <input type="number" className="w-20 py-2 bg-transparent font-bold text-sm" value={editData.watts} onChange={e => setEditData({...editData, watts: e.target.value})} />
+                    </div>
+                    <div className="flex gap-1">
+                      <button onClick={saveEdit} className="p-3 bg-blue-600 text-white rounded-xl"><Check size={16}/></button>
+                      <button onClick={() => setEditingId(null)} className="p-3 bg-slate-200 text-slate-600 rounded-xl"><X size={16}/></button>
+                    </div>
+                  </div>
+                ) : (
+                  /* VIEW MODE */
+                  <>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-blue-600">
+                        <Gauge size={24} />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-slate-800 uppercase text-xs leading-none">
+                          {p.name}
+                        </h3>
+                        <div className="flex items-center gap-3 mt-1.5">
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
+                            <Zap size={10} /> {p.watts}W Consumption
+                          </p>
+                          <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-green-500">Online</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setEditingId(p.id); setEditData(p); }} className="p-3 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all"><Edit2 size={16} /></button>
+                      <button onClick={() => library.printers.length > 1 && saveToDisk({...library, printers: library.printers.filter(x => x.id !== p.id)})} className="p-3 text-slate-400 hover:text-red-500 hover:bg-white rounded-xl transition-all"><Trash2 size={16} /></button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

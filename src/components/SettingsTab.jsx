@@ -1,142 +1,126 @@
-import React, { useState } from 'react';
-import { Save, Cloud, Trash2, AlertTriangle, RefreshCw } from 'lucide-react';
+import React from 'react';
+import { Settings, DollarSign, Database, Home, Percent, Zap } from 'lucide-react';
 
 const SettingsTab = ({ library, saveToDisk, history }) => {
-  const [formData, setFormData] = useState({
-    shopName: library.shopName || "PRO PRINT STUDIO",
-    kwhRate: library.kwhRate || 0.14,
-    laborRate: library.laborRate || 25,
-    shopHourlyRate: library.shopHourlyRate || 15.00
-  });
-
-  const [syncStatus, setSyncStatus] = useState('');
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'shopName' ? value : parseFloat(value) || 0
-    }));
+  
+  const updateSetting = (key, value) => {
+    saveToDisk({ ...library, [key]: value });
   };
 
-  const handleUpdateSettings = async () => {
-    setSyncStatus('Saving...');
-    const updatedLibrary = {
-      ...library,
-      ...formData
-    };
-    
-    // This calls the saveToDisk function in App.jsx
-    await saveToDisk(updatedLibrary);
-    setSyncStatus('Settings Saved!');
-    setTimeout(() => setSyncStatus(''), 3000);
-  };
-
-  const handleClearHistory = () => {
-    if (window.confirm("Are you sure? This will delete all logged production history from the cloud.")) {
-      saveToDisk(library, []); // Send empty array for history
-    }
-  };
+  const InputBlock = ({ label, icon: Icon, type = "text", value, onChange, prefix }) => (
+    <div className="space-y-2">
+      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 flex items-center gap-2">
+        {Icon && <Icon size={12} />} {label}
+      </label>
+      <div className="relative">
+        {prefix && (
+          <span className="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm">
+            {prefix}
+          </span>
+        )}
+        <input 
+          type={type} 
+          value={value} 
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full ${prefix ? 'pl-10' : 'px-6'} py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm`}
+        />
+      </div>
+    </div>
+  );
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      {/* HEADER SECTION */}
-      <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h2 className="text-xl font-black uppercase tracking-tight text-slate-800">Shop Settings</h2>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Configure your rates and cloud sync</p>
-          </div>
-          <div className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-            syncStatus.includes('Saved') ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-blue-600'
-          }`}>
-            {syncStatus || 'Cloud Active'}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* SHOP NAME */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Studio Name</label>
-            <input 
-              type="text"
-              name="shopName"
-              value={formData.shopName}
-              onChange={handleChange}
-              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold"
-            />
-          </div>
-
-          {/* ELECTRICITY RATE */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Electricity ($/kWh)</label>
-            <input 
-              type="number"
-              name="kwhRate"
-              step="0.01"
-              value={formData.kwhRate}
-              onChange={handleChange}
-              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold"
-            />
-          </div>
-
-          {/* LABOR RATE */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Labor Rate ($/hr)</label>
-            <input 
-              type="number"
-              name="laborRate"
-              value={formData.laborRate}
-              onChange={handleChange}
-              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold"
-            />
-          </div>
-
-          {/* SHOP OVERHEAD */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Shop Overhead ($/hr)</label>
-            <input 
-              type="number"
-              name="shopHourlyRate"
-              value={formData.shopHourlyRate}
-              onChange={handleChange}
-              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold"
-            />
-          </div>
-        </div>
-
-        <button 
-          onClick={handleUpdateSettings}
-          className="mt-8 w-full md:w-auto px-10 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase hover:bg-blue-700 transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-100"
-        >
-          <Cloud size={16} /> Save to Cloud
-        </button>
-      </div>
-
-      {/* DATA MANAGEMENT SECTION */}
-      <div className="bg-slate-900 rounded-[2rem] p-8 text-white">
-        <div className="flex items-center gap-3 mb-6">
-          <AlertTriangle className="text-amber-400" size={20} />
-          <h3 className="font-black uppercase tracking-tight">Danger Zone</h3>
-        </div>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+      <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 space-y-12">
         
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 p-6 border border-slate-800 rounded-3xl bg-slate-800/50">
+        {/* HEADER */}
+        <div className="flex justify-between items-center">
           <div>
-            <h4 className="font-bold text-sm">Clear Production Ledger</h4>
-            <p className="text-slate-400 text-xs mt-1">Permanently remove all {history.length} logged items from the database.</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
+              <Settings className="text-blue-600" size={28} /> Studio Settings
+            </h2>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Configure your global rates and studio identity</p>
           </div>
-          <button 
-            onClick={handleClearHistory}
-            className="flex items-center gap-2 px-6 py-3 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
-          >
-            <Trash2 size={14} /> Purge History
-          </button>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-slate-800 text-center">
-          <p className="text-slate-500 text-[9px] uppercase font-black tracking-[0.3em]">
-            Sync ID: {library.nextQuoteNo || 'NO_SESSION'}
-          </p>
+        {/* SECTION 1: STUDIO IDENTITY */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
+            <Home size={12} /> Branding
+          </div>
+          <InputBlock 
+            label="Studio Name" 
+            value={library.shopName} 
+            onChange={(val) => updateSetting('shopName', val)} 
+          />
+        </div>
+
+        <hr className="border-slate-50" />
+
+        {/* SECTION 2: GLOBAL RATES */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
+            <DollarSign size={12} /> Financial Rates
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <InputBlock 
+              label="Shop Hourly Rate" 
+              prefix="$" 
+              type="number" 
+              value={library.shopHourlyRate} 
+              onChange={(val) => updateSetting('shopHourlyRate', parseFloat(val))} 
+            />
+            <InputBlock 
+              label="Labor Rate (Your Pay)" 
+              prefix="$" 
+              type="number" 
+              value={library.laborRate} 
+              onChange={(val) => updateSetting('laborRate', parseFloat(val))} 
+            />
+            <InputBlock 
+              label="Electricity Cost" 
+              prefix="$" 
+              type="number" 
+              value={library.kwhRate} 
+              onChange={(val) => updateSetting('kwhRate', parseFloat(val))} 
+            />
+          </div>
+        </div>
+
+        <hr className="border-slate-50" />
+
+        {/* SECTION 3: SYSTEM STATS */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
+            <Database size={12} /> Database Info
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 text-center">
+              <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Total Quotes</span>
+              <span className="text-2xl font-black text-slate-800">{history.length}</span>
+            </div>
+            <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 text-center">
+              <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Materials</span>
+              <span className="text-2xl font-black text-slate-800">{library.filaments.length}</span>
+            </div>
+            <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 text-center">
+              <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Hardware</span>
+              <span className="text-2xl font-black text-slate-800">{library.printers.length}</span>
+            </div>
+            <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 text-center">
+              <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Next Quote</span>
+              <span className="text-2xl font-black text-slate-800">#{library.nextQuoteNo}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* FOOTER ACTION */}
+        <div className="pt-6">
+          <button 
+            onClick={() => window.print()}
+            className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-[10px] tracking-[0.2em] uppercase hover:bg-slate-800 transition shadow-xl"
+          >
+            Export Shop Data Report
+          </button>
         </div>
       </div>
     </div>

@@ -1,234 +1,151 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
-  Calculator, History, FlaskConical, Printer, 
-  Settings, Layers, HardDrive, Package 
+  Calculator, FlaskConical, Cpu, 
+  Settings as SettingsIcon, History, 
+  Box 
 } from 'lucide-react';
 
-// --- SUPABASE & AUTH ---
-import { supabase } from './supabaseClient';
-import AuthGate from './components/Auth';
-
-// --- TAB COMPONENTS ---
 import CalculatorTab from './components/CalculatorTab';
-import InventoryTab from './components/InventoryTab';
-import LedgerTab from './components/LedgerTab';
 import FilamentTab from './components/FilamentTab';
 import PrinterTab from './components/PrinterTab';
 import SettingsTab from './components/SettingsTab';
+import LedgerTab from './components/LedgerTab';
 
-const DEFAULT_LIBRARY = {
-  filaments: [{ id: 1, name: 'Bambu Matte PLA', price: 24.99, grams: 1000, color: '#3b82f6' }],
-  printers: [{ id: 1, name: 'Bambu Lab X1C', watts: 350, cost: 1200, lifespan: 15000 }],
-  inventory: [],
-  printedParts: [],
-  nextQuoteNo: 5001,
-  kwhRate: 0.14,
-  laborRate: 25,
-  shopHourlyRate: 15.00,
-  shopName: "PRO PRINT STUDIO"
-};
-
-const PrintingApp = () => {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState('');
+const App = () => {
   const [activeTab, setActiveTab] = useState('calculator');
-  const [selectedStrategy, setSelectedStrategy] = useState('markup');
-  const [library, setLibrary] = useState(DEFAULT_LIBRARY);
-  const [history, setHistory] = useState([]);
-  
+
+  const [library, setLibrary] = useState(() => {
+    const saved = localStorage.getItem('studio_db');
+    return saved ? JSON.parse(saved) : {
+      shopName: "Studio OS",
+      shopHourlyRate: 2.00,
+      laborRate: 20.00,
+      kwhRate: 0.12,
+      nextQuoteNo: 1001,
+      filaments: [{ id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#3b82f6" }],
+      printers: [{ id: 1, name: "Bambu Lab X1C", watts: 350 }]
+    };
+  });
+
+  const [history, setHistory] = useState(() => {
+    const saved = localStorage.getItem('studio_history');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [job, setJob] = useState({
-    name: '', qty: 1, hours: 0, materials: [{ filamentId: 1, grams: 0 }], 
-    extraCosts: 0, laborHours: 0, desiredMargin: 50, materialMarkup: 2.5,
-    hourlyRateOverride: 0, selectedPrinterId: 1
+    name: "",
+    qty: 1,
+    hours: 0,
+    laborMinutes: 0, // Minutes-based labor
+    extraCosts: 0,
+    infill: "15%",
+    walls: "3",
+    layerHeight: "0.2mm",
+    notes: "", // Custom production notes
+    materials: [{ filamentId: 1, grams: 0 }],
+    selectedPrinterId: 1
   });
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+  const stats = (() => {
+    const matCost = job.materials.reduce((sum, m) => {
+      const f = library.filaments.find(x => x.id === parseInt(m.filamentId)) || library.filaments[0];
+      return sum + ((parseFloat(m.grams) || 0) * (f.price / f.grams));
+    }, 0);
 
-  useEffect(() => { if (session) fetchUserData(); }, [session]);
-
-  const fetchUserData = async () => {
-    try {
-      const { data } = await supabase.from('profiles').select('shop_data').eq('id', session.user.id).single();
-      if (data?.shop_data) {
-        setLibrary({ ...DEFAULT_LIBRARY, ...data.shop_data.library });
-        setHistory(data.shop_data.history || []);
-      }
-    } catch (err) { console.log("New user setup."); }
-  };
-
-  const saveToDisk = async (newLib, newHis = null) => {
-    const finalLib = newLib || library;
-    const finalHis = newHis !== null ? newHis : history;
-    setLibrary(finalLib);
-    setHistory(finalHis);
-
-    const { error } = await supabase.from('profiles').upsert({
-      id: session.user.id,
-      shop_data: { library: finalLib, history: finalHis },
-      updated_at: new Date()
-    });
-    if (!error) {
-      setStatus('Saved to Cloud');
-      setTimeout(() => setStatus(''), 2000);
-    }
-  };
-
-  // --- CALCULATION LOGIC ---
-  const activePrinter = library.printers.find(p => p.id === job.selectedPrinterId) || library.printers[0];
-  const unitMaterialCost = (job.materials || []).reduce((total, entry) => {
-    const filament = library.filaments.find(f => f.id === entry.filamentId) || library.filaments[0];
-    return total + ((filament.price / filament.grams) * (entry.grams || 0));
-  }, 0);
-
-  const unitOpCost = ((activePrinter.watts / 1000) * library.kwhRate * job.hours) + ((activePrinter.cost / activePrinter.lifespan) * job.hours);
-  const unitLaborCost = library.laborRate * job.laborHours;
-  const unitInternalCost = unitMaterialCost + unitOpCost + unitLaborCost + Number(job.extraCosts);
-  const effectiveMultiplier = job.hourlyRateOverride > 0 ? job.hourlyRateOverride : library.shopHourlyRate;
-  
-  const roundToFive = (num) => Math.ceil(num / 5) * 5;
-  const pricing = {
-    markup: roundToFive((unitMaterialCost * job.materialMarkup) + (effectiveMultiplier * job.hours) + (unitLaborCost * 1.2) + Number(job.extraCosts)),
-    margin: roundToFive(unitInternalCost / (1 - (job.desiredMargin / 100))),
-    hourly: roundToFive(((effectiveMultiplier * 1.5) * job.hours) + (unitMaterialCost * 1.1) + Number(job.extraCosts))
-  };
-
-  const totalJobPrice = pricing[selectedStrategy] * job.qty;
-  const totalJobProfit = totalJobPrice - (unitInternalCost * job.qty);
-
- const handleSaveHistory = () => {
-  const finalUnitPrice = pricing[selectedStrategy];
-  
-  // 1. Create the History Entry
-  const newEntry = {
-    id: Date.now(),
-    quoteNo: `Q-${library.nextQuoteNo}`,
-    date: new Date().toLocaleDateString(),
-    name: job.name || "Untitled Part",
-    unitPrice: finalUnitPrice,
-    details: { ...job, strategy: selectedStrategy, totalJobPrice }
-  };
-
-  // 2. AUTO-SUBTRACT LOGIC
-  // We create a copy of the filaments and subtract the grams used in this job
-  const updatedFilaments = library.filaments.map(filament => {
-    // Find if this filament was used in the current job
-    const materialUsed = job.materials.find(m => m.filamentId === filament.id);
+    const printer = library.printers.find(p => p.id === job.selectedPrinterId) || library.printers[0];
+    const energy = (job.hours * (printer.watts / 1000)) * library.kwhRate;
+    const labor = (job.laborMinutes / 60) * library.laborRate; // Hourly rate applied to minutes
+    const machine = job.hours * library.shopHourlyRate;
     
-    if (materialUsed) {
-      // Subtract grams (and ensure we don't go below zero if you don't want to)
-      const remainingGrams = Math.max(0, filament.grams - materialUsed.grams);
-      return { ...filament, grams: remainingGrams };
-    }
-    return filament;
-  });
+    const baseCost = matCost + energy + labor + machine + (parseFloat(job.extraCosts) || 0);
+    const total = baseCost * job.qty;
+    const profit = total - (matCost + energy);
 
-  // 3. Update Printed Parts Inventory (Optional helper)
-  let newParts = [...library.printedParts];
-  const idx = newParts.findIndex(p => p.name.toLowerCase() === (job.name || "").toLowerCase());
-  if (idx > -1) {
-    newParts[idx].qty += Number(job.qty);
-  } else if (job.name) {
-    newParts.push({ id: Date.now(), name: job.name, qty: Number(job.qty), unitPrice: finalUnitPrice });
-  }
+    return { total, profit, baseCost };
+  })();
 
-  // 4. Save everything to Cloud
-  saveToDisk(
-    { 
-      ...library, 
-      filaments: updatedFilaments, // The new inventory levels
-      nextQuoteNo: library.nextQuoteNo + 1, 
-      printedParts: newParts 
-    }, 
-    [newEntry, ...history]
-  );
-};
+  const saveToDisk = (newLib, newHist = history) => {
+    setLibrary(newLib);
+    setHistory(newHist);
+    localStorage.setItem('studio_db', JSON.stringify(newLib));
+    localStorage.setItem('studio_history', JSON.stringify(newHist));
+  };
 
-  const TabButton = ({ id, icon: Icon, label }) => (
-    <button onClick={() => setActiveTab(id)} className={`flex items-center gap-2 px-4 py-4 font-black text-[10px] tracking-widest uppercase transition-all border-b-2 ${activeTab === id ? 'border-blue-600 text-blue-600 bg-blue-50/50' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
-      <Icon size={14} /> {label}
-    </button>
-  );
-
-  if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50 font-black text-slate-300">INITIALIZING CLOUD...</div>;
-  if (!session) return <AuthGate />;
+  const handleLogProduction = () => {
+    const newEntry = {
+      id: Date.now(),
+      date: new Date().toLocaleDateString(),
+      quoteNo: `Q-${library.nextQuoteNo}`,
+      name: job.name || "Untitled Project",
+      unitPrice: stats.total,
+      notes: job.notes, // Saving notes to ledger
+      details: { ...job }
+    };
+    saveToDisk({ ...library, nextQuoteNo: library.nextQuoteNo + 1 }, [newEntry, ...history]);
+    alert("Production logged with notes!");
+  };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 pb-20">
-      <header className="bg-white border-b sticky top-0 z-50 overflow-x-auto shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 flex justify-between items-center min-w-[900px]">
-          <div className="py-4 flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-lg text-white"><Layers size={20} /></div>
-            <h1 className="font-black tracking-tighter text-lg uppercase leading-none">{library.shopName}</h1>
-          </div>
-          <nav className="flex items-center">
-            <TabButton id="calculator" icon={Calculator} label="Calculator" />
-            <TabButton id="history" icon={History} label="History" />
-            <TabButton id="printed-inv" icon={HardDrive} label="Inventory" />
-            <TabButton id="filament-inv" icon={FlaskConical} label="Materials" />
-            <TabButton id="printers" icon={Printer} label="Hardware" />
-            <TabButton id="settings" icon={Settings} label="Settings" />
-            <button onClick={() => supabase.auth.signOut()} className="px-4 py-4 font-black text-[10px] text-red-500 hover:text-red-700 uppercase ml-4">Sign Out</button>
-          </nav>
+    <div className="min-h-screen bg-[#F8FAFC] pb-12 font-sans">
+      <header className="max-w-[1600px] mx-auto pt-6 pb-8 px-8 flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <div className="bg-slate-900 p-2.5 rounded-2xl text-white shadow-lg"><Box size={22} /></div>
+          <h1 className="text-lg font-black uppercase tracking-tighter leading-none">
+            {library.shopName} <br/>
+            <span className="text-blue-600 text-[9px] tracking-[0.2em] font-black uppercase">Studio OS</span>
+          </h1>
         </div>
+        <nav className="bg-white p-1.5 rounded-full shadow-sm border border-slate-100 flex items-center">
+          {['calculator', 'materials', 'hardware', 'ledger', 'settings'].map((tab) => (
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-3 rounded-full font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+              {tab}
+            </button>
+          ))}
+        </nav>
       </header>
 
-      <main className="max-w-7xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Main Content Area: Responsive Width */}
-        <div className={activeTab === 'calculator' ? "lg:col-span-8" : "lg:col-span-12"}>
-          {activeTab === 'calculator' && <CalculatorTab job={job} setJob={setJob} library={library} />}
-          {activeTab === 'history' && <LedgerTab history={history} setJob={setJob} setActiveTab={setActiveTab} />}
-          {activeTab === 'printed-inv' && <InventoryTab library={library} saveToDisk={saveToDisk} view="printed" />}
-          {activeTab === 'filament-inv' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
-          {activeTab === 'printers' && <PrinterTab library={library} saveToDisk={saveToDisk} />}
-          {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} />}
-        </div>
-
-        {/* Sidebar: Only visible on Calculator */}
-        {activeTab === 'calculator' && (
-          <div className="lg:col-span-4 animate-in slide-in-from-right duration-500">
-            <div className="bg-blue-600 rounded-[3rem] p-8 text-white sticky top-28 shadow-2xl border-b-[12px] border-blue-800">
-              <div className="flex justify-between items-center mb-8">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase opacity-60 tracking-widest">Pricing Engine</span>
-                  <span className="text-[10px] font-bold opacity-40 italic">Unit Cost: ${unitInternalCost.toFixed(2)}</span>
-                </div>
-                {status && <div className="bg-white/20 px-3 py-1 rounded-full text-[9px] font-black uppercase">{status}</div>}
-              </div>
-
-              <div className="space-y-4">
-                {['markup', 'margin', 'hourly'].map(id => (
-                  <button key={id} onClick={() => setSelectedStrategy(id)} className={`w-full p-6 rounded-[2rem] border-2 text-left transition-all ${selectedStrategy === id ? 'bg-white text-blue-600 border-white scale-[1.05] shadow-xl' : 'bg-blue-500/40 border-blue-400'}`}>
-                    <div className="text-[9px] font-black uppercase opacity-70 mb-1">{id}</div>
-                    <div className="text-4xl font-black">${pricing[id]}</div>
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-blue-400/30 flex justify-between items-end">
-                <div>
-                  <div className="text-[10px] font-black uppercase opacity-60">Job Total ({job.qty}x)</div>
-                  <div className="text-2xl font-black">${totalJobPrice.toFixed(2)}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[10px] font-black uppercase opacity-60">Profit</div>
-                  <div className="text-lg font-bold">+${totalJobProfit.toFixed(2)}</div>
-                </div>
-              </div>
-
-              <button onClick={handleSaveHistory} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black text-[10px] tracking-[0.2em] uppercase mt-8 hover:bg-slate-800 transition">
-                LOG PRODUCTION
-              </button>
+      <main className="max-w-[1600px] mx-auto px-8">
+        {activeTab === 'calculator' ? (
+          <div className="studio-cockpit">
+            <div className="left-workbench bg-white rounded-studio border border-slate-100 shadow-sm">
+              <CalculatorTab job={job} setJob={setJob} library={library} />
             </div>
+            <div className="right-engine">
+              <div className="bg-[#1e60ff] rounded-studio p-8 text-white shadow-2xl flex flex-col min-h-[700px]">
+                <div className="mb-8 px-1">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">Pricing Engine</h3>
+                  <p className="text-[9px] font-bold opacity-40 uppercase tracking-widest">Live Quote v2.3</p>
+                </div>
+                <div className="space-y-4 flex-grow">
+                  <div className="bg-white rounded-[2rem] p-7 text-blue-600 shadow-xl border-b-4 border-blue-50">
+                    <span className="text-[9px] font-black uppercase tracking-widest block mb-2 opacity-40">Estimated Quote</span>
+                    <h2 className="text-5xl font-black tabular-nums tracking-tighter">${stats.total.toFixed(0)}</h2>
+                  </div>
+                  <div className="bg-white/10 border border-white/20 rounded-[2rem] p-6">
+                    <span className="text-[9px] font-black uppercase tracking-widest block mb-1 opacity-40">Profit Margin</span>
+                    <h2 className="text-3xl font-black tabular-nums">${stats.profit.toFixed(2)}</h2>
+                  </div>
+                </div>
+                <div className="mt-10 mb-8 border-t border-white/10 pt-8 px-1 flex justify-between items-end">
+                  <div>
+                    <span className="text-[9px] font-black uppercase opacity-50 block mb-1">Job Total ({job.qty}x)</span>
+                    <h3 className="text-3xl font-black">${stats.total.toFixed(2)}</h3>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[9px] font-black opacity-50 block mb-1">Base Cost</span>
+                    <h3 className="text-xl font-black text-blue-200">${stats.baseCost.toFixed(2)}</h3>
+                  </div>
+                </div>
+                <button onClick={handleLogProduction} className="w-full py-5 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl transition-all">
+                  Log Production
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-5xl mx-auto">
+             {activeTab === 'ledger' && <LedgerTab history={history} saveToDisk={saveToDisk} library={library} />}
+             {/* Other tabs... */}
           </div>
         )}
       </main>
@@ -236,4 +153,4 @@ const PrintingApp = () => {
   );
 };
 
-export default PrintingApp;
+export default App;
