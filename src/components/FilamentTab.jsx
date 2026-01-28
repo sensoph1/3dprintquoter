@@ -4,6 +4,8 @@ import {
   RefreshCw, AlertCircle, Copy, FlaskConical, Palette 
 } from 'lucide-react';
 
+import generateUniqueId from '../utils/idGenerator';
+
 const FilamentTab = ({ library, saveToDisk }) => {
   const [newFilament, setNewFilament] = useState({ name: '', colorName: '', price: '', grams: 1000, color: '#3b82f6' });
   const [editingId, setEditingId] = useState(null);
@@ -13,14 +15,14 @@ const FilamentTab = ({ library, saveToDisk }) => {
     if (!newFilament.name || !newFilament.price) return;
     const updatedFilaments = [
       ...library.filaments,
-      { ...newFilament, id: Date.now(), price: parseFloat(newFilament.price), grams: parseFloat(newFilament.grams) }
+      { ...newFilament, id: generateUniqueId(), price: parseFloat(newFilament.price), grams: parseFloat(newFilament.grams) }
     ];
     saveToDisk({ ...library, filaments: updatedFilaments });
     setNewFilament({ name: '', colorName: '', price: '', grams: 1000, color: '#3b82f6' });
   };
 
   const handleDuplicate = (f) => {
-    const duplicated = { ...f, id: Date.now(), name: `${f.name} (Copy)` };
+    const duplicated = { ...f, id: generateUniqueId(), name: `${f.name} (Copy)` };
     saveToDisk({ ...library, filaments: [...library.filaments, duplicated] });
     setEditingId(duplicated.id);
     setEditData(duplicated);

@@ -60,7 +60,7 @@ const PrinterTab = ({ library, saveToDisk }) => {
               <Zap size={14} className="text-slate-400" />
               <input 
                 type="number" 
-                placeholder="Watts" 
+                placeholder="Peak Power Consumption (Watts)" 
                 value={newPrinter.watts} 
                 onChange={(e) => setNewPrinter({...newPrinter, watts: e.target.value})} 
                 className="w-full py-4 bg-transparent outline-none font-bold text-sm" 
@@ -89,7 +89,7 @@ const PrinterTab = ({ library, saveToDisk }) => {
                     <input className="flex-1 px-4 py-3 bg-white rounded-xl border font-bold text-sm outline-none" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} />
                     <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-xl border border-slate-200">
                       <Zap size={12} className="text-slate-300" />
-                      <input type="number" className="w-20 py-2 bg-transparent font-bold text-sm" value={editData.watts} onChange={e => setEditData({...editData, watts: e.target.value})} />
+                      <input type="number" className="w-20 py-2 bg-transparent font-bold text-sm" value={editData.watts} onChange={e => setEditData({...editData, watts: e.target.value})} placeholder="Peak Power" />
                     </div>
                     <div className="flex gap-1">
                       <button onClick={saveEdit} className="p-3 bg-blue-600 text-white rounded-xl"><Check size={16}/></button>
@@ -109,7 +109,7 @@ const PrinterTab = ({ library, saveToDisk }) => {
                         </h3>
                         <div className="flex items-center gap-3 mt-1.5">
                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                            <Zap size={10} /> {p.watts}W Consumption
+                            <Zap size={10} /> {p.watts} Peak W Consumption
                           </p>
                           <span className="w-1 h-1 bg-slate-200 rounded-full" />
                           <p className="text-[10px] font-bold uppercase tracking-widest text-green-500">Online</p>

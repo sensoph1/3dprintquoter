@@ -1,32 +1,34 @@
-import React from 'react';
-import { Settings, DollarSign, Database, Home, Percent, Zap } from 'lucide-react';
+import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download } from 'lucide-react';
+
+const InputBlock = ({ label, icon: Icon, type = "text", value, onChange, prefix }) => (
+  <div className="space-y-2">
+    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 flex items-center gap-2">
+      {Icon && <Icon size={12} />} {label}
+    </label>
+    <div className="flex items-center bg-slate-50 border border-slate-100 rounded-2xl focus-within:ring-2 focus-within:ring-blue-500">
+      {prefix && (
+        <span className="px-4 font-bold text-slate-400 text-sm">
+          {prefix}
+        </span>
+      )}
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full ${prefix ? '' : 'px-6'} py-4 bg-transparent outline-none font-bold text-sm`}
+      />
+    </div>
+  </div>
+);
 
 const SettingsTab = ({ library, saveToDisk, history }) => {
-  
   const updateSetting = (key, value) => {
     saveToDisk({ ...library, [key]: value });
   };
 
-  const InputBlock = ({ label, icon: Icon, type = "text", value, onChange, prefix }) => (
-    <div className="space-y-2">
-      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 flex items-center gap-2">
-        {Icon && <Icon size={12} />} {label}
-      </label>
-      <div className="relative">
-        {prefix && (
-          <span className="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm">
-            {prefix}
-          </span>
-        )}
-        <input 
-          type={type} 
-          value={value} 
-          onChange={(e) => onChange(e.target.value)}
-          className={`w-full ${prefix ? 'pl-10' : 'px-6'} py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm`}
-        />
-      </div>
-    </div>
-  );
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
@@ -113,13 +115,50 @@ const SettingsTab = ({ library, saveToDisk, history }) => {
           </div>
         </div>
 
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-50 w-fit px-3 py-1 rounded-full">
+            <Zap size={12} /> Danger Zone
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p className="text-sm text-slate-500">
+                Reset all your data to the initial state. This action cannot be undone.
+              </p>
+              <button 
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to reset all data? This cannot be undone.')) {
+                    saveToDisk({
+                      shopName: "Studio OS",
+                      shopHourlyRate: 2.00,
+                      laborRate: 20.00,
+                      kwhRate: 0.12,
+                      nextQuoteNo: 1001,
+                      filaments: [{ id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#3b82f6" }],
+                      printers: [{ id: 1, name: "Bambu Lab X1C", watts: 350 }],
+                      printedParts: [],
+                      inventory: []
+                    }, []);
+                  }
+                }}
+                className="mt-4 w-full py-3 bg-red-600 text-white rounded-lg font-bold text-sm"
+              >
+                Reset All Data
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-slate-50" />
+
+        <hr className="border-slate-50" />
+
         {/* FOOTER ACTION */}
-        <div className="pt-6">
+        <div className="pt-6 flex gap-4">
           <button 
-            onClick={() => window.print()}
-            className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-[10px] tracking-[0.2em] uppercase hover:bg-slate-800 transition shadow-xl"
+            onClick={handlePrint}
+            className="w-full py-5 bg-white text-black border-2 border-black rounded-[2rem] font-black text-[10px] tracking-[0.2em] uppercase hover:bg-gray-200 transition shadow-xl"
           >
-            Export Shop Data Report
+            Print Shop Data Report
           </button>
         </div>
       </div>
