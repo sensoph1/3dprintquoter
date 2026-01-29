@@ -85,7 +85,8 @@ const App = () => {
   const energy = (ensureNumber(job.hours) * (ensureNumber(printer.watts) / 1000)) * ensureNumber(library.kwhRate);
   const labor = (ensureNumber(job.laborMinutes) / 60) * ensureNumber(library.laborRate);
   
-  const depreciationCost = (ensureNumber(printer.cost) / Math.max(1, ensureNumber(printer.hoursOfLife))) * ensureNumber(job.hours);
+  const hourlyAmortization = (ensureNumber(printer.cost) / Math.max(1, ensureNumber(printer.hoursOfLife)));
+  const depreciationCost = hourlyAmortization * ensureNumber(job.hours);
   
   const baseCost = matCost + energy + labor + ensureNumber(job.extraCosts) + depreciationCost;
 
@@ -103,6 +104,7 @@ const App = () => {
     energy,
     depreciationCost,
     matCost,
+    hourlyAmortization,
     priceByProfitMargin: Math.ceil(unroundedPriceByProfitMargin / rounding) * rounding,
     priceByHourlyRate: Math.ceil(unroundedPriceByHourlyRate / rounding) * rounding,
     priceByMaterialMultiplier: Math.ceil(unroundedPriceByMaterialMultiplier / rounding) * rounding,

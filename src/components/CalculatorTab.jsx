@@ -100,7 +100,7 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
         {showAdvanced && (
           <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100 shadow-inner space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Advanced Cost Breakdown</h4>
-            <div className="grid grid-cols-6 gap-4 text-blue-800 font-bold">
+            <div className="grid grid-cols-7 gap-4 text-blue-800 font-bold">
               <Tooltip text="Calculated as: Filament Used (g) * Filament Cost/g">
                 <div>
                   <p className="text-[9px] uppercase font-bold text-blue-500">Raw Material Cost</p>
@@ -117,6 +117,12 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
                 <div>
                   <p className="text-[9px] uppercase font-bold text-blue-500">Total Depreciation Cost</p>
                   <p className="text-xl">${stats.depreciationCost.toFixed(2)}</p>
+                </div>
+              </Tooltip>
+              <Tooltip text="Calculated as: Printer Cost / Printer Lifespan in Hours">
+                <div>
+                  <p className="text-[9px] uppercase font-bold text-blue-500">Hourly Amortization</p>
+                  <p className="text-xl">${stats.hourlyAmortization.toFixed(2)}</p>
                 </div>
               </Tooltip>
               <Tooltip text="Calculated as: Material Cost + Energy Cost + Labor Cost + Extra Costs + Depreciation Cost">
