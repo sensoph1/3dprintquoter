@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { 
-  Calculator, FlaskConical, Cpu, 
-  Settings as SettingsIcon, History, 
-  Box 
+  Calculator, DollarSign, Settings as SettingsIcon, History 
 } from 'lucide-react';
 
 import CalculatorTab from './components/CalculatorTab';
-import FilamentTab from './components/FilamentTab';
-import PrinterTab from './components/PrinterTab';
+import CostsTab from './components/CostsTab';
 import SettingsTab from './components/SettingsTab';
 import LedgerTab from './components/LedgerTab';
-import InventoryTab from './components/InventoryTab';
 
 import generateUniqueId from './utils/idGenerator';
 
@@ -24,9 +20,7 @@ const App = () => {
 
   const tabs = {
     calculator: { name: 'Calculator', icon: Calculator },
-    filament: { name: 'Filament', icon: FlaskConical },
-    printer: { name: 'Printer', icon: Cpu },
-    inventory: { name: 'Inventory', icon: Box },
+    costs: { name: 'Costs', icon: DollarSign },
     ledger: { name: 'Ledger', icon: History },
     settings: { name: 'Settings', icon: SettingsIcon },
   };
@@ -41,6 +35,8 @@ const App = () => {
       nextQuoteNo: 1001,
       filaments: [{ id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#3b82f6" }],
       printers: [{ id: 1, name: "Bambu Lab X1C", watts: 350, cost: 0, hoursOfLife: 0 }],
+      subscriptions: [{id: 1, name: "Patreon", cost: 10, interval: 'monthly'}],
+      monthlyPrintingHours: 100,
       printedParts: [],
       inventory: [],
       rounding: 1
@@ -88,7 +84,15 @@ const App = () => {
   const hourlyAmortization = (ensureNumber(printer.cost) / Math.max(1, ensureNumber(printer.hoursOfLife)));
   const depreciationCost = hourlyAmortization * ensureNumber(job.hours);
   
-  const baseCost = matCost + energy + labor + ensureNumber(job.extraCosts) + depreciationCost;
+  const totalMonthlySubscriptionCost = library.subscriptions.reduce((total, sub) => {
+    const cost = ensureNumber(sub.cost);
+    return total + (sub.interval === 'annual' ? cost / 12 : cost);
+  }, 0);
+
+  const subscriptionCostPerHour = totalMonthlySubscriptionCost / Math.max(1, ensureNumber(library.monthlyPrintingHours));
+  const subscriptionCost = subscriptionCostPerHour * ensureNumber(job.hours);
+
+  const baseCost = matCost + energy + labor + ensureNumber(job.extraCosts) + depreciationCost + subscriptionCost;
 
   const qty = Math.max(1, ensureNumber(job.qty));
   const rounding = Math.max(0.01, ensureNumber(job.rounding));
@@ -242,9 +246,7 @@ const App = () => {
           </div>
         ) : (
           <div className="max-w-5xl mx-auto bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
-             {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
-             {activeTab === 'printer' && <PrinterTab library={library} saveToDisk={saveToDisk} />}
-             {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} />}
+             {activeTab === 'costs' && <CostsTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'ledger' && <LedgerTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} />}
              {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} />}
           </div>
