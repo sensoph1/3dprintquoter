@@ -167,27 +167,27 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-12 font-sans">
-      <header className="max-w-[1600px] mx-auto pt-6 pb-8 px-8 flex justify-between items-center">
-        <div className="flex items-center gap-4">
+      <header className="max-w-[1600px] mx-auto pt-6 pb-8 px-4 sm:px-8 flex flex-wrap justify-between items-center">
+        <div className="flex items-center gap-4 mb-4 sm:mb-0">
           <div className="bg-slate-900 p-2.5 rounded-2xl text-white shadow-lg"><tabs.calculator.icon size={22} /></div>
           <h1 className="text-lg font-black uppercase tracking-tighter leading-none">
             {library.shopName} <br/>
             <span className="text-blue-600 text-[9px] tracking-[0.2em] font-black uppercase">Studio OS</span>
           </h1>
         </div>
-        <nav className="bg-white p-1.5 rounded-full shadow-sm border border-slate-100 flex items-center">
+        <nav className="bg-white p-1.5 rounded-full shadow-sm border border-slate-100 flex items-center overflow-x-auto">
           {Object.keys(tabs).map((tab) => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-3 rounded-full font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 sm:px-6 sm:py-3 rounded-full font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
               {tabs[tab].name}
             </button>
           ))}
         </nav>
       </header>
 
-      <main className="max-w-[1600px] mx-auto px-8">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-8">
         {activeTab === 'calculator' ? (
-          <div className="studio-cockpit">
-            <div className="left-workbench bg-white rounded-studio border border-slate-100 shadow-sm">
+          <div className="flex flex-col md:flex-row gap-8">
+            <div className="w-full md:w-2/3 bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
               <CalculatorTab 
                 job={job} 
                 setJob={setJob} 
@@ -197,8 +197,8 @@ const App = () => {
                 setShowAdvanced={setShowAdvanced} 
               />
             </div>
-            <div className="right-engine">
-              <div className="bg-[#1e60ff] rounded-studio p-8 text-white shadow-2xl flex flex-col min-h-[700px]">
+            <div className="w-full md:w-1/3">
+              <div className="bg-[#1e60ff] rounded-studio p-6 sm:p-8 text-white shadow-2xl flex flex-col min-h-[700px]">
                 <div className="mb-8 px-1">
                   <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">Pricing Engine</h3>
                   <p className="text-[9px] font-bold opacity-40 uppercase tracking-widest">Live Quote v2.4</p>
@@ -206,34 +206,34 @@ const App = () => {
                 <div className="space-y-4 flex-grow">
                   <div className="bg-white rounded-[2rem] p-6 text-blue-600 shadow-xl border-b-4 border-blue-50">
                     <span className="text-[9px] font-black uppercase tracking-widest block mb-2 opacity-40">Profit Margin ({job.profitMargin}%)</span>
-                    <h2 className="text-3xl font-black tabular-nums tracking-tighter">${stats.priceByProfitMargin.toFixed(2)}</h2>
+                    <h2 className="text-2xl sm:text-3xl font-black tabular-nums tracking-tighter">${stats.priceByProfitMargin.toFixed(2)}</h2>
                   </div>
                   <div className="bg-white/10 border border-white/20 rounded-[2rem] p-6">
                     <span className="text-[9px] font-black uppercase tracking-widest block mb-1 opacity-40">Hourly Rate (${job.overrideShopHourlyRate}/hr)</span>
-                    <h2 className="text-3xl font-black tabular-nums">${stats.priceByHourlyRate.toFixed(2)}</h2>
+                    <h2 className="text-2xl sm:text-3xl font-black tabular-nums">${stats.priceByHourlyRate.toFixed(2)}</h2>
                   </div>
                   <div className="bg-white/10 border border-white/20 rounded-[2rem] p-6">
                     <span className="text-[9px] font-black uppercase tracking-widest block mb-1 opacity-40">Material Cost (x{job.materialCostMultiplier})</span>
-                    <h2 className="text-3xl font-black tabular-nums">${stats.priceByMaterialMultiplier.toFixed(2)}</h2>
+                    <h2 className="text-2xl sm:text-3xl font-black tabular-nums">${stats.priceByMaterialMultiplier.toFixed(2)}</h2>
                   </div>
                 </div>
                 <div className="mt-10 mb-8 border-t border-white/10 pt-8 px-1">
                   <div className="text-right">
                     <span className="text-[9px] font-black opacity-50 block mb-1">Cost Per Item</span>
-                    <h3 className="text-xl font-black text-blue-200">${stats.costPerItem.toFixed(2)}</h3>
+                    <h3 className="text-lg sm:text-xl font-black text-blue-200">${stats.costPerItem.toFixed(2)}</h3>
                   </div>
                 </div>
                 {editingJobId ? (
-                  <div className="flex gap-4">
-                    <button onClick={handleUpdateJob} className="w-full py-5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl transition-all">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <button onClick={handleUpdateJob} className="w-full py-4 sm:py-5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl transition-all">
                       Save Changes
                     </button>
-                    <button onClick={handleCancelEdit} className="w-full py-5 bg-slate-600 hover:bg-slate-700 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl transition-all">
+                    <button onClick={handleCancelEdit} className="w-full py-4 sm:py-5 bg-slate-600 hover:bg-slate-700 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl transition-all">
                       Cancel
                     </button>
                   </div>
                 ) : (
-                  <button onClick={handleLogProduction} className="w-full py-5 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl transition-all">
+                  <button onClick={handleLogProduction} className="w-full py-4 sm:py-5 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl transition-all">
                     Log Production
                   </button>
                 )}
@@ -241,7 +241,7 @@ const App = () => {
             </div>
           </div>
         ) : (
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-5xl mx-auto bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'printer' && <PrinterTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} />}
