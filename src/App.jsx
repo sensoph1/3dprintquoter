@@ -27,7 +27,7 @@ const App = () => {
 
   const [library, setLibrary] = useState(() => {
     const saved = localStorage.getItem('studio_db');
-    return saved ? JSON.parse(saved) : {
+    const initial = saved ? JSON.parse(saved) : {
       shopName: "Studio OS",
       shopHourlyRate: 2.00,
       laborRate: 20.00,
@@ -41,6 +41,10 @@ const App = () => {
       inventory: [],
       rounding: 1
     };
+    if (!initial.subscriptions) {
+      initial.subscriptions = [];
+    }
+    return initial;
   });
 
   const getDefaultJob = (library) => ({
