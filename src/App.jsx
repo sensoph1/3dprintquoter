@@ -40,7 +40,7 @@ const App = () => {
       kwhRate: 0.12,
       nextQuoteNo: 1001,
       filaments: [{ id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#3b82f6" }],
-      printers: [{ id: 1, name: "Bambu Lab X1C", watts: 350 }],
+      printers: [{ id: 1, name: "Bambu Lab X1C", watts: 350, cost: 0, hoursOfLife: 0 }],
       printedParts: [],
       inventory: [],
       rounding: 1
@@ -80,29 +80,34 @@ const App = () => {
   }, 0);
 
   const selectedPrinter = library.printers.find(p => p.id === job.selectedPrinterId);
-  const printer = selectedPrinter || { watts: 0 }; // Default printer if not found
+  const printer = selectedPrinter || { watts: 0, cost: 0, hoursOfLife: 1 }; // Default printer if not found, hoursOfLife defaults to 1 to prevent division by zero
 
   const energy = (ensureNumber(job.hours) * (ensureNumber(printer.watts) / 1000)) * ensureNumber(library.kwhRate);
   const labor = (ensureNumber(job.laborMinutes) / 60) * ensureNumber(library.laborRate);
-  const machine = ensureNumber(job.hours) * ensureNumber(library.shopHourlyRate);
   
-  const baseCost = matCost + energy + labor + machine + ensureNumber(job.extraCosts);
+  const depreciationCost = (ensureNumber(printer.cost) / Math.max(1, ensureNumber(printer.hoursOfLife))) * ensureNumber(job.hours);
+  
+  const baseCost = matCost + energy + labor + ensureNumber(job.extraCosts) + depreciationCost;
 
   const qty = Math.max(1, ensureNumber(job.qty));
   const rounding = Math.max(0.01, ensureNumber(job.rounding));
-
-  const unroundedPriceByProfitMargin = (baseCost * (1 + (ensureNumber(job.profitMargin) / 100))) / qty;
-  const unroundedPriceByHourlyRate = (ensureNumber(job.hours) * ensureNumber(job.overrideShopHourlyRate)) / qty;
-  const unroundedPriceByMaterialMultiplier = ((matCost * ensureNumber(job.materialCostMultiplier)) + labor + ensureNumber(job.extraCosts)) / qty;
   const costPerItem = baseCost / qty;
 
+  const unroundedPriceByProfitMargin = costPerItem / Math.max(0.01, (1 - (ensureNumber(job.profitMargin) / 100)));
+  const unroundedPriceByHourlyRate = (ensureNumber(job.hours) * ensureNumber(job.overrideShopHourlyRate)) / qty;
+  const unroundedPriceByMaterialMultiplier = (baseCost * 3) / qty;
+  const materialCostPerItemAdvanced = (matCost * ensureNumber(job.materialCostMultiplier)) / qty;
+
   const stats = {
-    baseCost,
+    baseCost, // This remains the total base cost for the job
     energy,
+    depreciationCost,
+    matCost,
     priceByProfitMargin: Math.ceil(unroundedPriceByProfitMargin / rounding) * rounding,
     priceByHourlyRate: Math.ceil(unroundedPriceByHourlyRate / rounding) * rounding,
     priceByMaterialMultiplier: Math.ceil(unroundedPriceByMaterialMultiplier / rounding) * rounding,
-    costPerItem: costPerItem
+    costPerItem: costPerItem,
+    materialCostPerItemAdvanced: materialCostPerItemAdvanced
   };
 
   const saveToDisk = (newLib, newHist = history) => {

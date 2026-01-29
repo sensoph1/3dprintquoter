@@ -6,7 +6,7 @@ import {
 import Tooltip from './Tooltip';
 
 const PrinterTab = ({ library, saveToDisk }) => {
-  const [newPrinter, setNewPrinter] = useState({ name: '', watts: 300, cost: 0 });
+  const [newPrinter, setNewPrinter] = useState({ name: '', watts: 300, cost: 0, hoursOfLife: 0 });
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
 
@@ -14,7 +14,13 @@ const PrinterTab = ({ library, saveToDisk }) => {
     if (!newPrinter.name) return;
     const updatedPrinters = [
       ...library.printers,
-      { ...newPrinter, id: Date.now(), watts: parseFloat(newPrinter.watts), cost: parseFloat(newPrinter.cost) }
+      { 
+        ...newPrinter, 
+        id: Date.now(), 
+        watts: parseFloat(newPrinter.watts), 
+        cost: parseFloat(newPrinter.cost),
+        hoursOfLife: parseFloat(newPrinter.hoursOfLife)
+      }
     ];
     saveToDisk({ ...library, printers: updatedPrinters });
     setNewPrinter({ name: '', watts: 300, cost: 0 });
@@ -22,7 +28,12 @@ const PrinterTab = ({ library, saveToDisk }) => {
 
   const saveEdit = () => {
     const updated = library.printers.map(p => 
-      p.id === editingId ? { ...editData, watts: parseFloat(editData.watts), cost: parseFloat(editData.cost) } : p
+      p.id === editingId ? { 
+        ...editData, 
+        watts: parseFloat(editData.watts), 
+        cost: parseFloat(editData.cost),
+        hoursOfLife: parseFloat(editData.hoursOfLife)
+      } : p
     );
     saveToDisk({ ...library, printers: updated });
     setEditingId(null);
@@ -50,7 +61,7 @@ const PrinterTab = ({ library, saveToDisk }) => {
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
             <Plus size={12} /> Add Machine
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
             <Tooltip text="A descriptive name for your 3D printer (e.g., Voron 2.4, Ender 3 Pro).">
               <input 
                 placeholder="Printer Name (e.g. Voron 2.4)" 
@@ -71,7 +82,30 @@ const PrinterTab = ({ library, saveToDisk }) => {
                 />
               </Tooltip>
             </div>
-            <button onClick={handleAdd} className="bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all">
+            <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <span className="text-slate-400 font-bold">$</span>
+              <Tooltip text="The initial purchase cost of this printer. Used for calculating depreciation.">
+                <input 
+                  type="number" 
+                  placeholder="Printer Cost" 
+                  value={newPrinter.cost} 
+                  onChange={(e) => setNewPrinter({...newPrinter, cost: e.target.value})} 
+                  className="w-full py-4 bg-transparent outline-none font-bold text-sm" 
+                />
+              </Tooltip>
+            </div>
+            <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <Tooltip text="The estimated total operational hours before this printer needs significant replacement or major repair. Used for calculating depreciation.">
+                <input 
+                  type="number" 
+                  placeholder="Expected Hours of Life" 
+                  value={newPrinter.hoursOfLife} 
+                  onChange={(e) => setNewPrinter({...newPrinter, hoursOfLife: e.target.value})} 
+                  className="w-full py-4 bg-transparent outline-none font-bold text-sm" 
+                />
+              </Tooltip>
+            </div>
+            <button onClick={handleAdd} className="bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all col-span-1">
               Deploy Machine
             </button>
           </div>
@@ -98,6 +132,17 @@ const PrinterTab = ({ library, saveToDisk }) => {
                       <Zap size={12} className="text-slate-300" />
                       <Tooltip text="The maximum power your printer draws in Watts.">
                         <input type="number" className="w-20 py-2 bg-transparent font-bold text-sm" value={editData.watts} onChange={e => setEditData({...editData, watts: e.target.value})} placeholder="Peak Power" />
+                      </Tooltip>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-xl border border-slate-200">
+                      <span className="text-slate-300 font-bold">$</span>
+                      <Tooltip text="The initial purchase cost of this printer. Used for calculating depreciation.">
+                        <input type="number" className="w-20 py-2 bg-transparent font-bold text-sm" value={editData.cost} onChange={e => setEditData({...editData, cost: e.target.value})} placeholder="Cost" />
+                      </Tooltip>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-xl border border-slate-200">
+                      <Tooltip text="The estimated total operational hours before this printer needs significant replacement or major repair. Used for calculating depreciation.">
+                        <input type="number" className="w-20 py-2 bg-transparent font-bold text-sm" value={editData.hoursOfLife} onChange={e => setEditData({...editData, hoursOfLife: e.target.value})} placeholder="Hrs Life" />
                       </Tooltip>
                     </div>
                     <div className="flex gap-1">
