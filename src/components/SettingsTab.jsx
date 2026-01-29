@@ -1,4 +1,5 @@
 import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download } from 'lucide-react';
+import Tooltip from './Tooltip';
 
 const InputBlock = ({ label, icon: Icon, type = "text", value, onChange, prefix }) => (
   <div className="space-y-2">
@@ -49,11 +50,13 @@ const SettingsTab = ({ library, saveToDisk, history }) => {
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
             <Home size={12} /> Branding
           </div>
-          <InputBlock 
-            label="Studio Name" 
-            value={library.shopName} 
-            onChange={(val) => updateSetting('shopName', val)} 
-          />
+          <Tooltip text="Your studio's name, displayed at the top of the application.">
+            <InputBlock 
+              label="Studio Name" 
+              value={library.shopName} 
+              onChange={(val) => updateSetting('shopName', val)} 
+            />
+          </Tooltip>
         </div>
 
         <hr className="border-slate-50" />
@@ -63,28 +66,43 @@ const SettingsTab = ({ library, saveToDisk, history }) => {
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
             <DollarSign size={12} /> Financial Rates
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <InputBlock 
-              label="Shop Hourly Rate" 
-              prefix="$" 
-              type="number" 
-              value={library.shopHourlyRate} 
-              onChange={(val) => updateSetting('shopHourlyRate', parseFloat(val))} 
-            />
-            <InputBlock 
-              label="Labor Rate (Your Pay)" 
-              prefix="$" 
-              type="number" 
-              value={library.laborRate} 
-              onChange={(val) => updateSetting('laborRate', parseFloat(val))} 
-            />
-            <InputBlock 
-              label="Electricity Cost" 
-              prefix="$" 
-              type="number" 
-              value={library.kwhRate} 
-              onChange={(val) => updateSetting('kwhRate', parseFloat(val))} 
-            />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Tooltip text="The hourly rate your shop charges for machine usage, independent of material or labor costs.">
+              <InputBlock 
+                label="Shop Hourly Rate" 
+                prefix="$" 
+                type="number" 
+                value={library.shopHourlyRate} 
+                onChange={(val) => updateSetting('shopHourlyRate', parseFloat(val))} 
+              />
+            </Tooltip>
+            <Tooltip text="Your personal hourly labor rate. This is factored into job costs when labor minutes are entered.">
+              <InputBlock 
+                label="Labor Rate (Your Pay)" 
+                prefix="$" 
+                type="number" 
+                value={library.laborRate} 
+                onChange={(val) => updateSetting('laborRate', parseFloat(val))} 
+              />
+            </Tooltip>
+            <Tooltip text="The cost of electricity per kilowatt-hour (kWh) in your local currency. Used to calculate energy consumption costs.">
+              <InputBlock 
+                label="Electricity Cost" 
+                prefix="$" 
+                type="number" 
+                value={library.kwhRate} 
+                onChange={(val) => updateSetting('kwhRate', parseFloat(val))} 
+              />
+            </Tooltip>
+            <Tooltip text="The increment to which all final calculated prices will be rounded up. For example, '1' for nearest dollar, '5' for nearest five dollars.">
+              <InputBlock
+                label="Price Rounding"
+                prefix="$"
+                type="number"
+                value={library.rounding}
+                onChange={(val) => updateSetting('rounding', parseFloat(val))}
+              />
+            </Tooltip>
           </div>
         </div>
 

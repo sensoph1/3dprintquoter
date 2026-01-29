@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 
 import generateUniqueId from '../utils/idGenerator';
+import Tooltip from './Tooltip';
 
 const FilamentTab = ({ library, saveToDisk }) => {
   const [newFilament, setNewFilament] = useState({ name: '', colorName: '', price: '', grams: 1000, color: '#3b82f6' });
@@ -65,15 +66,23 @@ const FilamentTab = ({ library, saveToDisk }) => {
             <Plus size={12} /> Add New Spool
           </div>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-            <input placeholder="Brand (e.g. Polymaker)" value={newFilament.name} onChange={(e) => setNewFilament({...newFilament, name: e.target.value})} className="px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
-            <input placeholder="Color Name" value={newFilament.colorName} onChange={(e) => setNewFilament({...newFilament, colorName: e.target.value})} className="px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
+            <Tooltip text="The brand or type of filament (e.g., Polymaker PLA, Hatchbox PETG).">
+              <input placeholder="Brand (e.g. Polymaker)" value={newFilament.name} onChange={(e) => setNewFilament({...newFilament, name: e.target.value})} className="px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
+            </Tooltip>
+            <Tooltip text="The specific color of the filament (e.g., Galaxy Black, Azure Blue).">
+              <input placeholder="Color Name" value={newFilament.colorName} onChange={(e) => setNewFilament({...newFilament, colorName: e.target.value})} className="px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
+            </Tooltip>
             <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
               <span className="text-slate-400 font-bold">$</span>
-              <input type="number" placeholder="Price" value={newFilament.price} onChange={(e) => setNewFilament({...newFilament, price: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+              <Tooltip text="The cost of the entire spool of filament in your local currency.">
+                <input type="number" placeholder="Price" value={newFilament.price} onChange={(e) => setNewFilament({...newFilament, price: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+              </Tooltip>
             </div>
             <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
               <span className="text-slate-400 font-bold">g</span>
-              <input type="number" placeholder="Weight" value={newFilament.grams} onChange={(e) => setNewFilament({...newFilament, grams: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+              <Tooltip text="The total weight of the filament spool in grams (e.g., 1000g, 750g).">
+                <input type="number" placeholder="Weight" value={newFilament.grams} onChange={(e) => setNewFilament({...newFilament, grams: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+              </Tooltip>
             </div>
             <button onClick={handleAdd} className="bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all">
               Register Spool
@@ -95,10 +104,18 @@ const FilamentTab = ({ library, saveToDisk }) => {
                 {editingId === f.id ? (
                   /* EDIT MODE */
                   <div className="flex flex-1 gap-3 items-center">
-                    <input className="flex-1 px-4 py-3 bg-white rounded-xl border font-bold text-sm outline-none" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} />
-                    <input className="flex-1 px-4 py-3 bg-white rounded-xl border font-bold text-sm outline-none" value={editData.colorName} onChange={e => setEditData({...editData, colorName: e.target.value})} />
-                    <input type="color" className="w-10 h-10 border-none bg-transparent cursor-pointer" value={editData.color} onChange={e => setEditData({...editData, color: e.target.value})} />
-                    <input type="number" className="w-20 px-4 py-3 bg-white rounded-xl border font-bold text-sm" value={editData.price} onChange={e => setEditData({...editData, price: e.target.value})} />
+                    <Tooltip text="The brand or type of filament.">
+                      <input className="flex-1 px-4 py-3 bg-white rounded-xl border font-bold text-sm outline-none" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} />
+                    </Tooltip>
+                    <Tooltip text="The specific color of the filament.">
+                      <input className="flex-1 px-4 py-3 bg-white rounded-xl border font-bold text-sm outline-none" value={editData.colorName} onChange={e => setEditData({...editData, colorName: e.target.value})} />
+                    </Tooltip>
+                    <Tooltip text="The visual color representation of the filament.">
+                      <input type="color" className="w-10 h-10 border-none bg-transparent cursor-pointer" value={editData.color} onChange={e => setEditData({...editData, color: e.target.value})} />
+                    </Tooltip>
+                    <Tooltip text="The cost of the entire spool of filament in your local currency.">
+                      <input type="number" className="w-20 px-4 py-3 bg-white rounded-xl border font-bold text-sm" value={editData.price} onChange={e => setEditData({...editData, price: e.target.value})} />
+                    </Tooltip>
                     <div className="flex gap-1">
                       <button onClick={saveEdit} className="p-3 bg-blue-600 text-white rounded-xl"><Check size={16}/></button>
                       <button onClick={() => setEditingId(null)} className="p-3 bg-slate-200 text-slate-600 rounded-xl"><X size={16}/></button>

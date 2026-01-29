@@ -14,6 +14,11 @@ import InventoryTab from './components/InventoryTab';
 
 import generateUniqueId from './utils/idGenerator';
 
+const ensureNumber = (value, defaultValue = 0) => {
+  const num = parseFloat(value);
+  return isNaN(num) ? defaultValue : num;
+};
+
 const App = () => {
   const [activeTab, setActiveTab] = useState('calculator');
 
@@ -37,11 +42,12 @@ const App = () => {
       filaments: [{ id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#3b82f6" }],
       printers: [{ id: 1, name: "Bambu Lab X1C", watts: 350 }],
       printedParts: [],
-      inventory: []
+      inventory: [],
+      rounding: 1
     };
   });
 
-  const defaultJob = {
+  const getDefaultJob = (library) => ({
     name: "",
     qty: 1,
     hours: 0,
@@ -53,46 +59,51 @@ const App = () => {
     notes: "",
     materials: [{ filamentId: 1, grams: 0 }],
     selectedPrinterId: 1,
-    overrideShopHourlyRate: library.shopHourlyRate,
+    overrideShopHourlyRate: ensureNumber(library.shopHourlyRate, 0),
     materialCostMultiplier: 2,
-    profitMargin: 20
-  };
+    profitMargin: 20,
+    rounding: ensureNumber(library.rounding, 1)
+  });
 
-  const [job, setJob] = useState(defaultJob);
+  const [job, setJob] = useState(() => getDefaultJob(library));
 
   const [history, setHistory] = useState(() => {
     const saved = localStorage.getItem('studio_history');
     return saved ? JSON.parse(saved) : [];
   });
   const [editingJobId, setEditingJobId] = useState(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const stats = (() => {
-    const matCost = job.materials.reduce((sum, m) => {
-      const f = library.filaments.find(x => x.id === parseInt(m.filamentId)) || library.filaments[0];
-      return sum + ((parseFloat(m.grams) || 0) * (f.price / f.grams));
-    }, 0);
+  const matCost = job.materials.reduce((sum, m) => {
+    const f = library.filaments.find(x => x.id === parseInt(m.filamentId)) || { price: 0, grams: 1 }; // Default filament if not found
+    return sum + (ensureNumber(m.grams) * (ensureNumber(f.price) / Math.max(1, ensureNumber(f.grams))));
+  }, 0);
 
-    const printer = library.printers.find(p => p.id === job.selectedPrinterId) || library.printers[0];
-    const energy = (job.hours * (printer.watts / 1000)) * library.kwhRate;
-    const labor = (job.laborMinutes / 60) * library.laborRate;
-    const machine = job.hours * library.shopHourlyRate;
-    
-    const baseCost = matCost + energy + labor + machine + (parseFloat(job.extraCosts) || 0);
+  const selectedPrinter = library.printers.find(p => p.id === job.selectedPrinterId);
+  const printer = selectedPrinter || { watts: 0 }; // Default printer if not found
 
-    const qty = Math.max(1, parseInt(job.qty));
-    const priceByProfitMargin = (baseCost * (1 + (job.profitMargin / 100))) / qty;
-    const priceByHourlyRate = (job.hours * job.overrideShopHourlyRate) / qty;
-    const priceByMaterialMultiplier = ((matCost * job.materialCostMultiplier) + labor + (parseFloat(job.extraCosts) || 0)) / qty;
-    const costPerItem = baseCost / qty;
+  const energy = (ensureNumber(job.hours) * (ensureNumber(printer.watts) / 1000)) * ensureNumber(library.kwhRate);
+  const labor = (ensureNumber(job.laborMinutes) / 60) * ensureNumber(library.laborRate);
+  const machine = ensureNumber(job.hours) * ensureNumber(library.shopHourlyRate);
+  
+  const baseCost = matCost + energy + labor + machine + ensureNumber(job.extraCosts);
 
-    return {
-      baseCost,
-      priceByProfitMargin: priceByProfitMargin,
-      priceByHourlyRate: priceByHourlyRate,
-      priceByMaterialMultiplier: priceByMaterialMultiplier,
-      costPerItem: costPerItem
-    };
-  })();
+  const qty = Math.max(1, ensureNumber(job.qty));
+  const rounding = Math.max(0.01, ensureNumber(job.rounding));
+
+  const unroundedPriceByProfitMargin = (baseCost * (1 + (ensureNumber(job.profitMargin) / 100))) / qty;
+  const unroundedPriceByHourlyRate = (ensureNumber(job.hours) * ensureNumber(job.overrideShopHourlyRate)) / qty;
+  const unroundedPriceByMaterialMultiplier = ((matCost * ensureNumber(job.materialCostMultiplier)) + labor + ensureNumber(job.extraCosts)) / qty;
+  const costPerItem = baseCost / qty;
+
+  const stats = {
+    baseCost,
+    energy,
+    priceByProfitMargin: Math.ceil(unroundedPriceByProfitMargin / rounding) * rounding,
+    priceByHourlyRate: Math.ceil(unroundedPriceByHourlyRate / rounding) * rounding,
+    priceByMaterialMultiplier: Math.ceil(unroundedPriceByMaterialMultiplier / rounding) * rounding,
+    costPerItem: costPerItem
+  };
 
   const saveToDisk = (newLib, newHist = history) => {
     setLibrary(newLib);
@@ -132,13 +143,13 @@ const App = () => {
     });
     saveToDisk(library, newHistory);
     setEditingJobId(null);
-    setJob(defaultJob);
+    setJob(getDefaultJob(library));
     alert("Job updated successfully!");
   };
 
   const handleCancelEdit = () => {
     setEditingJobId(null);
-    setJob(defaultJob);
+    setJob(getDefaultJob(library));
   };
 
   const handleJobLoad = (jobDetails, jobId = null) => {
@@ -170,7 +181,14 @@ const App = () => {
         {activeTab === 'calculator' ? (
           <div className="studio-cockpit">
             <div className="left-workbench bg-white rounded-studio border border-slate-100 shadow-sm">
-              <CalculatorTab job={job} setJob={setJob} library={library} />
+              <CalculatorTab 
+                job={job} 
+                setJob={setJob} 
+                library={library} 
+                stats={stats} 
+                showAdvanced={showAdvanced} 
+                setShowAdvanced={setShowAdvanced} 
+              />
             </div>
             <div className="right-engine">
               <div className="bg-[#1e60ff] rounded-studio p-8 text-white shadow-2xl flex flex-col min-h-[700px]">

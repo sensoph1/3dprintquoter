@@ -3,6 +3,7 @@ import {
   ChevronDown, ChevronUp, FileText, 
   Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2
 } from 'lucide-react';
+import Tooltip from './Tooltip';
 
 const LedgerTab = ({ history, saveToDisk, library, handleJobLoad }) => {
   const [expandedId, setExpandedId] = useState(null);
@@ -60,10 +61,18 @@ const LedgerTab = ({ history, saveToDisk, library, handleJobLoad }) => {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/50 border-b border-slate-100">
-              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Date / ID</th>
-              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Project Name</th>
-              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Cost Per Item</th>
-              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Price Per Item</th>
+              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <Tooltip text="The date the project was logged and its unique quote number.">Date / ID</Tooltip>
+              </th>
+              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <Tooltip text="The name of the project.">Project Name</Tooltip>
+              </th>
+              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
+                <Tooltip text="The calculated cost to produce a single item, before any profit margins or multipliers.">Cost Per Item</Tooltip>
+              </th>
+              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
+                <Tooltip text="The calculated sale price per item, based on your chosen pricing strategy.">Price Per Item</Tooltip>
+              </th>
               <th className="p-6 text-right"></th>
             </tr>
           </thead>
@@ -112,19 +121,27 @@ const LedgerTab = ({ history, saveToDisk, library, handleJobLoad }) => {
                             <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600">Technical Specs</h4>
                             <div className="grid grid-cols-2 gap-2 text-slate-700">
                               <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                <p className="text-[8px] font-black text-slate-400 uppercase">Infill</p>
+                                <Tooltip text="The infill density used for the print.">
+                                  <p className="text-[8px] font-black text-slate-400 uppercase">Infill</p>
+                                </Tooltip>
                                 <p className="text-xs font-bold">{item.details?.infill}</p>
                               </div>
                               <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                <p className="text-[8px] font-black text-slate-400 uppercase">Walls</p>
+                                <Tooltip text="The number of perimeters/walls used for the print.">
+                                  <p className="text-[8px] font-black text-slate-400 uppercase">Walls</p>
+                                </Tooltip>
                                 <p className="text-xs font-bold">{item.details?.walls}</p>
                               </div>
                               <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                <p className="text-[8px] font-black text-slate-400 uppercase">Layer</p>
+                                <Tooltip text="The layer height used for the print.">
+                                  <p className="text-[8px] font-black text-slate-400 uppercase">Layer</p>
+                                </Tooltip>
                                 <p className="text-xs font-bold">{item.details?.layerHeight}</p>
                               </div>
                               <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                <p className="text-[8px] font-black text-slate-400 uppercase">Labor</p>
+                                <Tooltip text="The labor minutes recorded for the project.">
+                                  <p className="text-[8px] font-black text-slate-400 uppercase">Labor</p>
+                                </Tooltip>
                                 <p className="text-xs font-bold">{item.details?.laborMinutes} Mins</p>
                               </div>
                             </div>
@@ -132,10 +149,12 @@ const LedgerTab = ({ history, saveToDisk, library, handleJobLoad }) => {
 
                           <div className="md:col-span-2 space-y-4">
                             <div className="flex justify-between items-center">
-                              <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600 flex items-center gap-2">
-                                <FileText size={12} /> Production Notes
-                              </h4>
-                              <div className="flex items-center gap-4">
+                              <Tooltip text="Any specific notes or details recorded for this production job.">
+                                <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600 flex items-center gap-2">
+                                  <FileText size={12} /> Production Notes
+                                </h4>
+                              </Tooltip>
+                              <div className="flex justify-between items-center">
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleJobLoad(item.details, item.id); }}
                                   className="flex items-center gap-1 text-[9px] font-black uppercase text-blue-500 hover:text-blue-700 transition-colors"

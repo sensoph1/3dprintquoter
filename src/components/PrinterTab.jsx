@@ -3,6 +3,7 @@ import {
   Plus, Trash2, Cloud, Edit2, Check, X, 
   Cpu, Zap, Gauge, Settings, HardDrive 
 } from 'lucide-react';
+import Tooltip from './Tooltip';
 
 const PrinterTab = ({ library, saveToDisk }) => {
   const [newPrinter, setNewPrinter] = useState({ name: '', watts: 300, cost: 0 });
@@ -50,21 +51,25 @@ const PrinterTab = ({ library, saveToDisk }) => {
             <Plus size={12} /> Add Machine
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <input 
-              placeholder="Printer Name (e.g. Voron 2.4)" 
-              value={newPrinter.name} 
-              onChange={(e) => setNewPrinter({...newPrinter, name: e.target.value})} 
-              className="px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm col-span-1 md:col-span-2" 
-            />
+            <Tooltip text="A descriptive name for your 3D printer (e.g., Voron 2.4, Ender 3 Pro).">
+              <input 
+                placeholder="Printer Name (e.g. Voron 2.4)" 
+                value={newPrinter.name} 
+                onChange={(e) => setNewPrinter({...newPrinter, name: e.target.value})} 
+                className="px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm col-span-1 md:col-span-2" 
+              />
+            </Tooltip>
             <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
               <Zap size={14} className="text-slate-400" />
-              <input 
-                type="number" 
-                placeholder="Peak Power Consumption (Watts)" 
-                value={newPrinter.watts} 
-                onChange={(e) => setNewPrinter({...newPrinter, watts: e.target.value})} 
-                className="w-full py-4 bg-transparent outline-none font-bold text-sm" 
-              />
+              <Tooltip text="The maximum power your printer draws in Watts. This is used to calculate energy costs.">
+                <input 
+                  type="number" 
+                  placeholder="Peak Power Consumption (Watts)" 
+                  value={newPrinter.watts} 
+                  onChange={(e) => setNewPrinter({...newPrinter, watts: e.target.value})} 
+                  className="w-full py-4 bg-transparent outline-none font-bold text-sm" 
+                />
+              </Tooltip>
             </div>
             <button onClick={handleAdd} className="bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all">
               Deploy Machine
@@ -86,10 +91,14 @@ const PrinterTab = ({ library, saveToDisk }) => {
                 {editingId === p.id ? (
                   /* EDIT MODE */
                   <div className="flex flex-1 gap-3 items-center">
-                    <input className="flex-1 px-4 py-3 bg-white rounded-xl border font-bold text-sm outline-none" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} />
+                    <Tooltip text="The name of your 3D printer.">
+                      <input className="flex-1 px-4 py-3 bg-white rounded-xl border font-bold text-sm outline-none" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} />
+                    </Tooltip>
                     <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-xl border border-slate-200">
                       <Zap size={12} className="text-slate-300" />
-                      <input type="number" className="w-20 py-2 bg-transparent font-bold text-sm" value={editData.watts} onChange={e => setEditData({...editData, watts: e.target.value})} placeholder="Peak Power" />
+                      <Tooltip text="The maximum power your printer draws in Watts.">
+                        <input type="number" className="w-20 py-2 bg-transparent font-bold text-sm" value={editData.watts} onChange={e => setEditData({...editData, watts: e.target.value})} placeholder="Peak Power" />
+                      </Tooltip>
                     </div>
                     <div className="flex gap-1">
                       <button onClick={saveEdit} className="p-3 bg-blue-600 text-white rounded-xl"><Check size={16}/></button>
