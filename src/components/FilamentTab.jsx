@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import {
   Plus, Trash2, Cloud, Edit2, Check, X,
-  RefreshCw, AlertCircle, Copy, FlaskConical, Palette, Package
+  RefreshCw, AlertCircle, Copy, FlaskConical
 } from 'lucide-react';
 
 import generateUniqueId from '../utils/idGenerator';
 import Tooltip from './Tooltip';
+import Accordion from './Accordion';
 
 const FilamentTab = ({ library, saveToDisk }) => {
   const [newFilament, setNewFilament] = useState({ name: '', colorName: '', price: '', grams: 1000, color: '#3b82f6' });
@@ -57,7 +58,7 @@ const FilamentTab = ({ library, saveToDisk }) => {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
-              <FlaskConical className="text-blue-600" size={28} /> Filament
+              <FlaskConical className="text-blue-600" size={28} /> Materials
             </h2>
             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Live stock tracking & procurement</p>
           </div>
@@ -66,48 +67,44 @@ const FilamentTab = ({ library, saveToDisk }) => {
           </button>
         </div>
 
-        {/* QUICK ADD SECTION (Now inside the sheet) */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
-            <Plus size={12} /> Add New Spool
-          </div>
-          <div className="flex gap-3 items-center">
-            <div className="w-[30%]">
-              <Tooltip text="The brand or type of filament (e.g., Polymaker PLA, Hatchbox PETG).">
-                <input placeholder="Brand (e.g. Polymaker)" value={newFilament.name} onChange={(e) => setNewFilament({...newFilament, name: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
-              </Tooltip>
+        <Accordion title="Filament Inventory">
+          {/* ADD NEW SPOOL */}
+          <div className="space-y-4 mb-6">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
+              <Plus size={12} /> Add New Spool
             </div>
-            <div className="w-[30%]">
-              <Tooltip text="The specific color of the filament (e.g., Galaxy Black, Azure Blue).">
-                <input placeholder="Color Name" value={newFilament.colorName} onChange={(e) => setNewFilament({...newFilament, colorName: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
-              </Tooltip>
+            <div className="flex gap-3 items-center">
+              <div className="w-[30%]">
+                <Tooltip text="The brand or type of filament (e.g., Polymaker PLA, Hatchbox PETG).">
+                  <input placeholder="Brand (e.g. Polymaker)" value={newFilament.name} onChange={(e) => setNewFilament({...newFilament, name: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
+                </Tooltip>
+              </div>
+              <div className="w-[30%]">
+                <Tooltip text="The specific color of the filament (e.g., Galaxy Black, Azure Blue).">
+                  <input placeholder="Color Name" value={newFilament.colorName} onChange={(e) => setNewFilament({...newFilament, colorName: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
+                </Tooltip>
+              </div>
+              <div className="w-[20%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                <span className="text-slate-400 font-bold">$</span>
+                <Tooltip text="The cost of the entire spool of filament in your local currency.">
+                  <input type="number" placeholder="Price" value={newFilament.price} onChange={(e) => setNewFilament({...newFilament, price: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+                </Tooltip>
+              </div>
+              <div className="w-[20%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                <span className="text-slate-400 font-bold">g</span>
+                <Tooltip text="The total weight of the filament spool in grams (e.g., 1000g, 750g).">
+                  <input type="number" placeholder="Weight" value={newFilament.grams} onChange={(e) => setNewFilament({...newFilament, grams: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+                </Tooltip>
+              </div>
             </div>
-            <div className="w-[20%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
-              <span className="text-slate-400 font-bold">$</span>
-              <Tooltip text="The cost of the entire spool of filament in your local currency.">
-                <input type="number" placeholder="Price" value={newFilament.price} onChange={(e) => setNewFilament({...newFilament, price: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
-              </Tooltip>
-            </div>
-            <div className="w-[20%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
-              <span className="text-slate-400 font-bold">g</span>
-              <Tooltip text="The total weight of the filament spool in grams (e.g., 1000g, 750g).">
-                <input type="number" placeholder="Weight" value={newFilament.grams} onChange={(e) => setNewFilament({...newFilament, grams: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
-              </Tooltip>
-            </div>
-          </div>
-          <button onClick={handleAdd} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all">
-            Register Spool
-          </button>
-        </div>
-
-        <hr className="border-slate-200 my-8" />
-
-        {/* INVENTORY LIST */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
-            <Palette size={12} /> Current Inventory
+            <button onClick={handleAdd} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all">
+              Register Spool
+            </button>
           </div>
 
+          <hr className="border-slate-200 mb-6" />
+
+          {/* FILAMENT LIST */}
           <div className="grid grid-cols-1 gap-4">
             {library.filaments.map((f) => (
               <div key={f.id} className={`p-6 rounded-[2rem] border transition-all flex items-center justify-between ${f.grams < 100 ? 'border-red-100 bg-red-50/20' : 'bg-slate-50/50 border-slate-100'}`}>
@@ -158,16 +155,9 @@ const FilamentTab = ({ library, saveToDisk }) => {
               </div>
             ))}
           </div>
-        </div>
+        </Accordion>
 
-        <hr className="border-slate-200 my-8" />
-
-        {/* CONSUMABLES & SHIPPING */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 mb-6">
-            <Package className="text-blue-600" />
-            <h2 className="font-black text-lg uppercase tracking-tight">Consumables & Shipping</h2>
-          </div>
+        <Accordion title="Consumables & Shipping">
           <table className="w-full">
             <thead>
               <tr className="text-left text-xs text-slate-400 uppercase font-black">
@@ -200,7 +190,7 @@ const FilamentTab = ({ library, saveToDisk }) => {
               ))}
             </tbody>
           </table>
-        </div>
+        </Accordion>
       </div>
     </div>
   );

@@ -24,7 +24,7 @@ const App = () => {
   const tabs = {
     calculator: { name: 'Calculator', icon: Calculator },
     quoteHistory: { name: 'Quote History', icon: History },
-    filament: { name: 'Filament', icon: FlaskConical },
+    filament: { name: 'Materials', icon: FlaskConical },
     inventory: { name: 'Inventory', icon: Box },
     settings: { name: 'Settings', icon: SettingsIcon },
   };
