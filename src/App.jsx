@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { 
-  Calculator, FlaskConical, 
-  Settings as SettingsIcon, History, 
-  Box 
+import React, { useState, useEffect } from 'react';
+import {
+  Calculator, FlaskConical,
+  Settings as SettingsIcon, History,
+  Box
 } from 'lucide-react';
 
 import CalculatorTab from './components/CalculatorTab';
@@ -10,7 +10,9 @@ import FilamentTab from './components/FilamentTab';
 import SettingsTab from './components/SettingsTab';
 import QuoteHistoryTab from './components/QuoteHistoryTab';
 import InventoryTab from './components/InventoryTab';
+import AuthGate from './components/Auth';
 
+import { supabase } from './supabaseClient';
 import generateUniqueId from './utils/idGenerator';
 
 const ensureNumber = (value, defaultValue = 0) => {
@@ -18,7 +20,23 @@ const ensureNumber = (value, defaultValue = 0) => {
   return isNaN(num) ? defaultValue : num;
 };
 
+const DEFAULT_LIBRARY = {
+  shopName: "Studio OS",
+  shopHourlyRate: 2.00,
+  laborRate: 20.00,
+  kwhRate: 0.12,
+  nextQuoteNo: 1001,
+  filaments: [{ id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#3b82f6" }],
+  printers: [{ id: 1, name: "Bambu Lab X1C", watts: 350, cost: 0, hoursOfLife: 0 }],
+  categories: ["Client Work", "Prototypes", "Personal"],
+  printedParts: [],
+  inventory: [],
+  rounding: 1
+};
+
 const App = () => {
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('calculator');
 
   const tabs = {
@@ -31,19 +49,7 @@ const App = () => {
 
   const [library, setLibrary] = useState(() => {
     const saved = localStorage.getItem('studio_db');
-    return saved ? JSON.parse(saved) : {
-      shopName: "Studio OS",
-      shopHourlyRate: 2.00,
-      laborRate: 20.00,
-      kwhRate: 0.12,
-      nextQuoteNo: 1001,
-      filaments: [{ id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#3b82f6" }],
-      printers: [{ id: 1, name: "Bambu Lab X1C", watts: 350, cost: 0, hoursOfLife: 0 }],
-      categories: ["Client Work", "Prototypes", "Personal"],
-      printedParts: [],
-      inventory: [],
-      rounding: 1
-    };
+    return saved ? JSON.parse(saved) : DEFAULT_LIBRARY;
   });
 
   const getDefaultJob = (library) => ({
@@ -73,6 +79,72 @@ const App = () => {
   });
   const [editingJobId, setEditingJobId] = useState(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Auth state and data loading
+  useEffect(() => {
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) {
+        loadFromSupabase(session.user.id);
+      }
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) {
+        loadFromSupabase(session.user.id);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadFromSupabase = async (userId) => {
+    const { data, error } = await supabase
+      .from('user_data')
+      .select('library, history')
+      .eq('user_id', userId)
+      .single();
+
+    if (data) {
+      if (data.library) {
+        setLibrary(data.library);
+        localStorage.setItem('studio_db', JSON.stringify(data.library));
+      }
+      if (data.history) {
+        setHistory(data.history);
+        localStorage.setItem('studio_history', JSON.stringify(data.history));
+      }
+    } else if (error && error.code !== 'PGRST116') {
+      // PGRST116 = no rows returned, which is fine for new users
+      console.error('Error loading data:', error);
+    }
+  };
+
+  const saveToSupabase = async (newLib, newHist) => {
+    if (!session?.user?.id) return;
+
+    const { error } = await supabase
+      .from('user_data')
+      .upsert({
+        user_id: session.user.id,
+        library: newLib,
+        history: newHist,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+
+    if (error) {
+      console.error('Error saving to cloud:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+  };
 
   const matCost = job.materials.reduce((sum, m) => {
     const f = library.filaments.find(x => x.id === parseInt(m.filamentId)) || { price: 0, grams: 1 }; // Default filament if not found
@@ -117,6 +189,8 @@ const App = () => {
     setHistory(newHist);
     localStorage.setItem('studio_db', JSON.stringify(newLib));
     localStorage.setItem('studio_history', JSON.stringify(newHist));
+    // Sync to Supabase if logged in
+    saveToSupabase(newLib, newHist);
   };
 
     const handleLogProduction = () => {
@@ -195,6 +269,23 @@ const App = () => {
     saveToDisk({ ...library, printedParts: newPrintedParts });
     alert(`${item.details.qty} x ${item.name} added to inventory!`);
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-500 font-bold uppercase text-xs tracking-widest">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show auth gate if not logged in
+  if (!session) {
+    return <AuthGate />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-12 font-sans">
@@ -276,7 +367,7 @@ const App = () => {
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'quoteHistory' && <QuoteHistoryTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} handleAddToInventory={handleAddToInventory} />}
-             {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} />}
+             {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} onLogout={handleLogout} userEmail={session?.user?.email} />}
           </div>
         )}
       </main>
