@@ -10,6 +10,7 @@ import Accordion from './Accordion';
 
 const FilamentTab = ({ library, saveToDisk }) => {
   const [newFilament, setNewFilament] = useState({ name: '', colorName: '', price: '', grams: 1000, color: '#3b82f6' });
+  const [newConsumable, setNewConsumable] = useState({ name: '', qty: '', totalCost: '' });
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
 
@@ -48,6 +49,25 @@ const FilamentTab = ({ library, saveToDisk }) => {
     if (window.confirm("Remove this consumable?")) {
       saveToDisk({ ...library, inventory: library.inventory.filter(i => i.id !== id) });
     }
+  };
+
+  const handleAddConsumable = () => {
+    if (!newConsumable.name || !newConsumable.qty) return;
+    const qty = parseInt(newConsumable.qty);
+    const totalCost = parseFloat(newConsumable.totalCost) || 0;
+    const unitCost = qty > 0 ? totalCost / qty : 0;
+    const updatedInventory = [
+      ...(library.inventory || []),
+      {
+        name: newConsumable.name,
+        id: generateUniqueId(),
+        qty: qty,
+        unitCost: unitCost,
+        lowStockThreshold: 10
+      }
+    ];
+    saveToDisk({ ...library, inventory: updatedInventory });
+    setNewConsumable({ name: '', qty: '', totalCost: '' });
   };
 
   return (
@@ -155,26 +175,72 @@ const FilamentTab = ({ library, saveToDisk }) => {
         </Accordion>
 
         <Accordion title="Consumables & Shipping">
+          {/* ADD NEW CONSUMABLE */}
+          <div className="space-y-4 mb-6">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
+              <Plus size={12} /> Add New Item
+            </div>
+            <div className="flex gap-3 items-center">
+              <div className="w-[50%]">
+                <Tooltip text="Name of the item (e.g., 6mm Magnets, Small Box, Bubble Wrap Roll).">
+                  <input placeholder="Item Name (e.g. 6mm Magnets)" value={newConsumable.name} onChange={(e) => setNewConsumable({...newConsumable, name: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
+                </Tooltip>
+              </div>
+              <div className="w-[25%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                <span className="text-slate-400 font-bold">#</span>
+                <Tooltip text="Current quantity in stock.">
+                  <input type="number" placeholder="Qty" value={newConsumable.qty} onChange={(e) => setNewConsumable({...newConsumable, qty: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+                </Tooltip>
+              </div>
+              <div className="w-[25%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                <span className="text-slate-400 font-bold">$</span>
+                <Tooltip text="Total cost for the entire order (unit cost will be calculated automatically).">
+                  <input type="number" step="0.01" placeholder="Total Cost" value={newConsumable.totalCost} onChange={(e) => setNewConsumable({...newConsumable, totalCost: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+                </Tooltip>
+              </div>
+            </div>
+            <button onClick={handleAddConsumable} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all">
+              Add Item
+            </button>
+          </div>
+
+          <hr className="border-slate-200 mb-6" />
+
+          {/* CONSUMABLES LIST */}
           <table className="w-full">
             <thead>
               <tr className="text-left text-xs text-slate-400 uppercase font-black">
                 <th className="pb-4">Item Name</th>
+                <th className="pb-4 text-center">Unit Cost</th>
                 <th className="pb-4 text-center">Stock</th>
                 <th className="pb-4 text-center"></th>
               </tr>
             </thead>
             <tbody>
               {(library.inventory || []).map(item => (
-                <tr key={item.id} className="border-b border-slate-100 last:border-b-0">
+                <tr key={item.id} className={`border-b border-slate-100 last:border-b-0 ${item.qty < (item.lowStockThreshold || 10) ? 'bg-red-50/50' : ''}`}>
                   <td className="py-4">
-                    <Tooltip text="The name of this consumable or shipping item.">
-                      <input className="bg-transparent font-black uppercase text-sm outline-none w-full" value={item.name} onChange={(e) => saveToDisk({...library, inventory: library.inventory.map(x => x.id === item.id ? {...x, name: e.target.value} : x)})}/>
-                    </Tooltip>
+                    <div className="flex items-center gap-2">
+                      {item.qty < (item.lowStockThreshold || 10) && <AlertCircle className="text-red-500" size={14} />}
+                      <Tooltip text="The name of this consumable or shipping item.">
+                        <input className="bg-transparent font-black uppercase text-sm outline-none w-full" value={item.name} onChange={(e) => saveToDisk({...library, inventory: library.inventory.map(x => x.id === item.id ? {...x, name: e.target.value} : x)})}/>
+                      </Tooltip>
+                    </div>
+                  </td>
+                  <td className="text-center">
+                    <div className="w-32 inline-block">
+                      <Tooltip text="Cost per unit.">
+                        <div className="flex items-center justify-center gap-1">
+                          <span className="text-slate-400 text-sm">$</span>
+                          <input type="number" step="0.01" className="w-24 p-2 bg-white rounded-lg border text-sm font-bold text-center" value={item.unitCost || 0} onChange={(e) => saveToDisk({...library, inventory: library.inventory.map(x => x.id === item.id ? {...x, unitCost: parseFloat(e.target.value)} : x)})}/>
+                        </div>
+                      </Tooltip>
+                    </div>
                   </td>
                   <td className="text-center">
                     <div className="w-20 inline-block">
                       <Tooltip text="The current quantity of this item available in your inventory.">
-                        <input type="number" className="w-full p-2 bg-white rounded-lg border text-xs font-bold text-center" value={item.qty} onChange={(e) => saveToDisk({...library, inventory: library.inventory.map(x => x.id === item.id ? {...x, qty: parseInt(e.target.value)} : x)})}/>
+                        <input type="number" className={`w-full p-2 bg-white rounded-lg border text-xs font-bold text-center ${item.qty < (item.lowStockThreshold || 10) ? 'border-red-200 text-red-600' : ''}`} value={item.qty} onChange={(e) => saveToDisk({...library, inventory: library.inventory.map(x => x.id === item.id ? {...x, qty: parseInt(e.target.value)} : x)})}/>
                       </Tooltip>
                     </div>
                   </td>
@@ -187,6 +253,9 @@ const FilamentTab = ({ library, saveToDisk }) => {
               ))}
             </tbody>
           </table>
+          {(library.inventory || []).length === 0 && (
+            <p className="text-center text-slate-400 text-sm py-8">No consumables added yet. Add items like magnets, boxes, or bubble wrap above.</p>
+          )}
         </Accordion>
       </div>
     </div>
