@@ -4,10 +4,22 @@ import Tooltip from './Tooltip';
 
 const InventoryTab = ({ library, saveToDisk, view }) => {
   const updatePartQty = (id, delta) => {
-    const newParts = library.printedParts.map(p => 
+    const newParts = library.printedParts.map(p =>
       p.id === id ? { ...p, qty: Math.max(0, p.qty + delta) } : p
     );
     saveToDisk({ ...library, printedParts: newParts });
+  };
+
+  const deletePart = (id) => {
+    if (window.confirm("Remove this item from inventory?")) {
+      saveToDisk({ ...library, printedParts: library.printedParts.filter(p => p.id !== id) });
+    }
+  };
+
+  const deleteConsumable = (id) => {
+    if (window.confirm("Remove this consumable?")) {
+      saveToDisk({ ...library, inventory: library.inventory.filter(i => i.id !== id) });
+    }
   };
 
   return (
@@ -29,6 +41,7 @@ const InventoryTab = ({ library, saveToDisk, view }) => {
                 <th className="pb-4 text-center">Hourly Rate</th>
                 <th className="pb-4 text-center">Material Cost</th>
                 <th className="pb-4 text-center">Stock</th>
+                <th className="pb-4 text-center"></th>
               </tr>
             </thead>
             <tbody>
@@ -57,6 +70,11 @@ const InventoryTab = ({ library, saveToDisk, view }) => {
                       <button onClick={() => updatePartQty(part.id, 1)} className="p-2 bg-slate-100 rounded-lg hover:bg-blue-50 transition"><Plus size={16}/></button>
                     </div>
                   </td>
+                  <td className="text-center">
+                    <button onClick={() => deletePart(part.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                      <Trash2 size={16}/>
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -76,6 +94,7 @@ const InventoryTab = ({ library, saveToDisk, view }) => {
               <tr className="text-left text-xs text-slate-400 uppercase font-black">
                 <th className="pb-4">Item Name</th>
                 <th className="pb-4 text-center">Stock</th>
+                <th className="pb-4 text-center"></th>
               </tr>
             </thead>
             <tbody>
@@ -92,6 +111,11 @@ const InventoryTab = ({ library, saveToDisk, view }) => {
                         <input type="number" className="w-full p-2 bg-white rounded-lg border text-xs font-bold text-center" value={item.qty} onChange={(e) => saveToDisk({...library, inventory: library.inventory.map(x => x.id === item.id ? {...x, qty: parseInt(e.target.value)} : x)})}/>
                       </Tooltip>
                     </div>
+                  </td>
+                  <td className="text-center">
+                    <button onClick={() => deleteConsumable(item.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                      <Trash2 size={16}/>
+                    </button>
                   </td>
                 </tr>
               ))}
