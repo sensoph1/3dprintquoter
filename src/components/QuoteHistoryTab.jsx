@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { 
   ChevronDown, ChevronUp, FileText, 
-  Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2
+  Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2, Archive
 } from 'lucide-react';
 import Tooltip from './Tooltip';
 
-const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad }) => {
+const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAddToInventory }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -155,6 +155,12 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad }) => {
                                 </h4>
                               </Tooltip>
                               <div className="flex justify-between items-center">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleAddToInventory(item); }}
+                                  className="flex items-center gap-1 text-[9px] font-black uppercase text-blue-500 hover:text-blue-700 transition-colors"
+                                >
+                                  <Archive size={12} /> Add to Inventory
+                                </button>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleJobLoad(item.details, item.id); }}
                                   className="flex items-center gap-1 text-[9px] font-black uppercase text-blue-500 hover:text-blue-700 transition-colors"
