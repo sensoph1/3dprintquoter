@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  Plus, Trash2, Cloud, Edit2, Check, X, 
-  RefreshCw, AlertCircle, Copy, FlaskConical, Palette 
+import {
+  Plus, Trash2, Cloud, Edit2, Check, X,
+  RefreshCw, AlertCircle, Copy, FlaskConical, Palette, Package
 } from 'lucide-react';
 
 import generateUniqueId from '../utils/idGenerator';
@@ -40,6 +40,12 @@ const FilamentTab = ({ library, saveToDisk }) => {
     if (amount) {
       const updated = library.filaments.map(f => f.id === id ? { ...f, grams: parseFloat(amount) } : f);
       saveToDisk({ ...library, filaments: updated });
+    }
+  };
+
+  const deleteConsumable = (id) => {
+    if (window.confirm("Remove this consumable?")) {
+      saveToDisk({ ...library, inventory: library.inventory.filter(i => i.id !== id) });
     }
   };
 
@@ -152,6 +158,48 @@ const FilamentTab = ({ library, saveToDisk }) => {
               </div>
             ))}
           </div>
+        </div>
+
+        <hr className="border-slate-200 my-8" />
+
+        {/* CONSUMABLES & SHIPPING */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Package className="text-blue-600" />
+            <h2 className="font-black text-lg uppercase tracking-tight">Consumables & Shipping</h2>
+          </div>
+          <table className="w-full">
+            <thead>
+              <tr className="text-left text-xs text-slate-400 uppercase font-black">
+                <th className="pb-4">Item Name</th>
+                <th className="pb-4 text-center">Stock</th>
+                <th className="pb-4 text-center"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {(library.inventory || []).map(item => (
+                <tr key={item.id} className="border-b border-slate-100 last:border-b-0">
+                  <td className="py-4">
+                    <Tooltip text="The name of this consumable or shipping item.">
+                      <input className="bg-transparent font-black uppercase text-sm outline-none w-full" value={item.name} onChange={(e) => saveToDisk({...library, inventory: library.inventory.map(x => x.id === item.id ? {...x, name: e.target.value} : x)})}/>
+                    </Tooltip>
+                  </td>
+                  <td className="text-center">
+                    <div className="w-20 inline-block">
+                      <Tooltip text="The current quantity of this item available in your inventory.">
+                        <input type="number" className="w-full p-2 bg-white rounded-lg border text-xs font-bold text-center" value={item.qty} onChange={(e) => saveToDisk({...library, inventory: library.inventory.map(x => x.id === item.id ? {...x, qty: parseInt(e.target.value)} : x)})}/>
+                      </Tooltip>
+                    </div>
+                  </td>
+                  <td className="text-center">
+                    <button onClick={() => deleteConsumable(item.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                      <Trash2 size={16}/>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
