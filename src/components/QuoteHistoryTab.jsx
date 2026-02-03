@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import Tooltip from './Tooltip';
 
-const LedgerTab = ({ history, saveToDisk, library, handleJobLoad }) => {
+const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -32,7 +32,7 @@ const LedgerTab = ({ history, saveToDisk, library, handleJobLoad }) => {
       {/* HEADER & STATS */}
       <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
         <div>
-          <h2 className="text-3xl font-black tracking-tight text-slate-900">Production Ledger</h2>
+          <h2 className="text-3xl font-black tracking-tight text-slate-900">Quote History</h2>
           <p className="text-slate-500 font-medium">Historical record of all logged studio projects.</p>
         </div>
       </div>
@@ -197,4 +197,4 @@ const LedgerTab = ({ history, saveToDisk, library, handleJobLoad }) => {
   );
 };
 
-export default LedgerTab;
+export default QuoteHistoryTab;

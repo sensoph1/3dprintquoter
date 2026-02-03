@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { 
-  Calculator, FlaskConical, Cpu, 
+  Calculator, FlaskConical, 
   Settings as SettingsIcon, History, 
   Box 
 } from 'lucide-react';
 
 import CalculatorTab from './components/CalculatorTab';
 import FilamentTab from './components/FilamentTab';
-import PrinterTab from './components/PrinterTab';
 import SettingsTab from './components/SettingsTab';
-import LedgerTab from './components/LedgerTab';
+import QuoteHistoryTab from './components/QuoteHistoryTab';
 import InventoryTab from './components/InventoryTab';
 
 import generateUniqueId from './utils/idGenerator';
@@ -24,10 +23,9 @@ const App = () => {
 
   const tabs = {
     calculator: { name: 'Calculator', icon: Calculator },
+    quoteHistory: { name: 'Quote History', icon: History },
     filament: { name: 'Filament', icon: FlaskConical },
-    printer: { name: 'Printer', icon: Cpu },
     inventory: { name: 'Inventory', icon: Box },
-    ledger: { name: 'Ledger', icon: History },
     settings: { name: 'Settings', icon: SettingsIcon },
   };
 
@@ -243,9 +241,8 @@ const App = () => {
         ) : (
           <div className="max-w-5xl mx-auto bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
-             {activeTab === 'printer' && <PrinterTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} />}
-             {activeTab === 'ledger' && <LedgerTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} />}
+             {activeTab === 'quoteHistory' && <QuoteHistoryTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} />}
              {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} />}
           </div>
         )}
