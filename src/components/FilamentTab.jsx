@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Plus, Trash2, Cloud, Edit2, Check, X,
+  Plus, Trash2, Edit2, Check, X,
   RefreshCw, AlertCircle, Copy, FlaskConical
 } from 'lucide-react';
 
@@ -62,9 +62,6 @@ const FilamentTab = ({ library, saveToDisk }) => {
             </h2>
             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Live stock tracking & procurement</p>
           </div>
-          <button onClick={() => saveToDisk(library)} className="flex items-center gap-2 px-6 py-3 bg-blue-50 text-blue-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-100 transition-all">
-            <Cloud size={16} /> Sync Cloud
-          </button>
         </div>
 
         <Accordion title="Filament Inventory">
