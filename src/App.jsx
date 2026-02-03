@@ -163,6 +163,25 @@ const App = () => {
     setActiveTab('calculator');
   };
 
+  const handleAddToInventory = (item) => {
+    const existingPartIndex = library.printedParts.findIndex(p => p.name.toLowerCase() === item.name.toLowerCase());
+    let newPrintedParts = [...library.printedParts];
+
+    if (existingPartIndex > -1) {
+      newPrintedParts[existingPartIndex].qty += item.details.qty;
+    } else {
+      newPrintedParts.push({
+        id: generateUniqueId(),
+        name: item.name,
+        qty: item.details.qty,
+        unitPrice: item.unitPrice,
+        color: 'Multi-Mat' // default color
+      });
+    }
+    saveToDisk({ ...library, printedParts: newPrintedParts });
+    alert(`${item.details.qty} x ${item.name} added to inventory!`);
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-12 font-sans">
       <header className="max-w-[1600px] mx-auto pt-6 pb-8 px-4 sm:px-8 flex flex-wrap justify-between items-center">
@@ -184,19 +203,19 @@ const App = () => {
 
       <main className="max-w-[1600px] mx-auto px-4 sm:px-8">
         {activeTab === 'calculator' ? (
-          <div className="flex flex-col md:flex-row gap-8">
-            <div className="w-full md:w-2/3 bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
-              <CalculatorTab 
-                job={job} 
-                setJob={setJob} 
-                library={library} 
-                stats={stats} 
-                showAdvanced={showAdvanced} 
-                setShowAdvanced={setShowAdvanced} 
+          <div className="studio-cockpit">
+            <div className="left-workbench bg-white rounded-studio border border-slate-100 shadow-sm">
+              <CalculatorTab
+                job={job}
+                setJob={setJob}
+                library={library}
+                stats={stats}
+                showAdvanced={showAdvanced}
+                setShowAdvanced={setShowAdvanced}
               />
             </div>
-            <div className="w-full md:w-1/3">
-              <div className="bg-[#1e60ff] rounded-studio p-6 sm:p-8 text-white shadow-2xl flex flex-col min-h-[700px]">
+            <div className="right-engine">
+              <div className="bg-[#1e60ff] rounded-studio p-6 sm:p-8 text-white shadow-2xl flex flex-col">
                 <div className="mb-8 px-1">
                   <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">Pricing Engine</h3>
                   <p className="text-[9px] font-bold opacity-40 uppercase tracking-widest">Live Quote v2.4</p>
@@ -242,7 +261,7 @@ const App = () => {
           <div className="max-w-5xl mx-auto bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} />}
-             {activeTab === 'quoteHistory' && <QuoteHistoryTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} />}
+             {activeTab === 'quoteHistory' && <QuoteHistoryTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} handleAddToInventory={handleAddToInventory} />}
              {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} />}
           </div>
         )}
