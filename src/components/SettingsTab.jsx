@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive } from 'lucide-react';
+import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive, Tag } from 'lucide-react';
 import Tooltip from './Tooltip';
 import Accordion from './Accordion';
 
@@ -188,6 +188,61 @@ const HardwareFleet = ({ library, saveToDisk }) => {
   );
 }
 
+const CategoryManager = ({ library, saveToDisk }) => {
+  const [newCategory, setNewCategory] = useState('');
+
+  const handleAdd = () => {
+    if (!newCategory.trim()) return;
+    const categories = library.categories || [];
+    if (categories.includes(newCategory.trim())) return;
+    saveToDisk({ ...library, categories: [...categories, newCategory.trim()] });
+    setNewCategory('');
+  };
+
+  const handleDelete = (cat) => {
+    const categories = library.categories || [];
+    saveToDisk({ ...library, categories: categories.filter(c => c !== cat) });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
+        <Tag size={12} /> Project Categories
+      </div>
+
+      <div className="flex gap-3">
+        <input
+          placeholder="New category name..."
+          value={newCategory}
+          onChange={(e) => setNewCategory(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          className="flex-1 px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
+        />
+        <button onClick={handleAdd} className="px-6 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all">
+          Add
+        </button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {(library.categories || []).map((cat, index) => (
+          <div key={index} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-full">
+            <span className="font-bold text-sm text-slate-700">{cat}</span>
+            <button
+              onClick={() => handleDelete(cat)}
+              className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ))}
+        {(!library.categories || library.categories.length === 0) && (
+          <p className="text-sm text-slate-400 italic">No categories yet. Add one above.</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const SettingsTab = ({ library, saveToDisk, history }) => {
   const updateSetting = (key, value) => {
     saveToDisk({ ...library, [key]: value });
@@ -272,6 +327,10 @@ const SettingsTab = ({ library, saveToDisk, history }) => {
           </div>
         </Accordion>
 
+        <Accordion title="Categories">
+          <CategoryManager library={library} saveToDisk={saveToDisk} />
+        </Accordion>
+
         <Accordion title="Hardware Fleet">
           <HardwareFleet library={library} saveToDisk={saveToDisk} />
         </Accordion>
@@ -319,8 +378,10 @@ const SettingsTab = ({ library, saveToDisk, history }) => {
                         nextQuoteNo: 1001,
                         filaments: [{ id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#3b82f6" }],
                         printers: [{ id: 1, name: "Bambu Lab X1C", watts: 350 }],
+                        categories: ["Client Work", "Prototypes", "Personal"],
                         printedParts: [],
-                        inventory: []
+                        inventory: [],
+                        rounding: 1
                       }, []);
                     }
                   }}

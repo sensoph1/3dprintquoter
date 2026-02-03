@@ -67,11 +67,20 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
               <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
                 <Tooltip text="The name of the project.">Project Name</Tooltip>
               </th>
-              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
-                <Tooltip text="The calculated cost to produce a single item, before any profit margins or multipliers.">Cost Per Item</Tooltip>
+              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <Tooltip text="The category of the project.">Category</Tooltip>
               </th>
               <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
-                <Tooltip text="The calculated sale price per item, based on your chosen pricing strategy.">Price Per Item</Tooltip>
+                <Tooltip text="The calculated cost to produce a single item, before any profit margins or multipliers.">Cost</Tooltip>
+              </th>
+              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
+                <Tooltip text="Price calculated using profit margin strategy.">Profit Margin</Tooltip>
+              </th>
+              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
+                <Tooltip text="Price calculated using hourly rate strategy.">Hourly Rate</Tooltip>
+              </th>
+              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
+                <Tooltip text="Price calculated using material cost multiplier strategy.">Material Cost</Tooltip>
               </th>
               <th className="p-6 text-right"></th>
             </tr>
@@ -79,7 +88,7 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
           <tbody>
             {filteredHistory.length === 0 ? (
               <tr>
-                <td colSpan="5" className="p-20 text-center text-slate-400 font-bold italic">
+                <td colSpan="8" className="p-20 text-center text-slate-400 font-bold italic">
                   {searchTerm ? "No projects match your search." : "No production records found."}
                 </td>
               </tr>
@@ -100,11 +109,20 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
                         {item.details?.qty} Units • {item.details?.hours} Hrs
                       </div>
                     </td>
+                    <td className="p-6">
+                      <div className="text-sm font-bold text-slate-500">{item.category || '—'}</div>
+                    </td>
                     <td className="p-6 text-right">
                       <div className="text-lg font-black text-slate-900">${(item.costPerItem || 0).toFixed(2)}</div>
                     </td>
                     <td className="p-6 text-right">
-                      <div className="text-lg font-black text-slate-900">${(item.unitPrice || 0).toFixed(2)}</div>
+                      <div className="text-lg font-black text-blue-600">${(item.priceByProfitMargin || item.unitPrice || 0).toFixed(2)}</div>
+                    </td>
+                    <td className="p-6 text-right">
+                      <div className="text-lg font-black text-slate-600">${(item.priceByHourlyRate || 0).toFixed(2)}</div>
+                    </td>
+                    <td className="p-6 text-right">
+                      <div className="text-lg font-black text-slate-600">${(item.priceByMaterialMultiplier || 0).toFixed(2)}</div>
                     </td>
                     <td className="p-6 text-right">
                       <div className="flex justify-end gap-2">
@@ -115,7 +133,7 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
 
                   {expandedId === item.id && (
                     <tr className="bg-slate-50/50">
-                      <td colSpan="5" className="p-8 border-t border-slate-100">
+                      <td colSpan="8" className="p-8 border-t border-slate-100">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                           <div className="space-y-4">
                             <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600">Technical Specs</h4>

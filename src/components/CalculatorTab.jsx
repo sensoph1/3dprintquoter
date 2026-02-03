@@ -27,13 +27,25 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
       {/* SECTION 1: CORE PROJECT DETAILS */}
       <div>
         <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-          <div className="col-span-2">
+          <div>
             <Tooltip text="A descriptive name for your project or print job.">
               <label>Project Name</label>
             </Tooltip>
             <input type="text" className="w-full shadow-sm" value={job.name} onChange={(e) => update('name', e.target.value)} placeholder="e.g. Prototype_V1" />
           </div>
-          
+
+          <div>
+            <Tooltip text="A category to organize your projects.">
+              <label>Category</label>
+            </Tooltip>
+            <select className="w-full shadow-sm" value={job.category || ''} onChange={(e) => update('category', e.target.value)}>
+              <option value="">Select a category...</option>
+              {(library.categories || []).map((cat, index) => (
+                <option key={index} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <Tooltip text="The estimated time your 3D printer will be actively printing this job, in hours.">
               <label>Print Time (Hours)</label>

@@ -24,7 +24,10 @@ const InventoryTab = ({ library, saveToDisk, view }) => {
             <thead>
               <tr className="text-left text-xs text-slate-400 uppercase font-black">
                 <th className="pb-4">Part Name</th>
-                <th className="pb-4">Quoted Price</th>
+                <th className="pb-4">Category</th>
+                <th className="pb-4 text-center">Profit Margin</th>
+                <th className="pb-4 text-center">Hourly Rate</th>
+                <th className="pb-4 text-center">Material Cost</th>
                 <th className="pb-4 text-center">Stock</th>
               </tr>
             </thead>
@@ -35,8 +38,17 @@ const InventoryTab = ({ library, saveToDisk, view }) => {
                     <div className="font-black text-slate-800 uppercase tracking-tight">{part.name}</div>
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{part.color}</div>
                   </td>
-                  <td>
-                    <div className="text-lg font-black text-blue-600">${part.unitPrice}</div>
+                  <td className="py-4">
+                    <div className="text-sm font-bold text-slate-500">{part.category || '—'}</div>
+                  </td>
+                  <td className="text-center">
+                    <div className="text-lg font-black text-blue-600">${(part.priceByProfitMargin || part.unitPrice || 0).toFixed(2)}</div>
+                  </td>
+                  <td className="text-center">
+                    <div className="text-lg font-black text-slate-600">${(part.priceByHourlyRate || 0).toFixed(2)}</div>
+                  </td>
+                  <td className="text-center">
+                    <div className="text-lg font-black text-slate-600">${(part.priceByMaterialMultiplier || 0).toFixed(2)}</div>
                   </td>
                   <td>
                     <div className="flex items-center justify-center gap-4 bg-white p-2 rounded-2xl border shadow-sm">

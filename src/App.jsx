@@ -39,6 +39,7 @@ const App = () => {
       nextQuoteNo: 1001,
       filaments: [{ id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#3b82f6" }],
       printers: [{ id: 1, name: "Bambu Lab X1C", watts: 350, cost: 0, hoursOfLife: 0 }],
+      categories: ["Client Work", "Prototypes", "Personal"],
       printedParts: [],
       inventory: [],
       rounding: 1
@@ -47,6 +48,7 @@ const App = () => {
 
   const getDefaultJob = (library) => ({
     name: "",
+    category: "",
     qty: 1,
     hours: 0,
     laborMinutes: 0,
@@ -123,9 +125,13 @@ const App = () => {
       date: new Date().toLocaleDateString(),
       quoteNo: `Q-${library.nextQuoteNo}`,
       name: job.name || "Untitled Project",
+      category: job.category || "",
       unitPrice: stats.priceByProfitMargin,
+      priceByProfitMargin: stats.priceByProfitMargin,
+      priceByHourlyRate: stats.priceByHourlyRate,
+      priceByMaterialMultiplier: stats.priceByMaterialMultiplier,
       costPerItem: stats.costPerItem,
-      notes: job.notes, // Saving notes to ledger
+      notes: job.notes,
       details: { ...job }
     };
     saveToDisk({ ...library, nextQuoteNo: library.nextQuoteNo + 1 }, [newEntry, ...history]);
@@ -138,7 +144,11 @@ const App = () => {
         return {
           ...item,
           name: job.name,
+          category: job.category || "",
           unitPrice: stats.priceByProfitMargin,
+          priceByProfitMargin: stats.priceByProfitMargin,
+          priceByHourlyRate: stats.priceByHourlyRate,
+          priceByMaterialMultiplier: stats.priceByMaterialMultiplier,
           costPerItem: stats.costPerItem,
           notes: job.notes,
           details: { ...job }
@@ -173,9 +183,13 @@ const App = () => {
       newPrintedParts.push({
         id: generateUniqueId(),
         name: item.name,
+        category: item.category || "",
         qty: item.details.qty,
         unitPrice: item.unitPrice,
-        color: 'Multi-Mat' // default color
+        priceByProfitMargin: item.priceByProfitMargin || item.unitPrice,
+        priceByHourlyRate: item.priceByHourlyRate || 0,
+        priceByMaterialMultiplier: item.priceByMaterialMultiplier || 0,
+        color: 'Multi-Mat'
       });
     }
     saveToDisk({ ...library, printedParts: newPrintedParts });
