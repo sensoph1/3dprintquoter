@@ -283,10 +283,10 @@ const App = () => {
     );
   }
 
-  // Show auth gate if not logged in
-  if (!session) {
-    return <AuthGate />;
-  }
+  // Auth gate disabled for now - uncomment to require login
+  // if (!session) {
+  //   return <AuthGate />;
+  // }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-12 font-sans">

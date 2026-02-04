@@ -266,26 +266,28 @@ const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail }) => {
           </div>
         </div>
 
-        <Accordion title="Account">
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
-              <User size={12} /> Account
-            </div>
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-              <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Signed in as</p>
-                <p className="font-bold text-slate-800">{userEmail || 'Unknown'}</p>
+{userEmail && (
+          <Accordion title="Account">
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
+                <User size={12} /> Account
               </div>
-              <button
-                onClick={onLogout}
-                className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-100 transition-all"
-              >
-                <LogOut size={14} /> Sign Out
-              </button>
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Signed in as</p>
+                  <p className="font-bold text-slate-800">{userEmail}</p>
+                </div>
+                <button
+                  onClick={onLogout}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-100 transition-all"
+                >
+                  <LogOut size={14} /> Sign Out
+                </button>
+              </div>
+              <p className="text-xs text-slate-400">Your data is automatically synced to the cloud.</p>
             </div>
-            <p className="text-xs text-slate-400">Your data is automatically synced to the cloud.</p>
-          </div>
-        </Accordion>
+          </Accordion>
+        )}
 
         <Accordion title="Branding">
           <div className="space-y-6">
