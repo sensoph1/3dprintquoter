@@ -10,6 +10,11 @@
 ### Business Insights
 - [ ] Dashboard/analytics - Total revenue, best sellers, profit margins over time
 - [ ] Print failure tracking - Factor failed prints into true costs
+  - Option A: Simple failure rate % per printer, auto-factor into cost calculations
+  - Option B: Log individual failures with reasons (bed adhesion, jam, etc.)
+  - Option C: Both - default rate + refine with actual logged failures
+  - Show stats: "Bambu X1C: 3% failure rate (2/67 prints)"
+  - Cost calculation: `baseCost * (1 + failureRate)`
 - [ ] Time tracking - Log actual print time vs estimated to improve quotes
 
 ### Workflow
@@ -19,7 +24,14 @@
 
 ### Customer Features
 - [ ] Customer database - Track repeat customers, custom orders
-- [ ] Order requests - Simple form for custom quote requests
+- [ ] Order requests - Shareable public form for custom quote requests
+  - Shareable link: `yoursite.com?request=USER_ID`
+  - Public form (no login): Name, email, phone (optional), description
+  - Supabase table: `quote_requests` with RLS (public insert, auth read)
+  - New Requests tab/section to view incoming requests
+  - Status flow: New → Quoted → Accepted → In Progress → Completed
+  - Convert request to Calculator job
+  - Future: Email notifications via Supabase Edge Functions
 
 ### Export/Integration
 - [ ] CSV export - For taxes/accounting
