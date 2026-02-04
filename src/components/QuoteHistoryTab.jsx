@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   ChevronDown, ChevronUp, FileText,
-  Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2, Archive, History
+  Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2, Archive, History, Calendar
 } from 'lucide-react';
 import Tooltip from './Tooltip';
 
@@ -9,11 +9,25 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
   const [expandedId, setExpandedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const events = library.events || [];
+
   const deleteEntry = (id) => {
     if (window.confirm("Delete this record permanently?")) {
       const newHistory = history.filter(item => item.id !== id);
       saveToDisk(library, newHistory);
     }
+  };
+
+  const assignEvent = (itemId, eventId) => {
+    const newHistory = history.map(item =>
+      item.id === itemId ? { ...item, eventId: eventId || undefined } : item
+    );
+    saveToDisk(library, newHistory);
+  };
+
+  const getEventName = (eventId) => {
+    const event = events.find(e => e.id === eventId);
+    return event ? event.name : null;
   };
 
   const toggleExpand = (id) => {
@@ -107,8 +121,13 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
                     </td>
                     <td className="p-6">
                       <div className="font-bold text-slate-700">{item.name}</div>
-                      <div className="text-[10px] text-slate-400 uppercase font-black tracking-widest">
+                      <div className="text-[10px] text-slate-400 uppercase font-black tracking-widest flex items-center gap-2">
                         {item.details?.qty} Units • {item.details?.hours} Hrs
+                        {item.eventId && getEventName(item.eventId) && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[9px]">
+                            <Calendar size={10} /> {getEventName(item.eventId)}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="p-6">
@@ -168,13 +187,26 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
                           </div>
 
                           <div className="md:col-span-2 space-y-4">
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center flex-wrap gap-4">
                               <Tooltip text="Any specific notes or details recorded for this production job.">
                                 <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600 flex items-center gap-2">
                                   <FileText size={12} /> Production Notes
                                 </h4>
                               </Tooltip>
-                              <div className="flex justify-between items-center">
+                              <div className="flex flex-wrap items-center gap-3">
+                                {events.length > 0 && (
+                                  <select
+                                    value={item.eventId || ''}
+                                    onChange={(e) => { e.stopPropagation(); assignEvent(item.id, e.target.value ? parseInt(e.target.value) : null); }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-[9px] font-bold px-2 py-1 rounded-lg border border-slate-200 bg-white"
+                                  >
+                                    <option value="">No Event</option>
+                                    {events.map(event => (
+                                      <option key={event.id} value={event.id}>{event.name}</option>
+                                    ))}
+                                  </select>
+                                )}
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleAddToInventory(item); }}
                                   className="flex items-center gap-1 text-[9px] font-black uppercase text-blue-500 hover:text-blue-700 transition-colors"
@@ -187,13 +219,13 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
                                 >
                                   <Edit2 size={12} /> Edit
                                 </button>
-                                <button 
+                                <button
                                   onClick={(e) => { e.stopPropagation(); handleJobLoad(item.details); }}
                                   className="flex items-center gap-1 text-[9px] font-black uppercase text-blue-500 hover:text-blue-700 transition-colors"
                                 >
                                   <RefreshCw size={12} /> Recall Job
                                 </button>
-                                <button 
+                                <button
                                   onClick={(e) => { e.stopPropagation(); deleteEntry(item.id); }}
                                   className="flex items-center gap-1 text-[9px] font-black uppercase text-red-400 hover:text-red-600 transition-colors"
                                 >

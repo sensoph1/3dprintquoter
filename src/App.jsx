@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Calculator, FlaskConical,
   Settings as SettingsIcon, History,
-  Box, Menu, X
+  Box, Menu, X, Calendar
 } from 'lucide-react';
 
 import CalculatorTab from './components/CalculatorTab';
@@ -10,6 +10,7 @@ import FilamentTab from './components/FilamentTab';
 import SettingsTab from './components/SettingsTab';
 import QuoteHistoryTab from './components/QuoteHistoryTab';
 import InventoryTab from './components/InventoryTab';
+import EventsTab from './components/EventsTab';
 import AuthGate from './components/Auth';
 
 import { supabase } from './supabaseClient';
@@ -51,13 +52,19 @@ const DEFAULT_LIBRARY = {
     { id: 302, name: "Adobe Creative Cloud", monthlyCost: 59.99, cycle: "monthly" },
     { id: 303, name: "Cloud Backup", monthlyCost: 99.99, cycle: "yearly" }
   ],
+  events: [
+    { id: 401, name: "Downtown Craft Fair", date: "2025-01-18", location: "City Convention Center", boothFee: 150, otherCosts: 45, notes: "Corner booth near entrance" },
+    { id: 402, name: "Maker Market", date: "2025-01-25", location: "Community Center", boothFee: 75, otherCosts: 20, notes: "Shared table with friend" },
+    { id: 403, name: "Holiday Pop-Up Shop", date: "2024-12-14", location: "Main Street Plaza", boothFee: 200, otherCosts: 60, notes: "Great foot traffic" },
+    { id: 404, name: "Tech Meetup Vendor Fair", date: "2024-11-20", location: "Innovation Hub", boothFee: 50, otherCosts: 15, notes: "Mostly prototypes shown" }
+  ],
   rounding: 1
 };
 
 const DEFAULT_HISTORY = [
   {
     id: 1001,
-    date: "1/15/2025",
+    date: "1/18/2025",
     quoteNo: "Q-1001",
     name: "Custom Phone Stand",
     category: "Client Work",
@@ -66,12 +73,13 @@ const DEFAULT_HISTORY = [
     priceByHourlyRate: 8.00,
     priceByMaterialMultiplier: 6.40,
     costPerItem: 3.20,
-    notes: "Client requested matte black finish",
+    notes: "Sold at craft fair",
+    eventId: 401,
     details: { name: "Custom Phone Stand", category: "Client Work", qty: 5, hours: 2.5, laborMinutes: 15, extraCosts: 0, materials: [{ filamentId: 1, grams: 45 }], selectedPrinterId: 1, profitMargin: 20 }
   },
   {
     id: 1002,
-    date: "1/22/2025",
+    date: "1/18/2025",
     quoteNo: "Q-1002",
     name: "Desk Organizer Set",
     category: "Prototypes",
@@ -80,12 +88,13 @@ const DEFAULT_HISTORY = [
     priceByHourlyRate: 18.00,
     priceByMaterialMultiplier: 14.40,
     costPerItem: 7.20,
-    notes: "Prototype for potential bulk order",
+    notes: "Popular item at fair",
+    eventId: 401,
     details: { name: "Desk Organizer Set", category: "Prototypes", qty: 2, hours: 4, laborMinutes: 30, extraCosts: 0, materials: [{ filamentId: 2, grams: 120 }], selectedPrinterId: 1, profitMargin: 20 }
   },
   {
     id: 1003,
-    date: "1/28/2025",
+    date: "1/25/2025",
     quoteNo: "Q-1003",
     name: "Trophy Base",
     category: "Client Work",
@@ -94,8 +103,39 @@ const DEFAULT_HISTORY = [
     priceByHourlyRate: 15.00,
     priceByMaterialMultiplier: 9.60,
     costPerItem: 4.80,
-    notes: "Gold silk PLA for premium look",
+    notes: "Sold at maker market",
+    eventId: 402,
     details: { name: "Trophy Base", category: "Client Work", qty: 3, hours: 3, laborMinutes: 20, extraCosts: 0, materials: [{ filamentId: 3, grams: 85 }], selectedPrinterId: 2, profitMargin: 20 }
+  },
+  {
+    id: 1004,
+    date: "12/14/2024",
+    quoteNo: "Q-1004",
+    name: "Holiday Ornament Set",
+    category: "Personal",
+    unitPrice: 8.00,
+    priceByProfitMargin: 8.00,
+    priceByHourlyRate: 6.00,
+    priceByMaterialMultiplier: 4.80,
+    costPerItem: 2.40,
+    notes: "Best seller at holiday pop-up",
+    eventId: 403,
+    details: { name: "Holiday Ornament Set", category: "Personal", qty: 15, hours: 1.5, laborMinutes: 10, extraCosts: 0, materials: [{ filamentId: 3, grams: 25 }], selectedPrinterId: 1, profitMargin: 20 }
+  },
+  {
+    id: 1005,
+    date: "12/14/2024",
+    quoteNo: "Q-1005",
+    name: "Gift Box Inserts",
+    category: "Client Work",
+    unitPrice: 5.00,
+    priceByProfitMargin: 5.00,
+    priceByHourlyRate: 4.00,
+    priceByMaterialMultiplier: 3.00,
+    costPerItem: 1.50,
+    notes: "Custom order from holiday event",
+    eventId: 403,
+    details: { name: "Gift Box Inserts", category: "Client Work", qty: 20, hours: 2, laborMinutes: 5, extraCosts: 0, materials: [{ filamentId: 2, grams: 15 }], selectedPrinterId: 2, profitMargin: 20 }
   }
 ];
 
@@ -108,6 +148,7 @@ const App = () => {
   const tabs = {
     calculator: { name: 'Calculator', icon: Calculator },
     quoteHistory: { name: 'Quote History', icon: History },
+    events: { name: 'Events', icon: Calendar },
     filament: { name: 'Costs', icon: FlaskConical },
     inventory: { name: 'Inventory', icon: Box },
     settings: { name: 'Settings', icon: SettingsIcon },
@@ -472,6 +513,7 @@ const App = () => {
           </div>
         ) : (
           <div className="max-w-5xl mx-auto bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
+             {activeTab === 'events' && <EventsTab library={library} history={history} saveToDisk={saveToDisk} />}
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'quoteHistory' && <QuoteHistoryTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} handleAddToInventory={handleAddToInventory} />}
