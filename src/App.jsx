@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Calculator, FlaskConical,
   Settings as SettingsIcon, History,
-  Box
+  Box, Menu, X
 } from 'lucide-react';
 
 import CalculatorTab from './components/CalculatorTab';
@@ -38,6 +38,7 @@ const App = () => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('calculator');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const tabs = {
     calculator: { name: 'Calculator', icon: Calculator },
@@ -289,15 +290,25 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-12 font-sans">
-      <header className="max-w-[1600px] mx-auto pt-6 pb-8 px-4 sm:px-8 flex flex-wrap justify-between items-center">
-        <div className="flex items-center gap-4 mb-4 sm:mb-0">
+      <header className="max-w-[1600px] mx-auto pt-6 pb-8 px-4 sm:px-8 flex justify-between items-center">
+        <div className="flex items-center gap-4">
           <div className="bg-slate-900 p-2.5 rounded-2xl text-white shadow-lg"><tabs.calculator.icon size={22} /></div>
           <h1 className="text-lg font-black uppercase tracking-tighter leading-none">
             {library.shopName} <br/>
             <span className="text-blue-600 text-[9px] tracking-[0.2em] font-black uppercase">Studio OS</span>
           </h1>
         </div>
-        <nav className="bg-white p-1.5 rounded-full shadow-sm border border-slate-100 flex items-center overflow-x-auto">
+
+        {/* Mobile hamburger button */}
+        <button
+          className="mobile-menu-btn p-3 bg-white rounded-2xl shadow-sm border border-slate-100"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        {/* Desktop nav */}
+        <nav className="desktop-nav bg-white p-1.5 rounded-full shadow-sm border border-slate-100 items-center">
           {Object.keys(tabs).map((tab) => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 sm:px-6 sm:py-3 rounded-full font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
               {tabs[tab].name}
@@ -305,6 +316,38 @@ const App = () => {
           ))}
         </nav>
       </header>
+
+      {/* Mobile menu overlay */}
+      {mobileMenuOpen && (
+        <div className="mobile-only fixed inset-0 z-50 bg-black/50" onClick={() => setMobileMenuOpen(false)}>
+          <nav
+            className="absolute top-0 right-0 h-full w-72 bg-white shadow-2xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="font-black uppercase text-sm tracking-tight">Menu</h2>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {Object.keys(tabs).map((tab) => {
+                const TabIcon = tabs[tab].icon;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => { setActiveTab(tab); setMobileMenuOpen(false); }}
+                    className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl font-black text-sm uppercase tracking-wide transition-all ${activeTab === tab ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+                  >
+                    <TabIcon size={20} />
+                    {tabs[tab].name}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        </div>
+      )}
 
       <main className="max-w-[1600px] mx-auto px-4 sm:px-8">
         {activeTab === 'calculator' ? (

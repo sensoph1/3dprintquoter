@@ -26,7 +26,7 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
       </div>
       {/* SECTION 1: CORE PROJECT DETAILS */}
       <div>
-        <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
           <div>
             <Tooltip text="A descriptive name for your project or print job.">
               <label>Project Name</label>
@@ -64,7 +64,7 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
         <hr className="my-8 border-slate-100" />
 
         {job.materials.map((mat, index) => (
-          <div key={index} className="grid grid-cols-2 gap-x-8 gap-y-6 mb-4">
+          <div key={index} className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 mb-4">
             <div>
               <label>Select Filament</label>
               <ComboBox
@@ -165,7 +165,7 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Technical Specs & Notes</h4>
         </div>
         
-        <div className="grid grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
           <div>
             <Tooltip text="The density of the internal structure of your 3D print. Higher infill percentages use more material but result in stronger parts.">
               <label>Infill %</label>
@@ -207,7 +207,7 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
       </div>
 
       {/* SECTION 3: HARDWARE & EXTRAS */}
-      <div className="grid grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
         <div>
           <Tooltip text="The estimated time, in minutes, spent on pre- or post-processing for this specific print job (e.g., model preparation, support removal, assembly).">
             <label>Labor (Minutes)</label>

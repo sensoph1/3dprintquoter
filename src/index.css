@@ -59,7 +59,26 @@ textarea {
   border: 1px solid #e2e8f0 !important;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 768px) {
   .studio-cockpit { flex-direction: column !important; }
   .right-engine { min-width: 100%; position: static !important; }
+}
+
+@media (max-width: 768px) {
+  .studio-cockpit { gap: 16px !important; }
+  .left-workbench { padding: 1.25rem !important; }
+  .rounded-studio { border-radius: 1.5rem; }
+}
+
+/* Nav breakpoint at 1024px for longer business names */
+@media (max-width: 1024px) {
+  .desktop-nav { display: none !important; }
+  .mobile-menu-btn { display: flex !important; }
+  .mobile-only { display: block !important; }
+}
+
+@media (min-width: 1025px) {
+  .desktop-nav { display: flex !important; }
+  .mobile-menu-btn { display: none !important; }
+  .mobile-only { display: none !important; }
 }
