@@ -20,7 +20,7 @@
 .left-workbench {
   flex: 8 !important; /* Balanced ratio */
   min-width: 0;
-  padding: 2.5rem !important; /* Comfortable padding */
+  padding: 1.5rem !important; /* Match other tabs (sm:p-6) */
 }
 
 .right-engine {
@@ -66,7 +66,7 @@ textarea {
 
 @media (max-width: 768px) {
   .studio-cockpit { gap: 16px !important; }
-  .left-workbench { padding: 1.25rem !important; }
+  .left-workbench { padding: 1rem !important; } /* Match other tabs (p-4) */
   .rounded-studio { border-radius: 1.5rem; }
 }
 

@@ -351,7 +351,7 @@ const App = () => {
 
       <main className="max-w-[1600px] mx-auto px-4 sm:px-8">
         {activeTab === 'calculator' ? (
-          <div className="studio-cockpit">
+          <div className="studio-cockpit max-w-5xl mx-auto">
             <div className="left-workbench bg-white rounded-studio border border-slate-100 shadow-sm">
               <CalculatorTab
                 job={job}
