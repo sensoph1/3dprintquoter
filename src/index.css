@@ -9,6 +9,10 @@
   background-color: #F8FAFC;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 .studio-cockpit {
   display: flex !important;
   flex-direction: row !important;

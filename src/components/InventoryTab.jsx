@@ -16,7 +16,7 @@ const InventoryTab = ({ library, saveToDisk }) => {
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-8">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
 
       {/* HEADER */}
       <div className="flex justify-between items-center">
@@ -29,7 +29,7 @@ const InventoryTab = ({ library, saveToDisk }) => {
       </div>
 
       {/* FINISHED PRODUCTS */}
-      <div className="bg-white rounded-[2rem] border p-8 shadow-sm">
+      <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 space-y-4">
           <table className="w-full">
             <thead>
               <tr className="text-left text-xs text-slate-400 uppercase font-black">
