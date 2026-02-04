@@ -4,7 +4,6 @@
 
 ### Events & Sales
 - [ ] Sales tracker - Log actual sales (vs quotes), see revenue per event
-- [ ] Event/venue management - Track events, booth fees, profit per event
 - [ ] Quick POS mode - Simplified view for fast checkout at events
 - [ ] Low stock alerts - Warnings when inventory drops below threshold
 
@@ -38,6 +37,11 @@
 ## Completed
 
 ### Recent
+- [x] Events tab - Track events/venues with booth fees, other costs, and profit per event
+  - Link/unlink sales from Quote History to events
+  - Upcoming vs past events with automatic sorting
+  - Compare view for side-by-side event metrics
+  - Event badges shown in Quote History
 - [x] Sample data for new users - Filaments, printers, inventory, consumables, subscriptions, and quote history pre-populated
 - [x] Fix tab width inconsistency - Scrollbar gutter and standardized padding across all tabs
 - [x] Consistent tab layouts - Headers outside cards, matching styles
