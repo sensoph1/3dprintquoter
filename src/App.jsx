@@ -25,14 +25,79 @@ const DEFAULT_LIBRARY = {
   shopHourlyRate: 2.00,
   laborRate: 20.00,
   kwhRate: 0.12,
-  nextQuoteNo: 1001,
-  filaments: [{ id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#3b82f6" }],
-  printers: [{ id: 1, name: "Bambu Lab X1C", watts: 350, cost: 0, hoursOfLife: 0 }],
+  nextQuoteNo: 1004,
+  filaments: [
+    { id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#1e293b" },
+    { id: 2, name: "PETG", colorName: "White", price: 28, grams: 1000, color: "#f8fafc" },
+    { id: 3, name: "Silk PLA", colorName: "Gold", price: 32, grams: 1000, color: "#eab308" }
+  ],
+  printers: [
+    { id: 1, name: "Bambu Lab X1C", watts: 350, cost: 1449, hoursOfLife: 5000 },
+    { id: 2, name: "Prusa MK4", watts: 150, cost: 799, hoursOfLife: 8000 }
+  ],
   categories: ["Client Work", "Prototypes", "Personal"],
-  printedParts: [],
-  inventory: [],
+  printedParts: [
+    { id: 101, name: "Phone Stand", category: "Client Work", qty: 5, unitPrice: 12.50, priceByProfitMargin: 12.50, priceByHourlyRate: 8.00, priceByMaterialMultiplier: 6.40, color: "Black" },
+    { id: 102, name: "Cable Organizer", category: "Personal", qty: 12, unitPrice: 4.00, priceByProfitMargin: 4.00, priceByHourlyRate: 3.50, priceByMaterialMultiplier: 2.80, color: "White" },
+    { id: 103, name: "Desk Nameplate", category: "Client Work", qty: 3, unitPrice: 18.00, priceByProfitMargin: 18.00, priceByHourlyRate: 15.00, priceByMaterialMultiplier: 9.60, color: "Gold" }
+  ],
+  inventory: [
+    { id: 201, name: "6mm Magnets (100pk)", qty: 87, unitCost: 0.08, lowStockThreshold: 20 },
+    { id: 202, name: "Small Shipping Boxes", qty: 24, unitCost: 0.95, lowStockThreshold: 10 },
+    { id: 203, name: "Bubble Wrap Roll", qty: 3, unitCost: 12.00, lowStockThreshold: 2 }
+  ],
+  subscriptions: [
+    { id: 301, name: "Thangs Pro", monthlyCost: 9.99, cycle: "monthly" },
+    { id: 302, name: "Adobe Creative Cloud", monthlyCost: 59.99, cycle: "monthly" },
+    { id: 303, name: "Cloud Backup", monthlyCost: 99.99, cycle: "yearly" }
+  ],
   rounding: 1
 };
+
+const DEFAULT_HISTORY = [
+  {
+    id: 1001,
+    date: "1/15/2025",
+    quoteNo: "Q-1001",
+    name: "Custom Phone Stand",
+    category: "Client Work",
+    unitPrice: 12.50,
+    priceByProfitMargin: 12.50,
+    priceByHourlyRate: 8.00,
+    priceByMaterialMultiplier: 6.40,
+    costPerItem: 3.20,
+    notes: "Client requested matte black finish",
+    details: { name: "Custom Phone Stand", category: "Client Work", qty: 5, hours: 2.5, laborMinutes: 15, extraCosts: 0, materials: [{ filamentId: 1, grams: 45 }], selectedPrinterId: 1, profitMargin: 20 }
+  },
+  {
+    id: 1002,
+    date: "1/22/2025",
+    quoteNo: "Q-1002",
+    name: "Desk Organizer Set",
+    category: "Prototypes",
+    unitPrice: 24.00,
+    priceByProfitMargin: 24.00,
+    priceByHourlyRate: 18.00,
+    priceByMaterialMultiplier: 14.40,
+    costPerItem: 7.20,
+    notes: "Prototype for potential bulk order",
+    details: { name: "Desk Organizer Set", category: "Prototypes", qty: 2, hours: 4, laborMinutes: 30, extraCosts: 0, materials: [{ filamentId: 2, grams: 120 }], selectedPrinterId: 1, profitMargin: 20 }
+  },
+  {
+    id: 1003,
+    date: "1/28/2025",
+    quoteNo: "Q-1003",
+    name: "Trophy Base",
+    category: "Client Work",
+    unitPrice: 18.00,
+    priceByProfitMargin: 18.00,
+    priceByHourlyRate: 15.00,
+    priceByMaterialMultiplier: 9.60,
+    costPerItem: 4.80,
+    notes: "Gold silk PLA for premium look",
+    details: { name: "Trophy Base", category: "Client Work", qty: 3, hours: 3, laborMinutes: 20, extraCosts: 0, materials: [{ filamentId: 3, grams: 85 }], selectedPrinterId: 2, profitMargin: 20 }
+  }
+];
 
 const App = () => {
   const [session, setSession] = useState(null);
@@ -76,7 +141,7 @@ const App = () => {
 
   const [history, setHistory] = useState(() => {
     const saved = localStorage.getItem('studio_history');
-    return saved ? JSON.parse(saved) : [];
+    return saved ? JSON.parse(saved) : DEFAULT_HISTORY;
   });
   const [editingJobId, setEditingJobId] = useState(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
