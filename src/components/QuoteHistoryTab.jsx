@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  ChevronDown, ChevronUp, FileText, 
-  Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2, Archive
+import {
+  ChevronDown, ChevronUp, FileText,
+  Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2, Archive, History
 } from 'lucide-react';
 import Tooltip from './Tooltip';
 
@@ -29,11 +29,13 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
       
-      {/* HEADER & STATS */}
-      <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-10">
         <div>
-          <h2 className="text-3xl font-black tracking-tight text-slate-900">Quote History</h2>
-          <p className="text-slate-500 font-medium">Historical record of all logged studio projects.</p>
+          <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
+            <History className="text-blue-600" size={28} /> Quote History
+          </h2>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Historical record of all logged studio projects</p>
         </div>
       </div>
 

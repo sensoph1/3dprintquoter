@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, Plus, Trash2, Tag } from 'lucide-react';
+import { Minus, Plus, Trash2, Box } from 'lucide-react';
 
 const InventoryTab = ({ library, saveToDisk }) => {
   const updatePartQty = (id, delta) => {
@@ -18,12 +18,18 @@ const InventoryTab = ({ library, saveToDisk }) => {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-8">
 
+      {/* HEADER */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
+            <Box className="text-blue-600" size={28} /> Inventory
+          </h2>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Finished products ready for sale</p>
+        </div>
+      </div>
+
       {/* FINISHED PRODUCTS */}
       <div className="bg-white rounded-[2rem] border p-8 shadow-sm">
-          <div className="flex items-center gap-3 mb-8">
-            <Tag className="text-blue-600" />
-            <h2 className="font-black text-xl uppercase tracking-tighter">Finished Products</h2>
-          </div>
           <table className="w-full">
             <thead>
               <tr className="text-left text-xs text-slate-400 uppercase font-black">

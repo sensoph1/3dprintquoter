@@ -1,4 +1,5 @@
 import React from 'react';
+import { Calculator } from 'lucide-react';
 import ComboBox from './ComboBox';
 import Tooltip from './Tooltip';
 
@@ -13,6 +14,16 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
 
   return (
     <div className="space-y-8">
+      {/* HEADER */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
+            <Calculator className="text-blue-600" size={28} /> Job Calculator
+          </h2>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Configure print job details & pricing</p>
+        </div>
+      </div>
+
       {/* Advanced Mode Toggle */}
       <div className="flex items-center space-x-2">
         <input 
