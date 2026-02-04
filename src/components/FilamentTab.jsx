@@ -97,19 +97,19 @@ const FilamentTab = ({ library, saveToDisk }) => {
   }, 0);
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 space-y-10">
-        
-        {/* HEADER */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
-              <DollarSign className="text-blue-600" size={28} /> Cost Management
-            </h2>
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Materials, consumables & subscriptions</p>
-          </div>
-        </div>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
 
+      {/* HEADER */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
+            <DollarSign className="text-blue-600" size={28} /> Cost Management
+          </h2>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Materials, consumables & subscriptions</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 space-y-4">
         <Accordion title="Filament Inventory">
           {/* ADD NEW SPOOL */}
           <div className="space-y-4 mb-6">

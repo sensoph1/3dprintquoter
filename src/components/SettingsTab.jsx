@@ -253,19 +253,19 @@ const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail }) => {
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 space-y-12">
-        
-        {/* HEADER */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
-              <Settings className="text-blue-600" size={28} /> Studio Settings
-            </h2>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Configure your global rates and studio identity</p>
-          </div>
-        </div>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
 
+      {/* HEADER */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
+            <Settings className="text-blue-600" size={28} /> Studio Settings
+          </h2>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Configure your global rates and studio identity</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 space-y-4">
 {userEmail && (
           <Accordion title="Account">
             <div className="space-y-6">
