@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Plus, Trash2, Edit2, Check, X,
-  RefreshCw, AlertCircle, Copy, FlaskConical
+  RefreshCw, AlertCircle, Copy, DollarSign, CreditCard
 } from 'lucide-react';
 
 import generateUniqueId from '../utils/idGenerator';
@@ -11,6 +11,7 @@ import Accordion from './Accordion';
 const FilamentTab = ({ library, saveToDisk }) => {
   const [newFilament, setNewFilament] = useState({ name: '', colorName: '', price: '', grams: 1000, color: '#3b82f6' });
   const [newConsumable, setNewConsumable] = useState({ name: '', qty: '', totalCost: '' });
+  const [newSubscription, setNewSubscription] = useState({ name: '', monthlyCost: '', cycle: 'monthly' });
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
 
@@ -70,6 +71,31 @@ const FilamentTab = ({ library, saveToDisk }) => {
     setNewConsumable({ name: '', qty: '', totalCost: '' });
   };
 
+  const handleAddSubscription = () => {
+    if (!newSubscription.name || !newSubscription.monthlyCost) return;
+    const updatedSubscriptions = [
+      ...(library.subscriptions || []),
+      {
+        id: generateUniqueId(),
+        name: newSubscription.name,
+        monthlyCost: parseFloat(newSubscription.monthlyCost),
+        cycle: newSubscription.cycle
+      }
+    ];
+    saveToDisk({ ...library, subscriptions: updatedSubscriptions });
+    setNewSubscription({ name: '', monthlyCost: '', cycle: 'monthly' });
+  };
+
+  const deleteSubscription = (id) => {
+    if (window.confirm("Remove this subscription?")) {
+      saveToDisk({ ...library, subscriptions: (library.subscriptions || []).filter(s => s.id !== id) });
+    }
+  };
+
+  const totalMonthlyCost = (library.subscriptions || []).reduce((sum, s) => {
+    return sum + (s.cycle === 'yearly' ? s.monthlyCost / 12 : s.monthlyCost);
+  }, 0);
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 space-y-10">
@@ -78,9 +104,9 @@ const FilamentTab = ({ library, saveToDisk }) => {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
-              <FlaskConical className="text-blue-600" size={28} /> Materials
+              <DollarSign className="text-blue-600" size={28} /> Cost Management
             </h2>
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Live stock tracking & procurement</p>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Materials, consumables & subscriptions</p>
           </div>
         </div>
 
@@ -255,6 +281,91 @@ const FilamentTab = ({ library, saveToDisk }) => {
           </table>
           {(library.inventory || []).length === 0 && (
             <p className="text-center text-slate-400 text-sm py-8">No consumables added yet. Add items like magnets, boxes, or bubble wrap above.</p>
+          )}
+        </Accordion>
+
+        <Accordion title="Subscriptions">
+          {/* ADD NEW SUBSCRIPTION */}
+          <div className="space-y-4 mb-6">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
+              <Plus size={12} /> Add Subscription
+            </div>
+            <div className="flex gap-3 items-center">
+              <div className="w-[50%]">
+                <Tooltip text="Name of the subscription (e.g., Patreon - MakersMuse, Fusion 360, Cura Pro).">
+                  <input placeholder="Subscription Name" value={newSubscription.name} onChange={(e) => setNewSubscription({...newSubscription, name: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
+                </Tooltip>
+              </div>
+              <div className="w-[25%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                <span className="text-slate-400 font-bold">$</span>
+                <Tooltip text="Cost per billing cycle.">
+                  <input type="number" step="0.01" placeholder="Cost" value={newSubscription.monthlyCost} onChange={(e) => setNewSubscription({...newSubscription, monthlyCost: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+                </Tooltip>
+              </div>
+              <div className="w-[25%]">
+                <Tooltip text="How often you're billed.">
+                  <select value={newSubscription.cycle} onChange={(e) => setNewSubscription({...newSubscription, cycle: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm">
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </Tooltip>
+              </div>
+            </div>
+            <button onClick={handleAddSubscription} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all">
+              Add Subscription
+            </button>
+          </div>
+
+          <hr className="border-slate-200 mb-6" />
+
+          {/* SUBSCRIPTIONS LIST */}
+          <table className="w-full">
+            <thead>
+              <tr className="text-left text-xs text-slate-400 uppercase font-black">
+                <th className="pb-4">Subscription</th>
+                <th className="pb-4 text-center">Cycle</th>
+                <th className="pb-4 text-center">Cost</th>
+                <th className="pb-4 text-center">Monthly</th>
+                <th className="pb-4 text-center"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {(library.subscriptions || []).map(sub => (
+                <tr key={sub.id} className="border-b border-slate-100 last:border-b-0">
+                  <td className="py-4">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="text-blue-500" size={16} />
+                      <span className="font-black uppercase text-sm">{sub.name}</span>
+                    </div>
+                  </td>
+                  <td className="text-center">
+                    <span className="text-xs font-bold text-slate-500 uppercase">{sub.cycle}</span>
+                  </td>
+                  <td className="text-center">
+                    <span className="text-sm font-bold text-slate-700">${sub.monthlyCost.toFixed(2)}</span>
+                  </td>
+                  <td className="text-center">
+                    <span className="text-sm font-bold text-blue-600">
+                      ${(sub.cycle === 'yearly' ? sub.monthlyCost / 12 : sub.monthlyCost).toFixed(2)}
+                    </span>
+                  </td>
+                  <td className="text-center">
+                    <button onClick={() => deleteSubscription(sub.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                      <Trash2 size={16}/>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {(library.subscriptions || []).length === 0 ? (
+            <p className="text-center text-slate-400 text-sm py-8">No subscriptions added yet. Track your Patreon, software, or service costs here.</p>
+          ) : (
+            <div className="mt-6 p-4 bg-blue-50 rounded-2xl flex justify-between items-center">
+              <span className="text-xs font-black uppercase tracking-widest text-blue-600">Total Monthly Cost</span>
+              <span className="text-xl font-black text-blue-600">${totalMonthlyCost.toFixed(2)}/mo</span>
+            </div>
           )}
         </Accordion>
       </div>
