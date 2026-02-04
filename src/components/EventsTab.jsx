@@ -106,6 +106,175 @@ const EventsTab = ({ library, history, saveToDisk }) => {
     };
   }, { revenue: 0, costs: 0, profit: 0, items: 0 });
 
+  // Split events into upcoming and past
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcomingEvents = events
+    .filter(e => new Date(e.date) >= today)
+    .sort((a, b) => new Date(a.date) - new Date(b.date)); // Soonest first
+
+  const pastEvents = events
+    .filter(e => new Date(e.date) < today)
+    .sort((a, b) => new Date(b.date) - new Date(a.date)); // Most recent first
+
+  // Render a single event card
+  const renderEventCard = (event) => {
+    const metrics = calculateEventMetrics(event);
+    const isExpanded = expandedEventId === event.id;
+    const isEditing = editingId === event.id;
+
+    return (
+      <div key={event.id} className="border border-slate-100 rounded-2xl overflow-hidden">
+        {/* Event Header Row */}
+        <div
+          className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 transition-all"
+          onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
+        >
+          <div className="flex items-center gap-4">
+            {isExpanded ? <ChevronDown size={20} className="text-slate-400" /> : <ChevronRight size={20} className="text-slate-400" />}
+            <div>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editData.name}
+                  onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                  onClick={(e) => e.stopPropagation()}
+                  className="font-black text-slate-800 bg-slate-100 px-2 py-1 rounded"
+                />
+              ) : (
+                <div className="font-black text-slate-800">{event.name}</div>
+              )}
+              <div className="text-xs text-slate-400 flex items-center gap-2">
+                <Calendar size={12} /> {new Date(event.date).toLocaleDateString()}
+                {event.location && (
+                  <>
+                    <span className="mx-1">•</span>
+                    <MapPin size={12} /> {event.location}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-right">
+              <div className="text-xs text-slate-400 uppercase">Revenue</div>
+              <div className="font-black text-blue-600">${metrics.grossRevenue.toFixed(2)}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-slate-400 uppercase">Profit</div>
+              <div className={`font-black ${metrics.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                ${metrics.netProfit.toFixed(2)}
+              </div>
+            </div>
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              {isEditing ? (
+                <>
+                  <button onClick={saveEdit} className="p-2 text-green-600 hover:bg-green-50 rounded-lg"><Check size={16} /></button>
+                  <button onClick={cancelEdit} className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg"><X size={16} /></button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => startEdit(event)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg"><Edit2 size={16} /></button>
+                  <button onClick={() => handleDeleteEvent(event.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Expanded Details */}
+        {isExpanded && (
+          <div className="border-t border-slate-100 p-4 bg-slate-50 space-y-4">
+            {/* Edit fields */}
+            {isEditing && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-white rounded-xl">
+                <input type="date" value={editData.date} onChange={(e) => setEditData({ ...editData, date: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+                <input type="text" placeholder="Location" value={editData.location || ''} onChange={(e) => setEditData({ ...editData, location: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+                <input type="number" placeholder="Booth Fee" value={editData.boothFee} onChange={(e) => setEditData({ ...editData, boothFee: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+                <input type="number" placeholder="Other Costs" value={editData.otherCosts} onChange={(e) => setEditData({ ...editData, otherCosts: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+              </div>
+            )}
+
+            {/* Costs Breakdown */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-white p-3 rounded-xl text-center">
+                <div className="text-[10px] text-slate-400 uppercase font-bold">Booth Fee</div>
+                <div className="font-black text-slate-700">${(event.boothFee || 0).toFixed(2)}</div>
+              </div>
+              <div className="bg-white p-3 rounded-xl text-center">
+                <div className="text-[10px] text-slate-400 uppercase font-bold">Other Costs</div>
+                <div className="font-black text-slate-700">${(event.otherCosts || 0).toFixed(2)}</div>
+              </div>
+              <div className="bg-white p-3 rounded-xl text-center">
+                <div className="text-[10px] text-slate-400 uppercase font-bold">Items Sold</div>
+                <div className="font-black text-slate-700">{metrics.itemsSold}</div>
+              </div>
+            </div>
+
+            {/* Notes */}
+            {event.notes && (
+              <div className="text-sm text-slate-500 italic">"{event.notes}"</div>
+            )}
+
+            {/* Linked Sales */}
+            <div className="space-y-2">
+              <div className="text-xs font-black text-slate-400 uppercase tracking-widest">Linked Sales ({metrics.salesCount})</div>
+              {metrics.linkedSales.length === 0 ? (
+                <p className="text-sm text-slate-400">No sales linked to this event yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {metrics.linkedSales.map(sale => (
+                    <div key={sale.id} className="flex justify-between items-center bg-white p-3 rounded-xl">
+                      <div>
+                        <div className="font-bold text-slate-800">{sale.name}</div>
+                        <div className="text-xs text-slate-400">{sale.quoteNo} • Qty: {sale.details?.qty || 1}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <div className="font-black text-blue-600">${(sale.unitPrice * (sale.details?.qty || 1)).toFixed(2)}</div>
+                        </div>
+                        <button
+                          onClick={() => unlinkSale(sale.id)}
+                          className="text-xs text-red-500 hover:bg-red-50 px-2 py-1 rounded"
+                        >
+                          Unlink
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Link New Sale */}
+              {unlinkedSales.length > 0 && (
+                <div className="pt-2">
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        linkSaleToEvent(parseInt(e.target.value), event.id);
+                        e.target.value = '';
+                      }
+                    }}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm"
+                    defaultValue=""
+                  >
+                    <option value="">+ Link a sale to this event...</option>
+                    {unlinkedSales.map(sale => (
+                      <option key={sale.id} value={sale.id}>
+                        {sale.quoteNo} - {sale.name} (${sale.unitPrice.toFixed(2)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
       {/* HEADER */}
@@ -247,167 +416,34 @@ const EventsTab = ({ library, history, saveToDisk }) => {
             )}
 
             {/* EVENT LIST */}
-            <div className="space-y-3">
-              {events.length === 0 ? (
-                <p className="text-center text-slate-400 text-sm py-8">No events yet. Add your first event above.</p>
-              ) : (
-                events.sort((a, b) => new Date(b.date) - new Date(a.date)).map(event => {
-                  const metrics = calculateEventMetrics(event);
-                  const isExpanded = expandedEventId === event.id;
-                  const isEditing = editingId === event.id;
-
-                  return (
-                    <div key={event.id} className="border border-slate-100 rounded-2xl overflow-hidden">
-                      {/* Event Header Row */}
-                      <div
-                        className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 transition-all"
-                        onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
-                      >
-                        <div className="flex items-center gap-4">
-                          {isExpanded ? <ChevronDown size={20} className="text-slate-400" /> : <ChevronRight size={20} className="text-slate-400" />}
-                          <div>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={editData.name}
-                                onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                                onClick={(e) => e.stopPropagation()}
-                                className="font-black text-slate-800 bg-slate-100 px-2 py-1 rounded"
-                              />
-                            ) : (
-                              <div className="font-black text-slate-800">{event.name}</div>
-                            )}
-                            <div className="text-xs text-slate-400 flex items-center gap-2">
-                              <Calendar size={12} /> {new Date(event.date).toLocaleDateString()}
-                              {event.location && (
-                                <>
-                                  <span className="mx-1">•</span>
-                                  <MapPin size={12} /> {event.location}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-6">
-                          <div className="text-right">
-                            <div className="text-xs text-slate-400 uppercase">Revenue</div>
-                            <div className="font-black text-blue-600">${metrics.grossRevenue.toFixed(2)}</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-xs text-slate-400 uppercase">Profit</div>
-                            <div className={`font-black ${metrics.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              ${metrics.netProfit.toFixed(2)}
-                            </div>
-                          </div>
-                          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                            {isEditing ? (
-                              <>
-                                <button onClick={saveEdit} className="p-2 text-green-600 hover:bg-green-50 rounded-lg"><Check size={16} /></button>
-                                <button onClick={cancelEdit} className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg"><X size={16} /></button>
-                              </>
-                            ) : (
-                              <>
-                                <button onClick={() => startEdit(event)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg"><Edit2 size={16} /></button>
-                                <button onClick={() => handleDeleteEvent(event.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Expanded Details */}
-                      {isExpanded && (
-                        <div className="border-t border-slate-100 p-4 bg-slate-50 space-y-4">
-                          {/* Edit fields */}
-                          {isEditing && (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-white rounded-xl">
-                              <input type="date" value={editData.date} onChange={(e) => setEditData({ ...editData, date: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
-                              <input type="text" placeholder="Location" value={editData.location || ''} onChange={(e) => setEditData({ ...editData, location: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
-                              <input type="number" placeholder="Booth Fee" value={editData.boothFee} onChange={(e) => setEditData({ ...editData, boothFee: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
-                              <input type="number" placeholder="Other Costs" value={editData.otherCosts} onChange={(e) => setEditData({ ...editData, otherCosts: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
-                            </div>
-                          )}
-
-                          {/* Costs Breakdown */}
-                          <div className="grid grid-cols-3 gap-3">
-                            <div className="bg-white p-3 rounded-xl text-center">
-                              <div className="text-[10px] text-slate-400 uppercase font-bold">Booth Fee</div>
-                              <div className="font-black text-slate-700">${(event.boothFee || 0).toFixed(2)}</div>
-                            </div>
-                            <div className="bg-white p-3 rounded-xl text-center">
-                              <div className="text-[10px] text-slate-400 uppercase font-bold">Other Costs</div>
-                              <div className="font-black text-slate-700">${(event.otherCosts || 0).toFixed(2)}</div>
-                            </div>
-                            <div className="bg-white p-3 rounded-xl text-center">
-                              <div className="text-[10px] text-slate-400 uppercase font-bold">Items Sold</div>
-                              <div className="font-black text-slate-700">{metrics.itemsSold}</div>
-                            </div>
-                          </div>
-
-                          {/* Notes */}
-                          {event.notes && (
-                            <div className="text-sm text-slate-500 italic">"{event.notes}"</div>
-                          )}
-
-                          {/* Linked Sales */}
-                          <div className="space-y-2">
-                            <div className="text-xs font-black text-slate-400 uppercase tracking-widest">Linked Sales ({metrics.salesCount})</div>
-                            {metrics.linkedSales.length === 0 ? (
-                              <p className="text-sm text-slate-400">No sales linked to this event yet.</p>
-                            ) : (
-                              <div className="space-y-2">
-                                {metrics.linkedSales.map(sale => (
-                                  <div key={sale.id} className="flex justify-between items-center bg-white p-3 rounded-xl">
-                                    <div>
-                                      <div className="font-bold text-slate-800">{sale.name}</div>
-                                      <div className="text-xs text-slate-400">{sale.quoteNo} • Qty: {sale.details?.qty || 1}</div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                      <div className="text-right">
-                                        <div className="font-black text-blue-600">${(sale.unitPrice * (sale.details?.qty || 1)).toFixed(2)}</div>
-                                      </div>
-                                      <button
-                                        onClick={() => unlinkSale(sale.id)}
-                                        className="text-xs text-red-500 hover:bg-red-50 px-2 py-1 rounded"
-                                      >
-                                        Unlink
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Link New Sale */}
-                            {unlinkedSales.length > 0 && (
-                              <div className="pt-2">
-                                <select
-                                  onChange={(e) => {
-                                    if (e.target.value) {
-                                      linkSaleToEvent(parseInt(e.target.value), event.id);
-                                      e.target.value = '';
-                                    }
-                                  }}
-                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm"
-                                  defaultValue=""
-                                >
-                                  <option value="">+ Link a sale to this event...</option>
-                                  {unlinkedSales.map(sale => (
-                                    <option key={sale.id} value={sale.id}>
-                                      {sale.quoteNo} - {sale.name} (${sale.unitPrice.toFixed(2)})
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
+            {events.length === 0 ? (
+              <p className="text-center text-slate-400 text-sm py-8">No events yet. Add your first event above.</p>
+            ) : (
+              <>
+                {/* UPCOMING EVENTS */}
+                {upcomingEvents.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="text-xs font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                      <Calendar size={14} /> Upcoming Events
                     </div>
-                  );
-                })
-              )}
-            </div>
+                    {upcomingEvents.map(event => renderEventCard(event))}
+                  </div>
+                )}
+
+                {/* PAST EVENTS SEPARATOR */}
+                {pastEvents.length > 0 && (
+                  <div className="space-y-3">
+                    {upcomingEvents.length > 0 && (
+                      <div className="border-t border-slate-200 my-8"></div>
+                    )}
+                    <div className="text-lg font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      Past Events
+                    </div>
+                    {pastEvents.map(event => renderEventCard(event))}
+                  </div>
+                )}
+              </>
+            )}
           </>
         )}
 

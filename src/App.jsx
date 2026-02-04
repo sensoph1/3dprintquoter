@@ -56,7 +56,9 @@ const DEFAULT_LIBRARY = {
     { id: 401, name: "Downtown Craft Fair", date: "2025-01-18", location: "City Convention Center", boothFee: 150, otherCosts: 45, notes: "Corner booth near entrance" },
     { id: 402, name: "Maker Market", date: "2025-01-25", location: "Community Center", boothFee: 75, otherCosts: 20, notes: "Shared table with friend" },
     { id: 403, name: "Holiday Pop-Up Shop", date: "2024-12-14", location: "Main Street Plaza", boothFee: 200, otherCosts: 60, notes: "Great foot traffic" },
-    { id: 404, name: "Tech Meetup Vendor Fair", date: "2024-11-20", location: "Innovation Hub", boothFee: 50, otherCosts: 15, notes: "Mostly prototypes shown" }
+    { id: 404, name: "Tech Meetup Vendor Fair", date: "2024-11-20", location: "Innovation Hub", boothFee: 50, otherCosts: 15, notes: "Mostly prototypes shown" },
+    { id: 405, name: "Spring Artisan Market", date: "2026-03-15", location: "Riverside Park", boothFee: 125, otherCosts: 30, notes: "Outdoor event - bring tent" },
+    { id: 406, name: "Local Flea Market", date: "2026-02-22", location: "Fairgrounds", boothFee: 40, otherCosts: 10, notes: "Monthly recurring event" }
   ],
   rounding: 1
 };
