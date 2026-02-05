@@ -1,5 +1,11 @@
 # TODO
 
+## Needs Investigation
+- [ ] Fix Quote History logic - Currently being used as a sales tracker somehow
+  - Investigate current usage patterns
+  - Clarify distinction between quotes (estimates) vs sales (actual transactions)
+  - May need to separate into distinct features or rename for clarity
+
 ## Pending Ideas for enhancements
 
 ### Events & Sales
