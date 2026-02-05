@@ -200,7 +200,6 @@ const App = () => {
     return saved ? JSON.parse(saved) : DEFAULT_HISTORY;
   });
   const [editingJobId, setEditingJobId] = useState(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [requests, setRequests] = useState([]);
 
   // TODO: Remove hardcoded ID after testing
@@ -517,8 +516,6 @@ const App = () => {
                 setJob={setJob}
                 library={library}
                 stats={stats}
-                showAdvanced={showAdvanced}
-                setShowAdvanced={setShowAdvanced}
                 requests={requests}
               />
             </div>

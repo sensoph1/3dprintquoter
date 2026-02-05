@@ -3,7 +3,7 @@ import { Calculator, FileText } from 'lucide-react';
 import ComboBox from './ComboBox';
 import Tooltip from './Tooltip';
 
-const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvanced, requests = [] }) => {
+const CalculatorTab = ({ job, setJob, library, stats, requests = [] }) => {
   const update = (field, val) => setJob({ ...job, [field]: val });
   
   const updateMat = (index, field, val) => {
@@ -24,17 +24,6 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
         </div>
       </div>
 
-      {/* Advanced Mode Toggle */}
-      <div className="flex items-center space-x-2">
-        <input 
-          type="checkbox" 
-          id="advancedModeToggle" 
-          checked={showAdvanced} 
-          onChange={(e) => setShowAdvanced(e.target.checked)}
-          className="toggle toggle-primary" // Assuming you have some CSS for 'toggle toggle-primary'
-        />
-        <label htmlFor="advancedModeToggle" className="text-sm font-medium text-gray-700">Advanced Mode</label>
-      </div>
       {/* SECTION 1: CORE PROJECT DETAILS */}
       <div>
         {/* Project Name - full width */}
@@ -119,58 +108,6 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
           </button>
         </div>
       </div>
-
-        <hr className="my-8 border-slate-100" />
-
-        {showAdvanced && (
-          <div className="p-4 sm:p-6 bg-blue-50 rounded-[2rem] border border-blue-100 shadow-inner space-y-4">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Advanced Cost Breakdown</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4 text-blue-800 font-bold">
-              <Tooltip text="Calculated as: Filament Used (g) * Filament Cost/g">
-                <div className="p-2 bg-white/50 rounded-lg">
-                  <p className="text-[9px] uppercase font-bold text-blue-500">Raw Material Cost</p>
-                  <p className="text-lg sm:text-xl">${stats.matCost.toFixed(2)}</p>
-                </div>
-              </Tooltip>
-              <Tooltip text="Calculated as: (Print Time in Hours * (Printer Wattage / 1000)) * kWh Rate">
-                <div className="p-2 bg-white/50 rounded-lg">
-                  <p className="text-[9px] uppercase font-bold text-blue-500">Total Energy Cost</p>
-                  <p className="text-lg sm:text-xl">${stats.energy.toFixed(2)}</p>
-                </div>
-              </Tooltip>
-              <Tooltip text="Calculated as: (Printer Cost / Printer Lifespan in Hours) * Print Time in Hours">
-                <div className="p-2 bg-white/50 rounded-lg">
-                  <p className="text-[9px] uppercase font-bold text-blue-500">Total Depreciation Cost</p>
-                  <p className="text-lg sm:text-xl">${stats.depreciationCost.toFixed(2)}</p>
-                </div>
-              </Tooltip>
-              <Tooltip text="Calculated as: Printer Cost / Printer Lifespan in Hours">
-                <div className="p-2 bg-white/50 rounded-lg">
-                  <p className="text-[9px] uppercase font-bold text-blue-500">Hourly Amortization</p>
-                  <p className="text-lg sm:text-xl">${stats.hourlyAmortization.toFixed(2)}</p>
-                </div>
-              </Tooltip>
-              <Tooltip text="Calculated as: Material Cost + Energy Cost + Labor Cost + Extra Costs + Depreciation Cost">
-                <div className="p-2 bg-white/50 rounded-lg">
-                  <p className="text-[9px] uppercase font-bold text-blue-500">Total Base Cost</p>
-                  <p className="text-lg sm:text-xl">${stats.baseCost.toFixed(2)}</p>
-                </div>
-              </Tooltip>
-              <Tooltip text="Calculated as: Total Base Cost / Quantity">
-                <div className="p-2 bg-white/50 rounded-lg">
-                  <p className="text-[9px] uppercase font-bold text-blue-500">Cost Per Item</p>
-                  <p className="text-lg sm:text-xl">${stats.costPerItem.toFixed(2)}</p>
-                </div>
-              </Tooltip>
-              <Tooltip text="Calculated as: (Material Cost * Material Cost Multiplier) / Quantity">
-                <div className="p-2 bg-white/50 rounded-lg">
-                  <p className="text-[9px] uppercase font-bold text-blue-500">Material Cost Per Item</p>
-                  <p className="text-lg sm:text-xl">${stats.materialCostPerItemAdvanced.toFixed(2)}</p>
-                </div>
-              </Tooltip>
-            </div>
-          </div>
-        )}
 
       {/* SECTION 2: HARDWARE & EXTRAS */}
       <div className="space-y-6">
@@ -294,6 +231,55 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
             value={job.notes || ""}
             onChange={(e) => update('notes', e.target.value)}
           />
+        </div>
+      </div>
+
+      {/* COST BREAKDOWN */}
+      <div className="p-4 sm:p-6 bg-blue-50 rounded-[2rem] border border-blue-100 shadow-inner space-y-4">
+        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Cost Breakdown</h4>
+        <div className="grid grid-cols-4 md:grid-cols-7 gap-4 text-blue-800 font-bold">
+          <Tooltip text="Calculated as: Filament Used (g) * Filament Cost/g">
+            <div className="p-2 bg-white/50 rounded-lg">
+              <p className="text-[9px] uppercase font-bold text-blue-500">Material Cost</p>
+              <p className="text-lg">${stats.matCost.toFixed(2)}</p>
+            </div>
+          </Tooltip>
+          <Tooltip text="Calculated as: (Print Time in Hours * (Printer Wattage / 1000)) * kWh Rate">
+            <div className="p-2 bg-white/50 rounded-lg">
+              <p className="text-[9px] uppercase font-bold text-blue-500">Energy Cost</p>
+              <p className="text-lg">${stats.energy.toFixed(2)}</p>
+            </div>
+          </Tooltip>
+          <Tooltip text="Calculated as: (Printer Cost / Printer Lifespan in Hours) * Print Time in Hours">
+            <div className="p-2 bg-white/50 rounded-lg">
+              <p className="text-[9px] uppercase font-bold text-blue-500">Depreciation</p>
+              <p className="text-lg">${stats.depreciationCost.toFixed(2)}</p>
+            </div>
+          </Tooltip>
+          <Tooltip text="Calculated as: Printer Cost / Printer Lifespan in Hours">
+            <div className="p-2 bg-white/50 rounded-lg">
+              <p className="text-[9px] uppercase font-bold text-blue-500">Hourly Amort.</p>
+              <p className="text-lg">${stats.hourlyAmortization.toFixed(2)}</p>
+            </div>
+          </Tooltip>
+          <Tooltip text="Calculated as: Material Cost + Energy Cost + Labor Cost + Extra Costs + Depreciation Cost">
+            <div className="p-2 bg-white/50 rounded-lg">
+              <p className="text-[9px] uppercase font-bold text-blue-500">Base Cost</p>
+              <p className="text-lg">${stats.baseCost.toFixed(2)}</p>
+            </div>
+          </Tooltip>
+          <Tooltip text="Calculated as: Total Base Cost / Quantity">
+            <div className="p-2 bg-white/50 rounded-lg">
+              <p className="text-[9px] uppercase font-bold text-blue-500">Cost Per Item</p>
+              <p className="text-lg">${stats.costPerItem.toFixed(2)}</p>
+            </div>
+          </Tooltip>
+          <Tooltip text="Calculated as: (Material Cost * Material Cost Multiplier) / Quantity">
+            <div className="p-2 bg-white/50 rounded-lg">
+              <p className="text-[9px] uppercase font-bold text-blue-500">Mat. Cost/Item</p>
+              <p className="text-lg">${stats.materialCostPerItemAdvanced.toFixed(2)}</p>
+            </div>
+          </Tooltip>
         </div>
       </div>
     </div>
