@@ -86,15 +86,6 @@
   - Search/filter customers
   - Supabase table: `customers` with user_id foreign key
 
-- [ ] Order requests - Shareable public form for custom quote requests
-  - Shareable link: `yoursite.com?request=USER_ID`
-  - Public form (no login): Name, email, phone (optional), description
-  - Supabase table: `quote_requests` with RLS (public insert, auth read)
-  - New Requests tab/section to view incoming requests
-  - Status flow: New → Quoted → Accepted → In Progress → Completed
-  - Convert request to Calculator job
-  - Future: Email notifications via Supabase Edge Functions
-
 ### Export/Integration
 - [ ] CSV export - For taxes/accounting
   - Export buttons in relevant tabs
@@ -125,6 +116,13 @@
 ## Completed
 
 ### Recent
+- [x] Order requests - Shareable public form for custom quote requests
+  - Shareable link: `yoursite.com?request=USER_ID`
+  - Public form (no login): Name, email, phone (optional), description
+  - Supabase table: `quote_requests` with RLS policies
+  - Requests tab to view/manage incoming requests with status updates
+  - Status flow: New → Quoted → Accepted → Completed → Declined
+  - Link requests to Calculator jobs (auto-updates status to "quoted")
 - [x] Events tab - Track events/venues with booth fees, other costs, and profit per event
   - Link/unlink sales from Quote History to events
   - Upcoming vs past events with automatic sorting
