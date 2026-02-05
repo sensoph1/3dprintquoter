@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Calculator, FlaskConical,
   Settings as SettingsIcon, History,
-  Box, Menu, X, Calendar
+  Box, Menu, X, Calendar, Inbox
 } from 'lucide-react';
 
 import CalculatorTab from './components/CalculatorTab';
@@ -11,6 +11,8 @@ import SettingsTab from './components/SettingsTab';
 import QuoteHistoryTab from './components/QuoteHistoryTab';
 import InventoryTab from './components/InventoryTab';
 import EventsTab from './components/EventsTab';
+import RequestsTab from './components/RequestsTab';
+import QuoteRequestForm from './components/QuoteRequestForm';
 import AuthGate from './components/Auth';
 
 import { supabase } from './supabaseClient';
@@ -147,10 +149,15 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('calculator');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Check for public quote request form URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const requestUserId = urlParams.get('request');
+
   const tabs = {
     calculator: { name: 'Calculator', icon: Calculator },
     quoteHistory: { name: 'Quote History', icon: History },
     events: { name: 'Events', icon: Calendar },
+    requests: { name: 'Requests', icon: Inbox },
     filament: { name: 'Costs', icon: FlaskConical },
     inventory: { name: 'Inventory', icon: Box },
     settings: { name: 'Settings', icon: SettingsIcon },
@@ -391,6 +398,11 @@ const App = () => {
     );
   }
 
+  // Show public quote request form if URL parameter is present
+  if (requestUserId) {
+    return <QuoteRequestForm userId={requestUserId} shopName={library.shopName} />;
+  }
+
   // Auth gate disabled for now - uncomment to require login
   // if (!session) {
   //   return <AuthGate />;
@@ -516,6 +528,7 @@ const App = () => {
         ) : (
           <div className="max-w-5xl mx-auto bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
              {activeTab === 'events' && <EventsTab library={library} history={history} saveToDisk={saveToDisk} />}
+             {activeTab === 'requests' && <RequestsTab session={session} />}
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'quoteHistory' && <QuoteHistoryTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} handleAddToInventory={handleAddToInventory} />}
