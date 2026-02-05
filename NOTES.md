@@ -77,6 +77,18 @@
   - Export as PDF for printing
   - Library: qrcode.react for QR, jspdf or react-to-print for PDF
 
+### File Management
+- [ ] 3D file tracker - Catalog and browse local STL/3MF files
+  - User configures local folder path(s) to scan
+  - Display file list with thumbnails (if possible)
+  - Search/filter by filename
+  - Link files to inventory items or quote history entries
+  - Track file metadata: size, date modified, print count
+  - Note: Browser security limits direct filesystem access
+    - Option A: Desktop app (Electron) for full filesystem access
+    - Option B: Manual file upload/indexing via drag-and-drop
+    - Option C: Local server companion app that serves file list to web app
+
 ### Customer Features
 - [ ] Customer database - Track repeat customers, custom orders
   - New Customers tab or section
