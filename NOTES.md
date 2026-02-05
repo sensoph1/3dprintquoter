@@ -1,11 +1,5 @@
 # TODO
 
-## Needs Investigation
-- [ ] Fix Quote History logic - Currently being used as a sales tracker somehow
-  - Investigate current usage patterns
-  - Clarify distinction between quotes (estimates) vs sales (actual transactions)
-  - May need to separate into distinct features or rename for clarity
-
 ## Pending Ideas for enhancements
 
 ### Events & Sales
@@ -134,6 +128,17 @@
 ## Completed
 
 ### Recent
+- [x] Estimates tab (renamed from Quote History) with status workflow
+  - Status flow: Draft → Quoted → Accepted → Printed → Sold → Declined
+  - Only "sold" items count toward event profit calculations
+  - Status badge and dropdown in table
+  - Clarifies distinction between estimates and actual sales
+- [x] Tightened calculator form layout
+  - Project Name on own line, Category/Print Time/Quantity on same row
+  - Printer/Labor/Extras on same row, pricing fields on same row
+  - Removed responsive breakpoints for consistent desktop layout
+- [x] Wider site layout (max-w-5xl → max-w-6xl)
+- [x] Stacked +/- buttons in Inventory tab
 - [x] Order requests - Shareable public form for custom quote requests
   - Shareable link: `yoursite.com?request=USER_ID`
   - Public form (no login): Name, email, phone (optional), description
