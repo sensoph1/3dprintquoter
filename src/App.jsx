@@ -510,7 +510,7 @@ const App = () => {
 
       <main className="max-w-[1600px] mx-auto px-4 sm:px-8">
         {activeTab === 'calculator' ? (
-          <div className="studio-cockpit max-w-5xl mx-auto">
+          <div className="studio-cockpit max-w-6xl mx-auto">
             <div className="left-workbench bg-white rounded-studio border border-slate-100 shadow-sm">
               <CalculatorTab
                 job={job}
@@ -566,7 +566,7 @@ const App = () => {
             </div>
           </div>
         ) : (
-          <div className="max-w-5xl mx-auto bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
+          <div className="max-w-6xl mx-auto bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
              {activeTab === 'events' && <EventsTab library={library} history={history} saveToDisk={saveToDisk} />}
              {activeTab === 'requests' && <RequestsTab session={session} />}
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
