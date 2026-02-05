@@ -184,7 +184,8 @@ const App = () => {
     overrideShopHourlyRate: ensureNumber(library.shopHourlyRate, 0),
     materialCostMultiplier: 2,
     profitMargin: 20,
-    rounding: ensureNumber(library.rounding, 1)
+    rounding: ensureNumber(library.rounding, 1),
+    requestId: null
   });
 
   const [job, setJob] = useState(() => getDefaultJob(library));
@@ -195,6 +196,24 @@ const App = () => {
   });
   const [editingJobId, setEditingJobId] = useState(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [requests, setRequests] = useState([]);
+
+  // TODO: Remove hardcoded ID after testing
+  const TEST_USER_ID = 'c4ffce99-d61c-49c1-a77f-904fcb532e3e';
+  const userId = session?.user?.id || TEST_USER_ID;
+
+  // Load quote requests from Supabase
+  const loadRequests = async () => {
+    const { data, error } = await supabase
+      .from('quote_requests')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setRequests(data);
+    }
+  };
 
   // Auth state and data loading
   useEffect(() => {
@@ -214,6 +233,9 @@ const App = () => {
         loadFromSupabase(session.user.id);
       }
     });
+
+    // Load quote requests
+    loadRequests();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -309,7 +331,7 @@ const App = () => {
     saveToSupabase(newLib, newHist);
   };
 
-    const handleLogProduction = () => {
+    const handleLogProduction = async () => {
     const newEntry = {
       id: generateUniqueId(),
       date: new Date().toLocaleDateString(),
@@ -322,9 +344,20 @@ const App = () => {
       priceByMaterialMultiplier: stats.priceByMaterialMultiplier,
       costPerItem: stats.costPerItem,
       notes: job.notes,
+      requestId: job.requestId || null,
       details: { ...job }
     };
     saveToDisk({ ...library, nextQuoteNo: library.nextQuoteNo + 1 }, [newEntry, ...history]);
+
+    // Update request status to "quoted" if linked to a request
+    if (job.requestId) {
+      await supabase
+        .from('quote_requests')
+        .update({ status: 'quoted' })
+        .eq('id', job.requestId);
+      loadRequests(); // Refresh requests list
+    }
+
     alert("Production logged with notes!");
   };
 
@@ -480,6 +513,7 @@ const App = () => {
                 stats={stats}
                 showAdvanced={showAdvanced}
                 setShowAdvanced={setShowAdvanced}
+                requests={requests}
               />
             </div>
             <div className="right-engine">

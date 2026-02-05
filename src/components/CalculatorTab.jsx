@@ -1,9 +1,9 @@
 import React from 'react';
-import { Calculator } from 'lucide-react';
+import { Calculator, FileText } from 'lucide-react';
 import ComboBox from './ComboBox';
 import Tooltip from './Tooltip';
 
-const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvanced }) => {
+const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvanced, requests = [] }) => {
   const update = (field, val) => setJob({ ...job, [field]: val });
   
   const updateMat = (index, field, val) => {
@@ -63,7 +63,7 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
             </Tooltip>
             <input type="number" className="w-full shadow-sm" value={job.hours} onChange={(e) => update('hours', parseFloat(e.target.value) || 0)} />
           </div>
-          
+
           <div>
             <Tooltip text="The total number of identical items you plan to produce in this print job.">
               <label>Quantity to Produce</label>
@@ -170,54 +170,7 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
           </div>
         )}
 
-      {/* SECTION 2: TECHNICAL SPECS & NOTES */}
-      <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner">
-        <div className="mb-4 px-1">
-          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Technical Specs & Notes</h4>
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-          <div>
-            <Tooltip text="The density of the internal structure of your 3D print. Higher infill percentages use more material but result in stronger parts.">
-              <label>Infill %</label>
-            </Tooltip>
-            <select value={job.infill} onChange={(e) => update('infill', e.target.value)} className="w-full border-none shadow-sm">
-              <option>10%</option><option>15%</option><option>20%</option><option>40%</option><option>100%</option>
-            </select>
-          </div>
-          <div>
-            <Tooltip text="The number of perimeters or outer layers of your 3D print. More walls generally lead to stronger prints.">
-              <label>Wall Count</label>
-            </Tooltip>
-            <select value={job.walls} onChange={(e) => update('walls', e.target.value)} className="w-full border-none shadow-sm">
-              <option>2</option><option>3</option><option>4</option><option>6</option>
-            </select>
-          </div>
-          <div>
-            <Tooltip text="The height of each individual layer your 3D printer lays down. Smaller layer heights result in finer detail but longer print times.">
-              <label>Layer Height</label>
-            </Tooltip>
-            <select value={job.layerHeight} onChange={(e) => update('layerHeight', e.target.value)} className="w-full border-none shadow-sm">
-              <option>0.12mm</option><option>0.16mm</option><option>0.2mm</option><option>0.28mm</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <Tooltip text="Any specific instructions or details for this production job, such as unique client requirements, support settings, or special print temperatures.">
-            <label>Production Notes</label>
-          </Tooltip>
-          <textarea 
-            className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm"
-            rows="3"
-            placeholder="Support settings, nozzle temp, or client notes..."
-            value={job.notes || ""}
-            onChange={(e) => update('notes', e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* SECTION 3: HARDWARE & EXTRAS */}
+      {/* SECTION 2: HARDWARE & EXTRAS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
         <div>
           <Tooltip text="The estimated time, in minutes, spent on pre- or post-processing for this specific print job (e.g., model preparation, support removal, assembly).">
@@ -262,6 +215,76 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
             <label>Rounding Override ($)</label>
           </Tooltip>
           <input type="number" className="w-full shadow-sm" value={job.rounding} onChange={(e) => update('rounding', parseFloat(e.target.value) || 0)} />
+        </div>
+      </div>
+
+      {/* SECTION 3: TECHNICAL SPECS & NOTES */}
+      <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner">
+        <div className="mb-4 px-1">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Technical Specs & Notes</h4>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+          <div>
+            <Tooltip text="The density of the internal structure of your 3D print. Higher infill percentages use more material but result in stronger parts.">
+              <label>Infill %</label>
+            </Tooltip>
+            <select value={job.infill} onChange={(e) => update('infill', e.target.value)} className="w-full border-none shadow-sm">
+              <option>10%</option><option>15%</option><option>20%</option><option>40%</option><option>100%</option>
+            </select>
+          </div>
+          <div>
+            <Tooltip text="The number of perimeters or outer layers of your 3D print. More walls generally lead to stronger prints.">
+              <label>Wall Count</label>
+            </Tooltip>
+            <select value={job.walls} onChange={(e) => update('walls', e.target.value)} className="w-full border-none shadow-sm">
+              <option>2</option><option>3</option><option>4</option><option>6</option>
+            </select>
+          </div>
+          <div>
+            <Tooltip text="The height of each individual layer your 3D printer lays down. Smaller layer heights result in finer detail but longer print times.">
+              <label>Layer Height</label>
+            </Tooltip>
+            <select value={job.layerHeight} onChange={(e) => update('layerHeight', e.target.value)} className="w-full border-none shadow-sm">
+              <option>0.12mm</option><option>0.16mm</option><option>0.2mm</option><option>0.28mm</option>
+            </select>
+          </div>
+        </div>
+
+        {requests.length > 0 && (
+          <div className="mb-6">
+            <Tooltip text="Link this job to a customer quote request. Status will be updated to 'quoted' when saved.">
+              <label className="flex items-center gap-2">
+                <FileText size={14} className="text-blue-500" />
+                Link to Request
+              </label>
+            </Tooltip>
+            <select
+              className="w-full border-none shadow-sm"
+              value={job.requestId || ''}
+              onChange={(e) => update('requestId', e.target.value || null)}
+            >
+              <option value="">No linked request</option>
+              {requests.filter(r => r.status === 'new' || r.id === job.requestId).map(request => (
+                <option key={request.id} value={request.id}>
+                  {request.customer_name} - {request.description.substring(0, 50)}{request.description.length > 50 ? '...' : ''} ({request.status})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div>
+          <Tooltip text="Any specific instructions or details for this production job, such as unique client requirements, support settings, or special print temperatures.">
+            <label>Production Notes</label>
+          </Tooltip>
+          <textarea
+            className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm"
+            rows="3"
+            placeholder="Support settings, nozzle temp, or client notes..."
+            value={job.notes || ""}
+            onChange={(e) => update('notes', e.target.value)}
+          />
         </div>
       </div>
     </div>
