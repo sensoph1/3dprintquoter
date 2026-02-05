@@ -37,14 +37,16 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
       </div>
       {/* SECTION 1: CORE PROJECT DETAILS */}
       <div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-          <div>
-            <Tooltip text="A descriptive name for your project or print job.">
-              <label>Project Name</label>
-            </Tooltip>
-            <input type="text" className="w-full shadow-sm" value={job.name} onChange={(e) => update('name', e.target.value)} placeholder="e.g. Prototype_V1" />
-          </div>
+        {/* Project Name - full width */}
+        <div className="mb-6">
+          <Tooltip text="A descriptive name for your project or print job.">
+            <label>Project Name</label>
+          </Tooltip>
+          <input type="text" className="w-full shadow-sm" value={job.name} onChange={(e) => update('name', e.target.value)} placeholder="e.g. Prototype_V1" />
+        </div>
 
+        {/* Category, Print Time, Quantity - same line */}
+        <div className="grid grid-cols-3 gap-x-6 gap-y-4">
           <div>
             <Tooltip text="A category to organize your projects.">
               <label>Category</label>
@@ -66,7 +68,7 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
 
           <div>
             <Tooltip text="The total number of identical items you plan to produce in this print job.">
-              <label>Quantity to Produce</label>
+              <label>Quantity</label>
             </Tooltip>
             <input type="number" className="w-full shadow-sm" value={job.qty} onChange={(e) => update('qty', parseInt(e.target.value) || 1)} />
           </div>
@@ -75,7 +77,7 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
         <hr className="my-8 border-slate-100" />
 
         {job.materials.map((mat, index) => (
-          <div key={index} className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 mb-4">
+          <div key={index} className="grid grid-cols-2 gap-x-6 gap-y-4 mb-4">
             <div>
               <label>Select Filament</label>
               <ComboBox
@@ -171,50 +173,57 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
         )}
 
       {/* SECTION 2: HARDWARE & EXTRAS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
-        <div>
-          <Tooltip text="The estimated time, in minutes, spent on pre- or post-processing for this specific print job (e.g., model preparation, support removal, assembly).">
-            <label>Labor (Minutes)</label>
-          </Tooltip>
-          <input type="number" className="w-full shadow-sm" value={job.laborMinutes} onChange={(e) => update('laborMinutes', parseFloat(e.target.value) || 0)} />
+      <div className="space-y-6">
+        {/* Printer, Labor, Extras - same line */}
+        <div className="grid grid-cols-3 gap-6">
+          <div>
+            <Tooltip text="The 3D printer that will be used for this print job. Select from your configured hardware list.">
+              <label>Printer</label>
+            </Tooltip>
+            <select className="w-full shadow-sm" value={job.selectedPrinterId} onChange={(e) => update('selectedPrinterId', parseInt(e.target.value))}>
+              {library.printers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <Tooltip text="The estimated time, in minutes, spent on pre- or post-processing for this specific print job (e.g., model preparation, support removal, assembly).">
+              <label>Labor (Minutes)</label>
+            </Tooltip>
+            <input type="number" className="w-full shadow-sm" value={job.laborMinutes} onChange={(e) => update('laborMinutes', parseFloat(e.target.value) || 0)} />
+          </div>
+          <div>
+            <Tooltip text="Any additional costs associated with this job not covered by material, energy, labor, or machine time (e.g., magnets, special components, packaging).">
+              <label>Extra ($)</label>
+            </Tooltip>
+            <input type="number" className="w-full shadow-sm" value={job.extraCosts} onChange={(e) => update('extraCosts', parseFloat(e.target.value) || 0)} />
+          </div>
         </div>
-        <div>
-          <Tooltip text="The 3D printer that will be used for this print job. Select from your configured hardware list.">
-            <label>Printer</label>
-          </Tooltip>
-          <select className="w-full shadow-sm" value={job.selectedPrinterId} onChange={(e) => update('selectedPrinterId', parseInt(e.target.value))}>
-            {library.printers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        </div>
-        <div>
-          <Tooltip text="Any additional costs associated with this job not covered by material, energy, labor, or machine time (e.g., magnets, special components, packaging).">
-            <label>Extra ($)</label>
-          </Tooltip>
-          <input type="number" className="w-full shadow-sm" value={job.extraCosts} onChange={(e) => update('extraCosts', parseFloat(e.target.value) || 0)} />
-        </div>
-        <div>
-          <Tooltip text="Override the global shop hourly rate from settings for this specific job. This rate is factored into the 'Hourly Rate' pricing strategy.">
-            <label>Hourly Rate Override ($)</label>
-          </Tooltip>
-          <input type="number" className="w-full shadow-sm" value={job.overrideShopHourlyRate} onChange={(e) => update('overrideShopHourlyRate', parseFloat(e.target.value) || 0)} />
-        </div>
-        <div>
-          <Tooltip text="A multiplier applied to the material cost to determine the final price using the 'Material Cost' pricing strategy. Useful for covering material waste, handling, or desired markup.">
-            <label>Material Cost Multiplier</label>
-          </Tooltip>
-          <input type="number" className="w-full shadow-sm" value={job.materialCostMultiplier} onChange={(e) => update('materialCostMultiplier', parseFloat(e.target.value) || 0)} />
-        </div>
-        <div>
-          <Tooltip text="Your desired profit margin as a percentage for this specific job. This is used in the 'Profit Margin' pricing strategy.">
-            <label>Profit Margin (%)</label>
-          </Tooltip>
-          <input type="number" className="w-full shadow-sm" value={job.profitMargin} onChange={(e) => update('profitMargin', parseFloat(e.target.value) || 0)} />
-        </div>
-        <div>
-          <Tooltip text="Override the global price rounding setting for this specific job. Prices will be rounded up to the nearest value entered here (e.g., 1 for nearest dollar, 5 for nearest five dollars).">
-            <label>Rounding Override ($)</label>
-          </Tooltip>
-          <input type="number" className="w-full shadow-sm" value={job.rounding} onChange={(e) => update('rounding', parseFloat(e.target.value) || 0)} />
+
+        {/* Hourly Rate, Material Multiplier, Profit Margin, Rounding - same line */}
+        <div className="grid grid-cols-4 gap-6">
+          <div>
+            <Tooltip text="Override the global shop hourly rate from settings for this specific job. This rate is factored into the 'Hourly Rate' pricing strategy.">
+              <label>Hourly Rate ($)</label>
+            </Tooltip>
+            <input type="number" className="w-full shadow-sm" value={job.overrideShopHourlyRate} onChange={(e) => update('overrideShopHourlyRate', parseFloat(e.target.value) || 0)} />
+          </div>
+          <div>
+            <Tooltip text="A multiplier applied to the material cost to determine the final price using the 'Material Cost' pricing strategy. Useful for covering material waste, handling, or desired markup.">
+              <label>Material Multiplier</label>
+            </Tooltip>
+            <input type="number" className="w-full shadow-sm" value={job.materialCostMultiplier} onChange={(e) => update('materialCostMultiplier', parseFloat(e.target.value) || 0)} />
+          </div>
+          <div>
+            <Tooltip text="Your desired profit margin as a percentage for this specific job. This is used in the 'Profit Margin' pricing strategy.">
+              <label>Profit Margin (%)</label>
+            </Tooltip>
+            <input type="number" className="w-full shadow-sm" value={job.profitMargin} onChange={(e) => update('profitMargin', parseFloat(e.target.value) || 0)} />
+          </div>
+          <div>
+            <Tooltip text="Override the global price rounding setting for this specific job. Prices will be rounded up to the nearest value entered here (e.g., 1 for nearest dollar, 5 for nearest five dollars).">
+              <label>Rounding ($)</label>
+            </Tooltip>
+            <input type="number" className="w-full shadow-sm" value={job.rounding} onChange={(e) => update('rounding', parseFloat(e.target.value) || 0)} />
+          </div>
         </div>
       </div>
 
@@ -224,7 +233,7 @@ const CalculatorTab = ({ job, setJob, library, stats, showAdvanced, setShowAdvan
           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Technical Specs & Notes</h4>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-3 gap-6 mb-6">
           <div>
             <Tooltip text="The density of the internal structure of your 3D print. Higher infill percentages use more material but result in stronger parts.">
               <label>Infill %</label>
