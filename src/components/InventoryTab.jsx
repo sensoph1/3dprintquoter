@@ -62,10 +62,12 @@ const InventoryTab = ({ library, saveToDisk }) => {
                     <div className="text-lg font-black text-slate-600">${(part.priceByMaterialMultiplier || 0).toFixed(2)}</div>
                   </td>
                   <td>
-                    <div className="flex items-center justify-center gap-4 bg-white p-2 rounded-2xl border shadow-sm">
-                      <button onClick={() => updatePartQty(part.id, -1)} className="p-2 bg-slate-100 rounded-lg hover:bg-red-50 transition"><Minus size={16}/></button>
-                      <div className="w-12 text-center font-black text-xl">{part.qty}</div>
-                      <button onClick={() => updatePartQty(part.id, 1)} className="p-2 bg-slate-100 rounded-lg hover:bg-blue-50 transition"><Plus size={16}/></button>
+                    <div className="flex items-center justify-center gap-2 bg-white p-2 rounded-xl border shadow-sm">
+                      <div className="w-10 text-center font-black text-xl">{part.qty}</div>
+                      <div className="flex flex-col gap-0.5">
+                        <button onClick={() => updatePartQty(part.id, 1)} className="p-1 bg-slate-100 rounded hover:bg-blue-50 transition"><Plus size={12}/></button>
+                        <button onClick={() => updatePartQty(part.id, -1)} className="p-1 bg-slate-100 rounded hover:bg-red-50 transition"><Minus size={12}/></button>
+                      </div>
                     </div>
                   </td>
                   <td className="text-center">

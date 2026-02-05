@@ -78,6 +78,7 @@ const DEFAULT_HISTORY = [
     priceByMaterialMultiplier: 6.40,
     costPerItem: 3.20,
     notes: "Sold at craft fair",
+    status: "sold",
     eventId: 401,
     details: { name: "Custom Phone Stand", category: "Client Work", qty: 5, hours: 2.5, laborMinutes: 15, extraCosts: 0, materials: [{ filamentId: 1, grams: 45 }], selectedPrinterId: 1, profitMargin: 20 }
   },
@@ -93,6 +94,7 @@ const DEFAULT_HISTORY = [
     priceByMaterialMultiplier: 14.40,
     costPerItem: 7.20,
     notes: "Popular item at fair",
+    status: "sold",
     eventId: 401,
     details: { name: "Desk Organizer Set", category: "Prototypes", qty: 2, hours: 4, laborMinutes: 30, extraCosts: 0, materials: [{ filamentId: 2, grams: 120 }], selectedPrinterId: 1, profitMargin: 20 }
   },
@@ -108,6 +110,7 @@ const DEFAULT_HISTORY = [
     priceByMaterialMultiplier: 9.60,
     costPerItem: 4.80,
     notes: "Sold at maker market",
+    status: "sold",
     eventId: 402,
     details: { name: "Trophy Base", category: "Client Work", qty: 3, hours: 3, laborMinutes: 20, extraCosts: 0, materials: [{ filamentId: 3, grams: 85 }], selectedPrinterId: 2, profitMargin: 20 }
   },
@@ -123,6 +126,7 @@ const DEFAULT_HISTORY = [
     priceByMaterialMultiplier: 4.80,
     costPerItem: 2.40,
     notes: "Best seller at holiday pop-up",
+    status: "sold",
     eventId: 403,
     details: { name: "Holiday Ornament Set", category: "Personal", qty: 15, hours: 1.5, laborMinutes: 10, extraCosts: 0, materials: [{ filamentId: 3, grams: 25 }], selectedPrinterId: 1, profitMargin: 20 }
   },
@@ -138,6 +142,7 @@ const DEFAULT_HISTORY = [
     priceByMaterialMultiplier: 3.00,
     costPerItem: 1.50,
     notes: "Custom order from holiday event",
+    status: "sold",
     eventId: 403,
     details: { name: "Gift Box Inserts", category: "Client Work", qty: 20, hours: 2, laborMinutes: 5, extraCosts: 0, materials: [{ filamentId: 2, grams: 15 }], selectedPrinterId: 2, profitMargin: 20 }
   }
@@ -155,7 +160,7 @@ const App = () => {
 
   const tabs = {
     calculator: { name: 'Calculator', icon: Calculator },
-    quoteHistory: { name: 'Quote History', icon: History },
+    quoteHistory: { name: 'Estimates', icon: History },
     events: { name: 'Events', icon: Calendar },
     requests: { name: 'Requests', icon: Inbox },
     filament: { name: 'Costs', icon: FlaskConical },
@@ -345,6 +350,7 @@ const App = () => {
       costPerItem: stats.costPerItem,
       notes: job.notes,
       requestId: job.requestId || null,
+      status: job.requestId ? 'quoted' : 'draft',
       details: { ...job }
     };
     saveToDisk({ ...library, nextQuoteNo: library.nextQuoteNo + 1 }, [newEntry, ...history]);
@@ -553,7 +559,7 @@ const App = () => {
                   </div>
                 ) : (
                   <button onClick={handleLogProduction} className="w-full py-4 sm:py-5 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl transition-all">
-                    Log Production
+                    Save Estimate
                   </button>
                 )}
               </div>

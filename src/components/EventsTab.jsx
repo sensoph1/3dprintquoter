@@ -15,23 +15,25 @@ const EventsTab = ({ library, history, saveToDisk }) => {
 
   const events = library.events || [];
 
-  // Calculate metrics for an event
+  // Calculate metrics for an event (only "sold" items count toward revenue/profit)
   const calculateEventMetrics = (event) => {
     const linkedSales = history.filter(h => h.eventId === event.id);
-    const grossRevenue = linkedSales.reduce((sum, sale) => {
+    const soldItems = linkedSales.filter(h => h.status === 'sold');
+
+    const grossRevenue = soldItems.reduce((sum, sale) => {
       const qty = sale.details?.qty || 1;
       return sum + (sale.unitPrice * qty);
     }, 0);
-    const totalCOGS = linkedSales.reduce((sum, sale) => {
+    const totalCOGS = soldItems.reduce((sum, sale) => {
       const qty = sale.details?.qty || 1;
       return sum + ((sale.costPerItem || 0) * qty);
     }, 0);
     const eventCosts = (parseFloat(event.boothFee) || 0) + (parseFloat(event.otherCosts) || 0);
     const netProfit = grossRevenue - eventCosts - totalCOGS;
     const profitMargin = grossRevenue > 0 ? (netProfit / grossRevenue) * 100 : 0;
-    const itemsSold = linkedSales.reduce((sum, s) => sum + (s.details?.qty || 1), 0);
+    const itemsSold = soldItems.reduce((sum, s) => sum + (s.details?.qty || 1), 0);
 
-    return { grossRevenue, totalCOGS, eventCosts, netProfit, profitMargin, itemsSold, salesCount: linkedSales.length, linkedSales };
+    return { grossRevenue, totalCOGS, eventCosts, netProfit, profitMargin, itemsSold, salesCount: soldItems.length, linkedSales };
   };
 
   // CRUD operations

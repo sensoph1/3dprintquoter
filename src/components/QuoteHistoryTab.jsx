@@ -5,6 +5,19 @@ import {
 } from 'lucide-react';
 import Tooltip from './Tooltip';
 
+const STATUS_OPTIONS = [
+  { value: 'draft', label: 'Draft', color: 'bg-slate-100 text-slate-600' },
+  { value: 'quoted', label: 'Quoted', color: 'bg-yellow-100 text-yellow-700' },
+  { value: 'accepted', label: 'Accepted', color: 'bg-blue-100 text-blue-700' },
+  { value: 'printed', label: 'Printed', color: 'bg-purple-100 text-purple-700' },
+  { value: 'sold', label: 'Sold', color: 'bg-green-100 text-green-700' },
+  { value: 'declined', label: 'Declined', color: 'bg-red-100 text-red-700' }
+];
+
+const getStatusConfig = (status) => {
+  return STATUS_OPTIONS.find(s => s.value === status) || STATUS_OPTIONS[0];
+};
+
 const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAddToInventory }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,6 +34,13 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
   const assignEvent = (itemId, eventId) => {
     const newHistory = history.map(item =>
       item.id === itemId ? { ...item, eventId: eventId || undefined } : item
+    );
+    saveToDisk(library, newHistory);
+  };
+
+  const updateStatus = (itemId, newStatus) => {
+    const newHistory = history.map(item =>
+      item.id === itemId ? { ...item, status: newStatus } : item
     );
     saveToDisk(library, newHistory);
   };
@@ -47,9 +67,9 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
       <div className="flex justify-between items-center mb-10">
         <div>
           <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
-            <History className="text-blue-600" size={28} /> Quote History
+            <History className="text-blue-600" size={28} /> Estimates
           </h2>
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Historical record of all logged studio projects</p>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Track pricing estimates from draft to sold</p>
         </div>
       </div>
 
@@ -86,6 +106,9 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
               <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
                 <Tooltip text="The category of the project.">Category</Tooltip>
               </th>
+              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <Tooltip text="Current status of this estimate.">Status</Tooltip>
+              </th>
               <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
                 <Tooltip text="The calculated cost to produce a single item, before any profit margins or multipliers.">Cost</Tooltip>
               </th>
@@ -104,8 +127,8 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
           <tbody>
             {filteredHistory.length === 0 ? (
               <tr>
-                <td colSpan="8" className="p-20 text-center text-slate-400 font-bold italic">
-                  {searchTerm ? "No projects match your search." : "No production records found."}
+                <td colSpan="9" className="p-20 text-center text-slate-400 font-bold italic">
+                  {searchTerm ? "No estimates match your search." : "No estimates found."}
                 </td>
               </tr>
             ) : (
@@ -133,6 +156,11 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
                     <td className="p-6">
                       <div className="text-sm font-bold text-slate-500">{item.category || '—'}</div>
                     </td>
+                    <td className="p-6">
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${getStatusConfig(item.status).color}`}>
+                        {getStatusConfig(item.status).label}
+                      </span>
+                    </td>
                     <td className="p-6 text-right">
                       <div className="text-lg font-black text-slate-900">${(item.costPerItem || 0).toFixed(2)}</div>
                     </td>
@@ -154,7 +182,7 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
 
                   {expandedId === item.id && (
                     <tr className="bg-slate-50/50">
-                      <td colSpan="8" className="p-8 border-t border-slate-100">
+                      <td colSpan="9" className="p-8 border-t border-slate-100">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                           <div className="space-y-4">
                             <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600">Technical Specs</h4>
@@ -194,6 +222,16 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
                                 </h4>
                               </Tooltip>
                               <div className="flex flex-wrap items-center gap-3">
+                                <select
+                                  value={item.status || 'draft'}
+                                  onChange={(e) => { e.stopPropagation(); updateStatus(item.id, e.target.value); }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className={`text-[9px] font-bold px-2 py-1 rounded-lg border border-slate-200 ${getStatusConfig(item.status).color}`}
+                                >
+                                  {STATUS_OPTIONS.map(status => (
+                                    <option key={status.value} value={status.value}>{status.label}</option>
+                                  ))}
+                                </select>
                                 {events.length > 0 && (
                                   <select
                                     value={item.eventId || ''}
