@@ -131,23 +131,38 @@ const SquareIntegration = ({
       if (data?.transactions?.length > 0) {
         const existingSales = library.sales || [];
 
+        // Build date-to-event lookup for auto-linking
+        const events = library.events || [];
+        const eventByDate = {};
+        if (syncOptions.linkToEvent) {
+          for (const event of events) {
+            if (event.date) {
+              const dateStr = new Date(event.date).toLocaleDateString();
+              eventByDate[dateStr] = event.id;
+            }
+          }
+        }
+
         // Convert Square transactions to sale records
         const newSales = data.transactions
           .filter(t => !existingSales.some(s => s.squareOrderId === t.squareOrderId))
-          .map(t => ({
-            id: `sale-sq-${t.squareOrderId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            date: new Date(t.date).toLocaleDateString(),
-            itemName: t.name,
-            quantity: t.quantity || 1,
-            unitPrice: t.unitPrice,
-            total: (t.quantity || 1) * t.unitPrice,
-            paymentMethod: 'square',
-            eventId: null,
-            inventoryId: null,
-            squareOrderId: t.squareOrderId,
-            squareSource: true,
-            notes: 'Imported from Square',
-          }));
+          .map(t => {
+            const saleDate = new Date(t.date).toLocaleDateString();
+            return {
+              id: `sale-sq-${t.squareOrderId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              date: saleDate,
+              itemName: t.name,
+              quantity: t.quantity || 1,
+              unitPrice: t.unitPrice,
+              total: (t.quantity || 1) * t.unitPrice,
+              paymentMethod: 'square',
+              eventId: eventByDate[saleDate] || null,
+              inventoryId: null,
+              squareOrderId: t.squareOrderId,
+              squareSource: true,
+              notes: 'Imported from Square',
+            };
+          });
 
         if (newSales.length > 0) {
           let updatedLibrary = { ...library, sales: [...newSales, ...existingSales] };
@@ -192,7 +207,9 @@ const SquareIntegration = ({
                 return matched > 0 ? `, updated inventory for ${matched} item(s)` : '';
               })()
             : '';
-          setSuccessMessage(`Imported ${newSales.length} new sale(s) from Square${inventoryMsg}`);
+          const linkedCount = newSales.filter(s => s.eventId).length;
+          const eventMsg = linkedCount > 0 ? `, linked ${linkedCount} to events` : '';
+          setSuccessMessage(`Imported ${newSales.length} new sale(s) from Square${inventoryMsg}${eventMsg}`);
         } else {
           setSuccessMessage('No new transactions to import');
         }
@@ -438,7 +455,7 @@ const SquareIntegration = ({
                     onChange={(e) => setSyncOptions({ ...syncOptions, linkToEvent: e.target.checked })}
                     className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm font-medium text-slate-700">Auto-link to today's event (if active)</span>
+                  <span className="text-sm font-medium text-slate-700">Auto-link sales to events by matching date</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
