@@ -137,7 +137,7 @@ const SquareIntegration = ({
         if (syncOptions.linkToEvent) {
           for (const event of events) {
             if (event.date) {
-              const dateStr = new Date(event.date).toLocaleDateString();
+              const dateStr = new Date(event.date + 'T00:00:00').toLocaleDateString();
               eventByDate[dateStr] = event.id;
             }
           }

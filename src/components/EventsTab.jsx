@@ -155,11 +155,11 @@ const EventsTab = ({ library, history, saveToDisk }) => {
   today.setHours(0, 0, 0, 0);
 
   const upcomingEvents = events
-    .filter(e => new Date(e.date) >= today)
+    .filter(e => new Date(e.date + 'T00:00:00') >= today)
     .sort((a, b) => new Date(a.date) - new Date(b.date)); // Soonest first
 
   const pastEvents = events
-    .filter(e => new Date(e.date) < today)
+    .filter(e => new Date(e.date + 'T00:00:00') < today)
     .sort((a, b) => new Date(b.date) - new Date(a.date)); // Most recent first
 
   // Render a single event card
@@ -190,7 +190,7 @@ const EventsTab = ({ library, history, saveToDisk }) => {
                 <div className="font-black text-slate-800">{event.name}</div>
               )}
               <div className="text-xs text-slate-400 flex items-center gap-2">
-                <Calendar size={12} /> {new Date(event.date).toLocaleDateString()}
+                <Calendar size={12} /> {new Date(event.date + 'T00:00:00').toLocaleDateString()}
                 {event.location && (
                   <>
                     <span className="mx-1">•</span>
@@ -545,7 +545,7 @@ const EventsTab = ({ library, history, saveToDisk }) => {
                   </thead>
                   <tbody>
                     {[
-                      { label: 'Date', getValue: (e) => new Date(e.date).toLocaleDateString() },
+                      { label: 'Date', getValue: (e) => new Date(e.date + 'T00:00:00').toLocaleDateString() },
                       { label: 'Revenue', getValue: (e) => '$' + calculateEventMetrics(e).grossRevenue.toFixed(2), isMoney: true },
                       { label: 'Booth Fee', getValue: (e) => '$' + (e.boothFee || 0).toFixed(2) },
                       { label: 'Other Costs', getValue: (e) => '$' + (e.otherCosts || 0).toFixed(2) },
