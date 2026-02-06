@@ -108,7 +108,7 @@
 **All phases tested and working:**
 - [x] Cloud data sync — `user_data` table with JSONB library/history, verified cross-session
 - [x] Square OAuth — full flow: connect → authorize → callback → tokens stored
-- [x] Square sync sales (pull) — pulls transactions from Square Orders API
+- [x] Square sync sales (pull) — tested with 3 sandbox transactions, all imported successfully
 - [x] Square push inventory — pushes items to Square catalog (verified in Square dashboard)
 - [x] Quote requests — public form submits, shows in Requests tab
 - [x] Auth gate re-enabled, TEST_USER_ID removed, auth check restored
