@@ -165,8 +165,52 @@ const SquareIntegration = ({
 
         if (newEntries.length > 0) {
           const newHistory = [...newEntries, ...history];
-          saveToDisk(library, newHistory);
-          setSuccessMessage(`Imported ${newEntries.length} new transaction(s) from Square`);
+          let updatedLibrary = library;
+
+          // Auto-decrement inventory quantities
+          if (syncOptions.updateInventory && library.printedParts?.length > 0) {
+            const updatedParts = [...library.printedParts];
+            let decrementedCount = 0;
+
+            for (const entry of newEntries) {
+              const txName = entry.name?.toLowerCase();
+              const txQty = entry.details?.qty || 1;
+
+              // Match by squareCatalogId first, then case-insensitive name
+              const matchIdx = updatedParts.findIndex(p =>
+                (entry.category && p.squareCatalogId && p.squareCatalogId === entry.category) ||
+                (txName && p.name?.toLowerCase() === txName)
+              );
+
+              if (matchIdx !== -1) {
+                updatedParts[matchIdx] = {
+                  ...updatedParts[matchIdx],
+                  qty: Math.max(0, (updatedParts[matchIdx].qty || 0) - txQty),
+                };
+                decrementedCount++;
+              }
+            }
+
+            if (decrementedCount > 0) {
+              updatedLibrary = { ...library, printedParts: updatedParts };
+            }
+          }
+
+          saveToDisk(updatedLibrary, newHistory);
+
+          const inventoryMsg = syncOptions.updateInventory
+            ? (() => {
+                const matched = newEntries.filter(entry => {
+                  const txName = entry.name?.toLowerCase();
+                  return library.printedParts?.some(p =>
+                    (entry.category && p.squareCatalogId && p.squareCatalogId === entry.category) ||
+                    (txName && p.name?.toLowerCase() === txName)
+                  );
+                }).length;
+                return matched > 0 ? `, updated inventory for ${matched} item(s)` : '';
+              })()
+            : '';
+          setSuccessMessage(`Imported ${newEntries.length} new transaction(s) from Square${inventoryMsg}`);
           if (onTransactionsImported) {
             onTransactionsImported(newEntries);
           }
@@ -426,15 +470,14 @@ const SquareIntegration = ({
                   />
                   <span className="text-sm font-medium text-slate-700">Auto-link to today's event (if active)</span>
                 </label>
-                <label className="flex items-center gap-3 cursor-pointer opacity-50">
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={syncOptions.updateInventory}
                     onChange={(e) => setSyncOptions({ ...syncOptions, updateInventory: e.target.checked })}
-                    disabled
                     className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm font-medium text-slate-700">Update inventory quantities from Square (coming soon)</span>
+                  <span className="text-sm font-medium text-slate-700">Update inventory quantities from Square</span>
                 </label>
               </div>
             )}
