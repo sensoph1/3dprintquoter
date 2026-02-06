@@ -569,7 +569,7 @@ const App = () => {
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'quoteHistory' && <QuoteHistoryTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} handleAddToInventory={handleAddToInventory} />}
-             {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} onLogout={handleLogout} userEmail={session?.user?.email} />}
+             {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} onLogout={handleLogout} userEmail={session?.user?.email} session={session} />}
           </div>
         )}
       </main>

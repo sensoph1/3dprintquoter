@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive, Tag, LogOut, User, ChevronDown } from 'lucide-react';
 import Tooltip from './Tooltip';
 import Accordion from './Accordion';
+import SquareIntegration from './SquareIntegration';
 
 const InputBlock = ({ label, icon: Icon, type = "text", value, onChange, prefix }) => (
   <div className="space-y-2">
@@ -263,7 +264,7 @@ const CategoryManager = ({ library, saveToDisk }) => {
   );
 };
 
-const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail }) => {
+const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail, session }) => {
   const updateSetting = (key, value) => {
     saveToDisk({ ...library, [key]: value });
   };
@@ -308,6 +309,15 @@ const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail }) => {
             </div>
           </Accordion>
         )}
+
+        <Accordion title="Square Integration">
+          <SquareIntegration
+            session={session}
+            library={library}
+            history={history}
+            saveToDisk={saveToDisk}
+          />
+        </Accordion>
 
         <Accordion title="Branding">
           <div className="space-y-6">
