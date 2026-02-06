@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Calculator, FlaskConical,
   Settings as SettingsIcon, History,
-  Box, Menu, X, Calendar, Inbox
+  Box, Menu, X, Calendar, Inbox, ShoppingCart
 } from 'lucide-react';
 
 import CalculatorTab from './components/CalculatorTab';
@@ -11,6 +11,7 @@ import SettingsTab from './components/SettingsTab';
 import QuoteHistoryTab from './components/QuoteHistoryTab';
 import InventoryTab from './components/InventoryTab';
 import EventsTab from './components/EventsTab';
+import SalesTab from './components/SalesTab';
 import RequestsTab from './components/RequestsTab';
 import QuoteRequestForm from './components/QuoteRequestForm';
 import AuthGate from './components/Auth';
@@ -62,6 +63,7 @@ const DEFAULT_LIBRARY = {
     { id: 405, name: "Spring Artisan Market", date: "2026-03-15", location: "Riverside Park", boothFee: 125, otherCosts: 30, notes: "Outdoor event - bring tent" },
     { id: 406, name: "Local Flea Market", date: "2026-02-22", location: "Fairgrounds", boothFee: 40, otherCosts: 10, notes: "Monthly recurring event" }
   ],
+  sales: [],
   rounding: 1
 };
 
@@ -162,6 +164,7 @@ const App = () => {
     calculator: { name: 'Calculator', icon: Calculator },
     quoteHistory: { name: 'Estimates', icon: History },
     events: { name: 'Events', icon: Calendar },
+    sales: { name: 'Sales', icon: ShoppingCart },
     requests: { name: 'Requests', icon: Inbox },
     filament: { name: 'Costs', icon: FlaskConical },
     inventory: { name: 'Inventory', icon: Box },
@@ -564,6 +567,7 @@ const App = () => {
         ) : (
           <div className="max-w-6xl mx-auto bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
              {activeTab === 'events' && <EventsTab library={library} history={history} saveToDisk={saveToDisk} />}
+             {activeTab === 'sales' && <SalesTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'requests' && <RequestsTab session={session} />}
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} />}

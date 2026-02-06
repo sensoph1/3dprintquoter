@@ -15,25 +15,46 @@ const EventsTab = ({ library, history, saveToDisk }) => {
 
   const events = library.events || [];
 
-  // Calculate metrics for an event (only "sold" items count toward revenue/profit)
+  // Calculate metrics for an event — combines sales tab records + legacy history "sold" entries
   const calculateEventMetrics = (event) => {
-    const linkedSales = history.filter(h => h.eventId === event.id);
-    const soldItems = linkedSales.filter(h => h.status === 'sold');
+    const sales = library.sales || [];
+    const linkedSalesRecords = sales.filter(s => s.eventId === event.id);
+    const linkedHistoryItems = history.filter(h => h.eventId === event.id && h.status === 'sold');
 
-    const grossRevenue = soldItems.reduce((sum, sale) => {
-      const qty = sale.details?.qty || 1;
-      return sum + (sale.unitPrice * qty);
+    // Revenue from sales tab
+    const salesRevenue = linkedSalesRecords.reduce((sum, s) => sum + (s.total || 0), 0);
+    const salesItemCount = linkedSalesRecords.reduce((sum, s) => sum + (s.quantity || 1), 0);
+
+    // Revenue from legacy history sold items
+    const historyRevenue = linkedHistoryItems.reduce((sum, h) => {
+      const qty = h.details?.qty || 1;
+      return sum + (h.unitPrice * qty);
     }, 0);
-    const totalCOGS = soldItems.reduce((sum, sale) => {
-      const qty = sale.details?.qty || 1;
-      return sum + ((sale.costPerItem || 0) * qty);
+    const historyItemCount = linkedHistoryItems.reduce((sum, h) => sum + (h.details?.qty || 1), 0);
+    const totalCOGS = linkedHistoryItems.reduce((sum, h) => {
+      const qty = h.details?.qty || 1;
+      return sum + ((h.costPerItem || 0) * qty);
     }, 0);
+
+    const grossRevenue = salesRevenue + historyRevenue;
     const eventCosts = (parseFloat(event.boothFee) || 0) + (parseFloat(event.otherCosts) || 0);
     const netProfit = grossRevenue - eventCosts - totalCOGS;
     const profitMargin = grossRevenue > 0 ? (netProfit / grossRevenue) * 100 : 0;
-    const itemsSold = soldItems.reduce((sum, s) => sum + (s.details?.qty || 1), 0);
+    const itemsSold = salesItemCount + historyItemCount;
 
-    return { grossRevenue, totalCOGS, eventCosts, netProfit, profitMargin, itemsSold, salesCount: soldItems.length, linkedSales };
+    // Combined linked items for display
+    const linkedSales = [
+      ...linkedSalesRecords.map(s => ({
+        id: s.id,
+        name: s.itemName,
+        quoteNo: s.squareSource ? `SQ-${(s.squareOrderId || '').slice(-6)}` : 'Manual',
+        unitPrice: s.unitPrice,
+        details: { qty: s.quantity },
+      })),
+      ...linkedHistoryItems,
+    ];
+
+    return { grossRevenue, totalCOGS, eventCosts, netProfit, profitMargin, itemsSold, salesCount: linkedSales.length, linkedSales };
   };
 
   // CRUD operations
@@ -58,8 +79,9 @@ const EventsTab = ({ library, history, saveToDisk }) => {
   const handleDeleteEvent = (id) => {
     if (window.confirm("Delete this event? Sales linked to it will be unlinked.")) {
       // Unlink all sales from this event
+      const updatedSales = (library.sales || []).map(s => s.eventId === id ? { ...s, eventId: null } : s);
       const updatedHistory = history.map(h => h.eventId === id ? { ...h, eventId: undefined } : h);
-      saveToDisk({ ...library, events: events.filter(e => e.id !== id) }, updatedHistory);
+      saveToDisk({ ...library, events: events.filter(e => e.id !== id), sales: updatedSales }, updatedHistory);
     }
   };
 
@@ -83,19 +105,39 @@ const EventsTab = ({ library, history, saveToDisk }) => {
     setEditData({});
   };
 
-  // Link/unlink sales
+  // Link/unlink — handles both sales records and history entries
   const unlinkSale = (saleId) => {
-    const updatedHistory = history.map(h => h.id === saleId ? { ...h, eventId: undefined } : h);
-    saveToDisk(library, updatedHistory);
+    const salesArr = library.sales || [];
+    if (salesArr.some(s => s.id === saleId)) {
+      const updatedSales = salesArr.map(s => s.id === saleId ? { ...s, eventId: null } : s);
+      saveToDisk({ ...library, sales: updatedSales });
+    } else {
+      const updatedHistory = history.map(h => h.id === saleId ? { ...h, eventId: undefined } : h);
+      saveToDisk(library, updatedHistory);
+    }
   };
 
   const linkSaleToEvent = (saleId, eventId) => {
-    const updatedHistory = history.map(h => h.id === saleId ? { ...h, eventId } : h);
-    saveToDisk(library, updatedHistory);
+    const salesArr = library.sales || [];
+    if (salesArr.some(s => s.id === saleId)) {
+      const updatedSales = salesArr.map(s => s.id === saleId ? { ...s, eventId } : s);
+      saveToDisk({ ...library, sales: updatedSales });
+    } else {
+      const updatedHistory = history.map(h => h.id === saleId ? { ...h, eventId } : h);
+      saveToDisk(library, updatedHistory);
+    }
   };
 
-  // Get unlinked sales for linking
-  const unlinkedSales = history.filter(h => !h.eventId);
+  // Get unlinked items for linking — from both sales and history
+  const unlinkedSales = [
+    ...(library.sales || []).filter(s => !s.eventId).map(s => ({
+      id: s.id,
+      quoteNo: s.squareSource ? `SQ-${(s.squareOrderId || '').slice(-6)}` : 'Sale',
+      name: s.itemName,
+      unitPrice: s.unitPrice,
+    })),
+    ...history.filter(h => !h.eventId),
+  ];
 
   // Totals across all events
   const totals = events.reduce((acc, event) => {
@@ -254,7 +296,8 @@ const EventsTab = ({ library, history, saveToDisk }) => {
                   <select
                     onChange={(e) => {
                       if (e.target.value) {
-                        linkSaleToEvent(parseInt(e.target.value), event.id);
+                        const val = e.target.value;
+                        linkSaleToEvent(isNaN(val) ? val : parseInt(val), event.id);
                         e.target.value = '';
                       }
                     }}

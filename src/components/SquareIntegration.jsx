@@ -9,9 +9,7 @@ import { supabase } from '../supabaseClient';
 const SquareIntegration = ({
   session,
   library,
-  history,
   saveToDisk,
-  onTransactionsImported
 }) => {
   const [connection, setConnection] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +21,6 @@ const SquareIntegration = ({
 
   // Sync options
   const [syncOptions, setSyncOptions] = useState({
-    importAsSold: true,
     linkToEvent: true,
     updateInventory: false,
   });
@@ -132,53 +129,39 @@ const SquareIntegration = ({
       if (error) throw error;
 
       if (data?.transactions?.length > 0) {
-        // Convert Square transactions to history entries
-        const newEntries = data.transactions
-          .filter(t => !history.some(h => h.squareOrderId === t.squareOrderId))
+        const existingSales = library.sales || [];
+
+        // Convert Square transactions to sale records
+        const newSales = data.transactions
+          .filter(t => !existingSales.some(s => s.squareOrderId === t.squareOrderId))
           .map(t => ({
-            id: `sq-${t.squareOrderId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id: `sale-sq-${t.squareOrderId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             date: new Date(t.date).toLocaleDateString(),
-            quoteNo: `SQ-${t.squareOrderId.slice(-6)}`,
-            name: t.name,
-            category: "",
+            itemName: t.name,
+            quantity: t.quantity || 1,
             unitPrice: t.unitPrice,
-            priceByProfitMargin: t.unitPrice,
-            priceByHourlyRate: 0,
-            priceByMaterialMultiplier: 0,
-            costPerItem: 0,
-            notes: `Imported from Square`,
-            status: syncOptions.importAsSold ? 'sold' : 'draft',
+            total: (t.quantity || 1) * t.unitPrice,
+            paymentMethod: 'square',
             eventId: null,
+            inventoryId: null,
             squareOrderId: t.squareOrderId,
             squareSource: true,
-            details: {
-              name: t.name,
-              qty: t.quantity,
-              hours: 0,
-              laborMinutes: 0,
-              extraCosts: 0,
-              materials: [],
-              selectedPrinterId: library.printers[0]?.id,
-              profitMargin: 0,
-            }
+            notes: 'Imported from Square',
           }));
 
-        if (newEntries.length > 0) {
-          const newHistory = [...newEntries, ...history];
-          let updatedLibrary = library;
+        if (newSales.length > 0) {
+          let updatedLibrary = { ...library, sales: [...newSales, ...existingSales] };
 
           // Auto-decrement inventory quantities
           if (syncOptions.updateInventory && library.printedParts?.length > 0) {
             const updatedParts = [...library.printedParts];
             let decrementedCount = 0;
 
-            for (const entry of newEntries) {
-              const txName = entry.name?.toLowerCase();
-              const txQty = entry.details?.qty || 1;
+            for (const sale of newSales) {
+              const txName = sale.itemName?.toLowerCase();
+              const txQty = sale.quantity || 1;
 
-              // Match by squareCatalogId first, then case-insensitive name
               const matchIdx = updatedParts.findIndex(p =>
-                (entry.category && p.squareCatalogId && p.squareCatalogId === entry.category) ||
                 (txName && p.name?.toLowerCase() === txName)
               );
 
@@ -192,28 +175,24 @@ const SquareIntegration = ({
             }
 
             if (decrementedCount > 0) {
-              updatedLibrary = { ...library, printedParts: updatedParts };
+              updatedLibrary = { ...updatedLibrary, printedParts: updatedParts };
             }
           }
 
-          saveToDisk(updatedLibrary, newHistory);
+          saveToDisk(updatedLibrary);
 
           const inventoryMsg = syncOptions.updateInventory
             ? (() => {
-                const matched = newEntries.filter(entry => {
-                  const txName = entry.name?.toLowerCase();
+                const matched = newSales.filter(sale => {
+                  const txName = sale.itemName?.toLowerCase();
                   return library.printedParts?.some(p =>
-                    (entry.category && p.squareCatalogId && p.squareCatalogId === entry.category) ||
-                    (txName && p.name?.toLowerCase() === txName)
+                    txName && p.name?.toLowerCase() === txName
                   );
                 }).length;
                 return matched > 0 ? `, updated inventory for ${matched} item(s)` : '';
               })()
             : '';
-          setSuccessMessage(`Imported ${newEntries.length} new transaction(s) from Square${inventoryMsg}`);
-          if (onTransactionsImported) {
-            onTransactionsImported(newEntries);
-          }
+          setSuccessMessage(`Imported ${newSales.length} new sale(s) from Square${inventoryMsg}`);
         } else {
           setSuccessMessage('No new transactions to import');
         }
@@ -452,15 +431,6 @@ const SquareIntegration = ({
             </button>
             {showOptions && (
               <div className="p-4 border-t border-slate-100 space-y-3">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={syncOptions.importAsSold}
-                    onChange={(e) => setSyncOptions({ ...syncOptions, importAsSold: e.target.checked })}
-                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-slate-700">Import sales as "sold" estimates</span>
-                </label>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"

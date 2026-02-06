@@ -314,7 +314,6 @@ const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail, sessio
           <SquareIntegration
             session={session}
             library={library}
-            history={history}
             saveToDisk={saveToDisk}
           />
         </Accordion>
