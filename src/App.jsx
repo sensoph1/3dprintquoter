@@ -310,7 +310,7 @@ const App = () => {
 
   const unroundedPriceByProfitMargin = costPerItem / Math.max(0.01, (1 - (ensureNumber(job.profitMargin) / 100)));
   const unroundedPriceByHourlyRate = (ensureNumber(job.hours) * ensureNumber(job.overrideShopHourlyRate)) / qty;
-  const unroundedPriceByMaterialMultiplier = (baseCost * 3) / qty;
+  const unroundedPriceByMaterialMultiplier = (matCost * ensureNumber(job.materialCostMultiplier)) / qty;
   const materialCostPerItemAdvanced = (matCost * ensureNumber(job.materialCostMultiplier)) / qty;
 
   const stats = {
