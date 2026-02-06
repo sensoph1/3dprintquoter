@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive, Tag, LogOut, User } from 'lucide-react';
+import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive, Tag, LogOut, User, ChevronDown } from 'lucide-react';
 import Tooltip from './Tooltip';
 import Accordion from './Accordion';
 
@@ -25,31 +25,34 @@ const InputBlock = ({ label, icon: Icon, type = "text", value, onChange, prefix 
 );
 
 const HardwareFleet = ({ library, saveToDisk }) => {
-  const [newPrinter, setNewPrinter] = useState({ name: '', watts: 300, cost: 0, hoursOfLife: 0 });
+  const [newPrinter, setNewPrinter] = useState({ name: '', makeModel: '', watts: 300, cost: 0, hoursOfLife: 0 });
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const handleAdd = () => {
-    if (!newPrinter.name) return;
+    if (!newPrinter.name && !newPrinter.makeModel) return;
     const updatedPrinters = [
       ...library.printers,
-      { 
-        ...newPrinter, 
-        id: Date.now(), 
-        watts: parseFloat(newPrinter.watts), 
+      {
+        ...newPrinter,
+        id: Date.now(),
+        name: newPrinter.name || newPrinter.makeModel,
+        watts: parseFloat(newPrinter.watts),
         cost: parseFloat(newPrinter.cost),
         hoursOfLife: parseFloat(newPrinter.hoursOfLife)
       }
     ];
     saveToDisk({ ...library, printers: updatedPrinters });
-    setNewPrinter({ name: '', watts: 300, cost: 0 });
+    setNewPrinter({ name: '', makeModel: '', watts: 300, cost: 0, hoursOfLife: 0 });
+    setShowAddForm(false);
   };
 
   const saveEdit = () => {
-    const updated = library.printers.map(p => 
-      p.id === editingId ? { 
-        ...editData, 
-        watts: parseFloat(editData.watts), 
+    const updated = library.printers.map(p =>
+      p.id === editingId ? {
+        ...editData,
+        watts: parseFloat(editData.watts),
         cost: parseFloat(editData.cost),
         hoursOfLife: parseFloat(editData.hoursOfLife)
       } : p
@@ -59,64 +62,7 @@ const HardwareFleet = ({ library, saveToDisk }) => {
   };
 
   return (
-    <div className="space-y-10">
-      {/* ADD NEW PRINTER */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
-          <Plus size={12} /> Add Machine
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
-          <Tooltip text="A descriptive name for your 3D printer (e.g., Voron 2.4, Ender 3 Pro).">
-            <input 
-              placeholder="Printer Name (e.g. Voron 2.4)" 
-              value={newPrinter.name} 
-              onChange={(e) => setNewPrinter({...newPrinter, name: e.target.value})} 
-              className="px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm col-span-1 md:col-span-2" 
-            />
-          </Tooltip>
-          <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
-            <Zap size={14} className="text-slate-400" />
-            <Tooltip text="The maximum power your printer draws in Watts. This is used to calculate energy costs.">
-              <input 
-                type="number" 
-                placeholder="Peak Power Consumption (Watts)" 
-                value={newPrinter.watts} 
-                onChange={(e) => setNewPrinter({...newPrinter, watts: e.target.value})} 
-                className="w-full py-4 bg-transparent outline-none font-bold text-sm" 
-              />
-            </Tooltip>
-          </div>
-          <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
-            <span className="text-slate-400 font-bold">$</span>
-            <Tooltip text="The initial purchase cost of this printer. Used for calculating depreciation.">
-              <input 
-                type="number" 
-                placeholder="Printer Cost" 
-                value={newPrinter.cost} 
-                onChange={(e) => setNewPrinter({...newPrinter, cost: e.target.value})} 
-                className="w-full py-4 bg-transparent outline-none font-bold text-sm" 
-              />
-            </Tooltip>
-          </div>
-          <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
-            <Tooltip text="The estimated total operational hours before this printer needs significant replacement or major repair. Used for calculating depreciation.">
-              <input 
-                type="number" 
-                placeholder="Expected Hours of Life" 
-                value={newPrinter.hoursOfLife} 
-                onChange={(e) => setNewPrinter({...newPrinter, hoursOfLife: e.target.value})} 
-                className="w-full py-4 bg-transparent outline-none font-bold text-sm" 
-              />
-            </Tooltip>
-          </div>
-          <button onClick={handleAdd} className="bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all col-span-1">
-            Deploy Machine
-          </button>
-        </div>
-      </div>
-
-      <hr className="border-slate-50" />
-
+    <div className="space-y-6">
       {/* PRINTER LIST */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full mb-2">
@@ -165,12 +111,18 @@ const HardwareFleet = ({ library, saveToDisk }) => {
                       <h3 className="font-black text-slate-800 uppercase text-xs leading-none">
                         {p.name}
                       </h3>
-                      <div className="flex items-center gap-3 mt-1.5">
-                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                          <Zap size={10} /> {p.watts} Peak W Consumption
+                      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
+                          <Zap size={10} /> {p.watts}W
                         </p>
                         <span className="w-1 h-1 bg-slate-200 rounded-full" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-green-500">Online</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                          ${p.cost?.toLocaleString() || 0}
+                        </p>
+                        <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                          {p.hoursOfLife?.toLocaleString() || 0} hrs life
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -183,6 +135,74 @@ const HardwareFleet = ({ library, saveToDisk }) => {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* ADD NEW PRINTER - Collapsible */}
+      <div className="border border-slate-100 rounded-2xl overflow-hidden">
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-all"
+        >
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600">
+            <Plus size={12} /> Add Machine
+          </div>
+          <ChevronDown size={16} className={`text-slate-400 transition-transform ${showAddForm ? 'rotate-180' : ''}`} />
+        </button>
+        {showAddForm && (
+          <div className="p-4 border-t border-slate-100 space-y-3">
+            {/* Line 1: Machine Name | Make and Model */}
+            <div className="flex gap-2">
+              <input
+                placeholder="Machine Name (e.g. Shop Printer 1)"
+                value={newPrinter.name}
+                onChange={(e) => setNewPrinter({...newPrinter, name: e.target.value})}
+                className="flex-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-sm"
+              />
+              <input
+                placeholder="Make & Model (e.g. Bambu Lab X1C)"
+                value={newPrinter.makeModel}
+                onChange={(e) => setNewPrinter({...newPrinter, makeModel: e.target.value})}
+                className="flex-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-sm"
+              />
+            </div>
+            {/* Line 2: Wattage | Price | Lifespan | Add */}
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 flex items-center gap-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl">
+                <Zap size={12} className="text-slate-400" />
+                <input
+                  type="number"
+                  placeholder="Watts"
+                  value={newPrinter.watts}
+                  onChange={(e) => setNewPrinter({...newPrinter, watts: e.target.value})}
+                  className="w-full bg-transparent outline-none font-bold text-sm"
+                />
+              </div>
+              <div className="flex-1 flex items-center gap-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl">
+                <span className="text-slate-400 font-bold text-sm">$</span>
+                <input
+                  type="number"
+                  placeholder="Price"
+                  value={newPrinter.cost}
+                  onChange={(e) => setNewPrinter({...newPrinter, cost: e.target.value})}
+                  className="w-full bg-transparent outline-none font-bold text-sm"
+                />
+              </div>
+              <div className="flex-1 flex items-center gap-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl">
+                <input
+                  type="number"
+                  placeholder="Lifespan"
+                  value={newPrinter.hoursOfLife}
+                  onChange={(e) => setNewPrinter({...newPrinter, hoursOfLife: e.target.value})}
+                  className="w-full bg-transparent outline-none font-bold text-sm"
+                />
+                <span className="text-slate-400 font-bold text-xs">hrs</span>
+              </div>
+              <button onClick={handleAdd} className="px-6 py-2 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all">
+                Add
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
