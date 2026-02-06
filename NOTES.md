@@ -120,6 +120,15 @@
 - Secrets: `SQUARE_APP_ID`, `SQUARE_APP_SECRET`, `SQUARE_ENVIRONMENT=sandbox`, `APP_URL`
 - Square sandbox redirect URL: `https://tsylcoomfgbkxvrqinnj.supabase.co/functions/v1/square-callback`
 
+**Switching to Production Square (when ready):**
+No code changes needed — config only:
+1. `supabase secrets set SQUARE_ENVIRONMENT="production"`
+2. `supabase secrets set SQUARE_APP_ID="your-production-app-id"`
+3. `supabase secrets set SQUARE_APP_SECRET="your-production-secret"`
+4. `supabase secrets set APP_URL="https://your-real-domain.com"`
+5. Set redirect URL in Square Developer Dashboard under **Production** OAuth settings
+6. Redeploy all 4 edge functions with `--no-verify-jwt`
+
 **Still TODO (Phase 4):**
 1. Implement "Update inventory quantities from Square" sync option
 2. Sales tracking table
