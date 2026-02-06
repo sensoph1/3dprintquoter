@@ -441,10 +441,9 @@ const App = () => {
     return <QuoteRequestForm userId={requestUserId} shopName={library.shopName} />;
   }
 
-  // Auth gate disabled for now - uncomment to require login
-  // if (!session) {
-  //   return <AuthGate />;
-  // }
+  if (!session) {
+    return <AuthGate />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-12 font-sans">

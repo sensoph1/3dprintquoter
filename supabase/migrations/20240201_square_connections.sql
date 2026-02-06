@@ -21,12 +21,20 @@ CREATE TABLE IF NOT EXISTS square_connections (
 ALTER TABLE square_connections ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can view their own connection
-CREATE POLICY "Users can view own connection" ON square_connections
-  FOR SELECT USING (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view own connection' AND tablename = 'square_connections') THEN
+    CREATE POLICY "Users can view own connection" ON square_connections
+      FOR SELECT USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 -- Policy: Users can delete their own connection
-CREATE POLICY "Users can delete own connection" ON square_connections
-  FOR DELETE USING (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can delete own connection' AND tablename = 'square_connections') THEN
+    CREATE POLICY "Users can delete own connection" ON square_connections
+      FOR DELETE USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 -- Note: INSERT and UPDATE are handled by service role key in Edge Functions
 -- to keep access tokens server-side only

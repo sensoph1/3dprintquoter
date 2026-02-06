@@ -11,15 +11,6 @@
   - Link sales to events for profit tracking
   - Supabase table: `sales` with date, item_id, qty, price, event_id, customer_id
 
-- [ ] Quick POS mode - Simplified view for fast checkout at events
-  - Toggle in Events tab or standalone mode
-  - Grid of inventory items with big tap targets
-  - Tap item → increment quantity → running total
-  - Simple checkout: cash/card toggle, complete sale
-  - Auto-deduct from inventory, auto-link to current event
-  - Receipt view (shareable or printable)
-  - Works offline, syncs when back online
-
 - [ ] Low stock alerts - Warnings when inventory drops below threshold
   - Already have `lowStockThreshold` field on consumables
   - Add threshold field to printedParts (finished products)
@@ -77,18 +68,6 @@
   - Export as PDF for printing
   - Library: qrcode.react for QR, jspdf or react-to-print for PDF
 
-### File Management
-- [ ] 3D file tracker - Catalog and browse local STL/3MF files
-  - User configures local folder path(s) to scan
-  - Display file list with thumbnails (if possible)
-  - Search/filter by filename
-  - Link files to inventory items or quote history entries
-  - Track file metadata: size, date modified, print count
-  - Note: Browser security limits direct filesystem access
-    - Option A: Desktop app (Electron) for full filesystem access
-    - Option B: Manual file upload/indexing via drag-and-drop
-    - Option C: Local server companion app that serves file list to web app
-
 ### Customer Features
 - [ ] Customer database - Track repeat customers, custom orders
   - New Customers tab or section
@@ -99,6 +78,14 @@
   - Supabase table: `customers` with user_id foreign key
 
 ### Export/Integration
+- [ ] Square POS integration - Automatic sales data sync
+  - OAuth2 flow ("Connect to Square" button)
+  - Sync Square catalog with app inventory
+  - Pull transaction/sales history
+  - Auto-link sales to events, decrement inventory
+  - Supabase Edge Functions for backend
+  - Docs: https://developer.squareup.com/
+
 - [ ] CSV export - For taxes/accounting
   - Export buttons in relevant tabs
   - Quote History → CSV (date, item, qty, price, cost, profit)
@@ -116,18 +103,55 @@
   - Library: jspdf, react-pdf, or html2pdf
   - Store generated invoices? Or generate on-demand
 
+### Supabase + Square Setup — COMPLETE
+
+**All phases tested and working:**
+- [x] Cloud data sync — `user_data` table with JSONB library/history, verified cross-session
+- [x] Square OAuth — full flow: connect → authorize → callback → tokens stored
+- [x] Square sync sales (pull) — pulls transactions from Square Orders API
+- [x] Square push inventory — pushes items to Square catalog (verified in Square dashboard)
+- [x] Quote requests — public form submits, shows in Requests tab
+- [x] Auth gate re-enabled, TEST_USER_ID removed, auth check restored
+
+**Infrastructure:**
+- Supabase project: `tsylcoomfgbkxvrqinnj`
+- 4 edge functions deployed with `--no-verify-jwt`
+- 3 migrations: `square_connections`, `quote_requests`, `user_data` (all idempotent)
+- Secrets: `SQUARE_APP_ID`, `SQUARE_APP_SECRET`, `SQUARE_ENVIRONMENT=sandbox`, `APP_URL`
+- Square sandbox redirect URL: `https://tsylcoomfgbkxvrqinnj.supabase.co/functions/v1/square-callback`
+
+**Still TODO (Phase 4):**
+1. Implement "Update inventory quantities from Square" sync option
+2. Sales tracking table
+3. Customer database table
+4. Webhooks for real-time Square updates
+5. Add user-facing error messages for sync failures
+
 ### Low Priority
-- [ ] Integrate Square POS for automatic sales data sync
-  - OAuth2 flow for users to connect Square account
-  - Sync Square catalog with app inventory
-  - Pull transaction/sales history
-  - Match Square transactions to printed parts
-  - Needs backend (Supabase Edge Functions or serverless)
-  - Docs: https://developer.squareup.com/
+(empty for now)
+
+### Maybe Later
+- [ ] Quick POS mode - Simplified checkout view for events
+  - Redundant if Square integration is implemented
+  - Square handles payments better; just sync sales back to app
+
+- [ ] 3D file tracker - Catalog and browse local STL/3MF files
+  - Search/filter by filename, link files to inventory/estimates
+  - Track metadata: size, date modified, print count
+  - Not feasible as webapp due to browser filesystem restrictions
+  - Would need Electron app or local companion server
 
 ## Completed
 
 ### Recent
+- [x] Fixed Material Multiplier pricing strategy
+  - Was hardcoded to multiply by 3 instead of using the multiplier field
+  - Now correctly calculates: (materialCost * multiplier) / quantity
+- [x] Improved Hardware Fleet section in Settings
+  - Active Hardware list moved to top, shows price and lifespan in view mode
+  - Add Machine form is collapsible below the list
+  - Two-line add form: Machine Name + Make/Model, then Wattage/Price/Lifespan/Add
+  - Removed "Online" status badge, show actual specs instead
 - [x] Estimates tab (renamed from Quote History) with status workflow
   - Status flow: Draft → Quoted → Accepted → Printed → Sold → Declined
   - Only "sold" items count toward event profit calculations

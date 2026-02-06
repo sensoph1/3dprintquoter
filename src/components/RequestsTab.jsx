@@ -2,17 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Inbox, Mail, Phone, ChevronDown, ChevronRight, Check, X, Clock, Trash2, Copy, ExternalLink } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
-// TODO: Remove this hardcoded ID after testing
-const TEST_USER_ID = 'c4ffce99-d61c-49c1-a77f-904fcb532e3e';
-
 const RequestsTab = ({ session }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  // Use session user ID if available, otherwise fall back to test ID
-  const userId = session?.user?.id || TEST_USER_ID;
+  const userId = session?.user?.id;
 
   const shareableLink = `${window.location.origin}?request=${userId}`;
 
@@ -78,24 +74,23 @@ const RequestsTab = ({ session }) => {
 
   const statusOptions = ['new', 'quoted', 'accepted', 'completed', 'declined'];
 
-  // TODO: Restore auth check after testing
-  // if (!session) {
-  //   return (
-  //     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
-  //       <div className="flex justify-between items-center">
-  //         <div>
-  //           <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
-  //             <Inbox className="text-blue-600" size={28} /> Requests
-  //           </h2>
-  //           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Customer quote requests</p>
-  //         </div>
-  //       </div>
-  //       <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100 text-center">
-  //         <p className="text-slate-500">Sign in to view and manage quote requests.</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (!session) {
+    return (
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
+              <Inbox className="text-blue-600" size={28} /> Requests
+            </h2>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Customer quote requests</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100 text-center">
+          <p className="text-slate-500">Sign in to view and manage quote requests.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
