@@ -19,11 +19,9 @@ const SquareIntegration = ({
   const [successMessage, setSuccessMessage] = useState(null);
   const [showOptions, setShowOptions] = useState(false);
 
-  // Sync options
-  const [syncOptions, setSyncOptions] = useState({
-    linkToEvent: true,
-    updateInventory: false,
-  });
+  // Sync options — persisted in library
+  const syncOptions = library.squareSyncOptions || { linkToEvent: true, updateInventory: false };
+  const setSyncOptions = (opts) => saveToDisk({ ...library, squareSyncOptions: opts });
 
   // Check for connection status
   const checkConnection = useCallback(async () => {
@@ -239,6 +237,7 @@ const SquareIntegration = ({
         name: p.name,
         category: p.category,
         unitPrice: p.unitPrice || p.priceByProfitMargin,
+        qty: p.qty || 0,
         squareCatalogId: p.squareCatalogId,
         squareVariationId: p.squareVariationId,
       }));
@@ -274,13 +273,18 @@ const SquareIntegration = ({
 
         saveToDisk({ ...library, printedParts: updatedParts });
 
-        const successCount = data.pushResults.filter(r => r.success).length;
-        const failCount = data.pushResults.filter(r => !r.success).length;
+        const succeeded = data.pushResults.filter(r => r.success);
+        const failed = data.pushResults.filter(r => !r.success);
 
-        if (failCount > 0) {
-          setSuccessMessage(`Pushed ${successCount} item(s), ${failCount} failed`);
+        const successNames = succeeded.map(r => r.name).join(', ');
+        const failNames = failed.map(r => r.name).join(', ');
+
+        if (failed.length > 0 && succeeded.length > 0) {
+          setSuccessMessage(`Pushed: ${successNames}. Failed: ${failNames}`);
+        } else if (failed.length > 0) {
+          setError(`Failed to push: ${failNames}`);
         } else {
-          setSuccessMessage(`Successfully pushed ${successCount} item(s) to Square`);
+          setSuccessMessage(`Pushed: ${successNames}`);
         }
       }
     } catch (err) {

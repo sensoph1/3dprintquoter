@@ -151,15 +151,53 @@ async function pullTransactions(
 
 async function pushCatalogItem(
   accessToken: string,
-  item: any
+  item: any,
+  locationId: string | null
 ): Promise<{ catalogId: string; variationId: string }> {
   const squareEnvironment = Deno.env.get("SQUARE_ENVIRONMENT") || "production";
   const apiBaseUrl = squareEnvironment === "sandbox"
     ? "https://connect.squareupsandbox.com"
     : "https://connect.squareup.com";
 
+  const apiHeaders = {
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+    "Square-Version": "2024-01-18",
+  };
+
+  // If updating an existing item, fetch current version first
+  let itemVersion: number | undefined;
+  let variationVersion: number | undefined;
+  if (item.squareCatalogId && !item.squareCatalogId.startsWith("#")) {
+    const getRes = await fetch(`${apiBaseUrl}/v2/catalog/object/${item.squareCatalogId}`, {
+      headers: apiHeaders,
+    });
+    if (getRes.ok) {
+      const existing = await getRes.json();
+      itemVersion = existing.object?.version;
+      variationVersion = existing.object?.item_data?.variations?.[0]?.version;
+    }
+  }
+
   // Use idempotency key based on item id
   const idempotencyKey = `upsert-${item.id}-${Date.now()}`;
+
+  const variationObj: any = {
+    type: "ITEM_VARIATION",
+    id: item.squareVariationId || `#var-${item.id}`,
+    item_variation_data: {
+      name: "Regular",
+      pricing_type: "FIXED_PRICING",
+      track_inventory: true,
+      price_money: {
+        amount: Math.round((item.unitPrice || 0) * 100),
+        currency: "USD",
+      },
+    },
+  };
+  if (variationVersion !== undefined) {
+    variationObj.version = variationVersion;
+  }
 
   const catalogObject: any = {
     type: "ITEM",
@@ -167,30 +205,16 @@ async function pushCatalogItem(
     item_data: {
       name: item.name,
       description: item.category || "",
-      variations: [
-        {
-          type: "ITEM_VARIATION",
-          id: item.squareVariationId || `#var-${item.id}`,
-          item_variation_data: {
-            name: "Regular",
-            pricing_type: "FIXED_PRICING",
-            price_money: {
-              amount: Math.round((item.unitPrice || 0) * 100),
-              currency: "USD",
-            },
-          },
-        },
-      ],
+      variations: [variationObj],
     },
   };
+  if (itemVersion !== undefined) {
+    catalogObject.version = itemVersion;
+  }
 
   const response = await fetch(`${apiBaseUrl}/v2/catalog/object`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-      "Square-Version": "2024-01-18",
-    },
+    headers: apiHeaders,
     body: JSON.stringify({
       idempotency_key: idempotencyKey,
       object: catalogObject,
@@ -206,6 +230,36 @@ async function pushCatalogItem(
 
   const catalogId = data.catalog_object?.id || item.squareCatalogId;
   const variationId = data.catalog_object?.item_data?.variations?.[0]?.id || item.squareVariationId;
+
+  // Set inventory count via Inventory API
+  if (locationId && item.qty !== undefined) {
+    try {
+      const inventoryRes = await fetch(`${apiBaseUrl}/v2/inventory/changes/batch-create`, {
+        method: "POST",
+        headers: apiHeaders,
+        body: JSON.stringify({
+          idempotency_key: `inv-${item.id}-${Date.now()}`,
+          changes: [
+            {
+              type: "PHYSICAL_COUNT",
+              physical_count: {
+                catalog_object_id: variationId,
+                location_id: locationId,
+                quantity: String(item.qty),
+                state: "IN_STOCK",
+                occurred_at: new Date().toISOString(),
+              },
+            },
+          ],
+        }),
+      });
+      if (!inventoryRes.ok) {
+        console.error("Inventory count error:", await inventoryRes.json());
+      }
+    } catch (err) {
+      console.error("Inventory count failed:", err);
+    }
+  }
 
   return { catalogId, variationId };
 }
@@ -298,7 +352,7 @@ serve(async (req: Request) => {
       const pushResults: any[] = [];
       for (const item of items) {
         try {
-          const { catalogId, variationId } = await pushCatalogItem(accessToken, item);
+          const { catalogId, variationId } = await pushCatalogItem(accessToken, item, connection.location_id);
           pushResults.push({
             id: item.id,
             name: item.name,
