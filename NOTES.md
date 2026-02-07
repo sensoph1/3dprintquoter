@@ -3,13 +3,13 @@
 ## Pending Ideas for enhancements
 
 ### Events & Sales
-- [ ] Sales tracker - Log actual sales (vs quotes), see revenue per event
-  - Add "Log Sale" button in Inventory tab or quick action
-  - Track: item sold, quantity, price sold at, payment method, customer (optional)
-  - Separate from Quote History (quotes = estimates, sales = actual transactions)
-  - Daily/weekly/monthly sales summaries
-  - Link sales to events for profit tracking
-  - Supabase table: `sales` with date, item_id, qty, price, event_id, customer_id
+- [x] Sales tracker — dedicated Sales tab, separate from Estimates
+  - Log Sale form with inventory item search, auto-fill price, qty, payment method
+  - Square imports land in Sales tab (not Estimates)
+  - Auto-link Square sales to events by matching date
+  - Inventory auto-decrement on sale (manual or Square sync)
+  - Square badge on imported sales, expandable rows with details
+  - Summary stats: total revenue, sales count, items sold today
 
 - [ ] Low stock alerts - Warnings when inventory drops below threshold
   - Already have `lowStockThreshold` field on consumables
@@ -108,8 +108,8 @@
 **All phases tested and working:**
 - [x] Cloud data sync — `user_data` table with JSONB library/history, verified cross-session
 - [x] Square OAuth — full flow: connect → authorize → callback → tokens stored
-- [x] Square sync sales (pull) — tested with 3 sandbox transactions, all imported successfully
-- [x] Square push inventory — pushes items to Square catalog (verified in Square dashboard)
+- [x] Square sync sales (pull) — imports to Sales tab, auto-links to events by date
+- [x] Square push inventory — pushes items with prices, inventory tracking enabled, stock counts synced
 - [x] Quote requests — public form submits, shows in Requests tab
 - [x] Auth gate re-enabled, TEST_USER_ID removed, auth check restored
 
@@ -130,11 +130,9 @@ No code changes needed — config only:
 6. Redeploy all 4 edge functions with `--no-verify-jwt`
 
 **Still TODO (Phase 4):**
-1. Implement "Update inventory quantities from Square" sync option
-2. Sales tracking table
-3. Customer database table
-4. Webhooks for real-time Square updates
-5. Add user-facing error messages for sync failures
+1. Customer database table
+2. Webhooks for real-time Square updates
+3. Daily/weekly/monthly sales summaries
 
 ### Low Priority
 (empty for now)

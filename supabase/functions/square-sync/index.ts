@@ -166,8 +166,10 @@ async function pushCatalogItem(
   };
 
   // If updating an existing item, fetch current version first
+  // If the item no longer exists in Square, treat as new
   let itemVersion: number | undefined;
   let variationVersion: number | undefined;
+  let existsInSquare = false;
   if (item.squareCatalogId && !item.squareCatalogId.startsWith("#")) {
     const getRes = await fetch(`${apiBaseUrl}/v2/catalog/object/${item.squareCatalogId}`, {
       headers: apiHeaders,
@@ -176,6 +178,7 @@ async function pushCatalogItem(
       const existing = await getRes.json();
       itemVersion = existing.object?.version;
       variationVersion = existing.object?.item_data?.variations?.[0]?.version;
+      existsInSquare = true;
     }
   }
 
@@ -184,7 +187,7 @@ async function pushCatalogItem(
 
   const variationObj: any = {
     type: "ITEM_VARIATION",
-    id: item.squareVariationId || `#var-${item.id}`,
+    id: existsInSquare ? item.squareVariationId : `#var-${item.id}`,
     item_variation_data: {
       name: "Regular",
       pricing_type: "FIXED_PRICING",
@@ -201,7 +204,7 @@ async function pushCatalogItem(
 
   const catalogObject: any = {
     type: "ITEM",
-    id: item.squareCatalogId || `#new-${item.id}`,
+    id: existsInSquare ? item.squareCatalogId : `#new-${item.id}`,
     item_data: {
       name: item.name,
       description: item.category || "",
