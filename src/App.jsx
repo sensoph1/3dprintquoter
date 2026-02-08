@@ -160,6 +160,16 @@ const App = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const requestUserId = urlParams.get('request');
 
+  const [library, setLibrary] = useState(() => {
+    const saved = localStorage.getItem('studio_db');
+    return saved ? JSON.parse(saved) : DEFAULT_LIBRARY;
+  });
+
+  const lowStockCount = [
+    ...(library.printedParts || []).filter(p => p.qty <= (p.lowStockThreshold ?? 3)),
+    ...(library.inventory || []).filter(i => i.qty < (i.lowStockThreshold || 10)),
+  ].length;
+
   const tabs = {
     calculator: { name: 'Calculator', icon: Calculator },
     quoteHistory: { name: 'Estimates', icon: History },
@@ -167,14 +177,9 @@ const App = () => {
     sales: { name: 'Sales', icon: ShoppingCart },
     requests: { name: 'Requests', icon: Inbox },
     filament: { name: 'Costs', icon: FlaskConical },
-    inventory: { name: 'Inventory', icon: Box },
+    inventory: { name: 'Inventory', icon: Box, badge: lowStockCount || null },
     settings: { name: 'Settings', icon: SettingsIcon },
   };
-
-  const [library, setLibrary] = useState(() => {
-    const saved = localStorage.getItem('studio_db');
-    return saved ? JSON.parse(saved) : DEFAULT_LIBRARY;
-  });
 
   const getDefaultJob = (library) => ({
     name: "",
@@ -470,8 +475,11 @@ const App = () => {
         {/* Desktop nav */}
         <nav className="desktop-nav bg-white p-1.5 rounded-full shadow-sm border border-slate-100 items-center">
           {Object.keys(tabs).map((tab) => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 sm:px-6 sm:py-3 rounded-full font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`relative px-4 py-2 sm:px-6 sm:py-3 rounded-full font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
               {tabs[tab].name}
+              {tabs[tab].badge && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center">{tabs[tab].badge}</span>
+              )}
             </button>
           ))}
         </nav>
@@ -501,6 +509,9 @@ const App = () => {
                   >
                     <TabIcon size={20} />
                     {tabs[tab].name}
+                    {tabs[tab].badge && (
+                      <span className="ml-auto bg-red-500 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center">{tabs[tab].badge}</span>
+                    )}
                   </button>
                 );
               })}
