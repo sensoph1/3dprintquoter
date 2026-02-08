@@ -11,12 +11,12 @@
   - Square badge on imported sales, expandable rows with details
   - Summary stats: total revenue, sales count, items sold today
 
-- [ ] Low stock alerts - Warnings when inventory drops below threshold
-  - Already have `lowStockThreshold` field on consumables
-  - Add threshold field to printedParts (finished products)
-  - Dashboard widget or notification badge showing low stock items
-  - Optional: color-code items in inventory (red = critical, yellow = low)
-  - Future: email alerts via Supabase Edge Functions
+- [x] Low stock alerts — per-item thresholds with visual warnings
+  - Color-coded rows: red for out-of-stock, amber for low stock
+  - Alert banner at top of Inventory listing all low/out-of-stock items
+  - Editable "Low At" threshold per printed part (default 3)
+  - Red badge count on Inventory tab in nav (desktop + mobile)
+  - Consumables already had threshold support, now consistent across both
 
 ### Business Insights
 - [ ] Dashboard/analytics - Total revenue, best sellers, profit margins over time
