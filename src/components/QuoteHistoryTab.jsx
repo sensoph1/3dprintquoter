@@ -128,16 +128,7 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
                 <Tooltip text="Current status of this estimate.">Status</Tooltip>
               </th>
               <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
-                <Tooltip text="The calculated cost to produce a single item, before any profit margins or multipliers.">Cost</Tooltip>
-              </th>
-              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
-                <Tooltip text="Price calculated using profit margin strategy.">Profit Margin</Tooltip>
-              </th>
-              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
-                <Tooltip text="Price calculated using hourly rate strategy.">Hourly Rate</Tooltip>
-              </th>
-              <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
-                <Tooltip text="Price calculated using material cost multiplier strategy.">Material Cost</Tooltip>
+                <Tooltip text="The final price you chose for this estimate.">Price</Tooltip>
               </th>
               <th className="p-6 text-right"></th>
             </tr>
@@ -145,14 +136,14 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
           <tbody>
             {filteredHistory.length === 0 ? (
               <tr>
-                <td colSpan="9" className="p-20 text-center text-slate-400 font-bold italic">
+                <td colSpan="6" className="p-20 text-center text-slate-400 font-bold italic">
                   {searchTerm ? "No estimates match your search." : "No estimates found."}
                 </td>
               </tr>
             ) : (
               filteredHistory.map((item) => (
                 <React.Fragment key={item.id}>
-                  <tr 
+                  <tr
                     onClick={() => toggleExpand(item.id)}
                     className={`group cursor-pointer transition-colors hover:bg-slate-50 ${expandedId === item.id ? 'bg-blue-50/30' : ''}`}
                   >
@@ -180,16 +171,7 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
                       </span>
                     </td>
                     <td className="p-6 text-right">
-                      <div className="text-lg font-black text-slate-900">${(item.costPerItem || 0).toFixed(2)}</div>
-                    </td>
-                    <td className="p-6 text-right">
-                      <div className="text-lg font-black text-blue-600">${(item.priceByProfitMargin || item.unitPrice || 0).toFixed(2)}</div>
-                    </td>
-                    <td className="p-6 text-right">
-                      <div className="text-lg font-black text-slate-600">${(item.priceByHourlyRate || 0).toFixed(2)}</div>
-                    </td>
-                    <td className="p-6 text-right">
-                      <div className="text-lg font-black text-slate-600">${(item.priceByMaterialMultiplier || 0).toFixed(2)}</div>
+                      <div className="text-lg font-black text-blue-600">${(item.unitPrice || 0).toFixed(2)}</div>
                     </td>
                     <td className="p-6 text-right">
                       <div className="flex justify-end gap-2">
@@ -200,7 +182,7 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
 
                   {expandedId === item.id && (
                     <tr className="bg-slate-50/50">
-                      <td colSpan="9" className="p-8 border-t border-slate-100">
+                      <td colSpan="6" className="p-8 border-t border-slate-100">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                           <div className="space-y-4">
                             <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600">Technical Specs</h4>
