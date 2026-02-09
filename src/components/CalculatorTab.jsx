@@ -235,49 +235,43 @@ const CalculatorTab = ({ job, setJob, library, stats, requests = [] }) => {
       </div>
 
       {/* COST BREAKDOWN */}
-      <div className="p-4 sm:p-6 bg-blue-50 rounded-[2rem] border border-blue-100 shadow-inner space-y-4">
-        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Cost Breakdown</h4>
-        <div className="grid grid-cols-4 md:grid-cols-7 gap-4 text-blue-800 font-bold">
+      <div className="p-6 sm:p-8 bg-blue-50 rounded-[2rem] border border-blue-100 shadow-inner">
+        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-6">Cost Breakdown</h4>
+        <div className="space-y-4">
           <Tooltip text="Calculated as: Filament Used (g) * Filament Cost/g">
-            <div className="p-2 bg-white/50 rounded-lg">
-              <p className="text-[9px] uppercase font-bold text-blue-500">Material Cost</p>
-              <p className="text-lg">${stats.matCost.toFixed(2)}</p>
+            <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Material Cost</span>
+              <span className="text-xl font-black text-blue-800">${stats.matCost.toFixed(2)}</span>
             </div>
           </Tooltip>
           <Tooltip text="Calculated as: (Print Time in Hours * (Printer Wattage / 1000)) * kWh Rate">
-            <div className="p-2 bg-white/50 rounded-lg">
-              <p className="text-[9px] uppercase font-bold text-blue-500">Energy Cost</p>
-              <p className="text-lg">${stats.energy.toFixed(2)}</p>
+            <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Energy Cost</span>
+              <span className="text-xl font-black text-blue-800">${stats.energy.toFixed(2)}</span>
             </div>
           </Tooltip>
           <Tooltip text="Calculated as: (Printer Cost / Printer Lifespan in Hours) * Print Time in Hours">
-            <div className="p-2 bg-white/50 rounded-lg">
-              <p className="text-[9px] uppercase font-bold text-blue-500">Depreciation</p>
-              <p className="text-lg">${stats.depreciationCost.toFixed(2)}</p>
-            </div>
-          </Tooltip>
-          <Tooltip text="Calculated as: Printer Cost / Printer Lifespan in Hours">
-            <div className="p-2 bg-white/50 rounded-lg">
-              <p className="text-[9px] uppercase font-bold text-blue-500">Hourly Amort.</p>
-              <p className="text-lg">${stats.hourlyAmortization.toFixed(2)}</p>
+            <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Depreciation</span>
+              <span className="text-xl font-black text-blue-800">${stats.depreciationCost.toFixed(2)}</span>
             </div>
           </Tooltip>
           <Tooltip text="Calculated as: Material Cost + Energy Cost + Labor Cost + Extra Costs + Depreciation Cost">
-            <div className="p-2 bg-white/50 rounded-lg">
-              <p className="text-[9px] uppercase font-bold text-blue-500">Base Cost</p>
-              <p className="text-lg">${stats.baseCost.toFixed(2)}</p>
+            <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Base Cost</span>
+              <span className="text-xl font-black text-blue-800">${stats.baseCost.toFixed(2)}</span>
             </div>
           </Tooltip>
           <Tooltip text="Calculated as: Total Base Cost / Quantity">
-            <div className="p-2 bg-white/50 rounded-lg">
-              <p className="text-[9px] uppercase font-bold text-blue-500">Cost Per Item</p>
-              <p className="text-lg">${stats.costPerItem.toFixed(2)}</p>
+            <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Cost Per Item</span>
+              <span className="text-xl font-black text-blue-800">${stats.costPerItem.toFixed(2)}</span>
             </div>
           </Tooltip>
           <Tooltip text="Calculated as: (Material Cost * Material Cost Multiplier) / Quantity">
-            <div className="p-2 bg-white/50 rounded-lg">
-              <p className="text-[9px] uppercase font-bold text-blue-500">Mat. Cost/Item</p>
-              <p className="text-lg">${stats.materialCostPerItemAdvanced.toFixed(2)}</p>
+            <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Mat. Cost/Item</span>
+              <span className="text-xl font-black text-blue-800">${stats.materialCostPerItemAdvanced.toFixed(2)}</span>
             </div>
           </Tooltip>
         </div>

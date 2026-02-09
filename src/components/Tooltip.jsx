@@ -50,11 +50,11 @@ const Tooltip = ({ children, text }) => {
   }, [showTooltip]); // Only re-calculate when visibility changes
 
   return (
-    <div ref={wrapperRef} className="relative flex items-center">
+    <div ref={wrapperRef} className="relative w-full">
       <div
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
-        className="cursor-help"
+        className="cursor-help w-full"
       >
         {children}
       </div>

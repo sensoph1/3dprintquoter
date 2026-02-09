@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, MapPin, DollarSign, Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronRight, TrendingUp, BarChart3, Download } from 'lucide-react';
 import Accordion from './Accordion';
 import Tooltip from './Tooltip';
+import EventCalendar from './EventCalendar';
 import generateUniqueId from '../utils/idGenerator';
 import { calculateEventMetrics } from '../utils/eventMetrics';
 import { formatEventsCSV, downloadCSV } from '../utils/csvExport';
@@ -308,7 +309,7 @@ const EventsTab = ({ library, history, saveToDisk }) => {
 
       {/* VIEW TOGGLE */}
       <div className="flex gap-2">
-        {['list', 'compare'].map(view => (
+        {['list', 'calendar', 'compare'].map(view => (
           <button
             key={view}
             onClick={() => setActiveView(view)}
@@ -318,7 +319,7 @@ const EventsTab = ({ library, history, saveToDisk }) => {
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            {view === 'list' ? 'Events' : 'Compare'}
+            {view === 'list' ? 'Events' : view === 'calendar' ? 'Calendar' : 'Compare'}
           </button>
         ))}
       </div>
@@ -464,6 +465,26 @@ const EventsTab = ({ library, history, saveToDisk }) => {
               </>
             )}
           </>
+        )}
+
+        {/* CALENDAR VIEW */}
+        {activeView === 'calendar' && (
+          <EventCalendar
+            events={events}
+            onDateClick={(date, dayEvents) => {
+              if (dayEvents.length === 1) {
+                setExpandedEventId(dayEvents[0].id);
+                setActiveView('list');
+              } else if (dayEvents.length > 1) {
+                // Show list view filtered to that date's events
+                setActiveView('list');
+              }
+            }}
+            onEventClick={(event) => {
+              setExpandedEventId(event.id);
+              setActiveView('list');
+            }}
+          />
         )}
 
         {/* COMPARE VIEW */}
