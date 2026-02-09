@@ -15,6 +15,7 @@ import SalesTab from './components/SalesTab';
 import RequestsTab from './components/RequestsTab';
 import QuoteRequestForm from './components/QuoteRequestForm';
 import AuthGate from './components/Auth';
+import LandingPage from './components/LandingPage';
 
 import { supabase } from './supabaseClient';
 import generateUniqueId from './utils/idGenerator';
@@ -212,6 +213,7 @@ const App = () => {
   const [reEvaluatePartId, setReEvaluatePartId] = useState(null);
   const [requests, setRequests] = useState([]);
   const [toast, setToast] = useState(null);
+  const [showAuth, setShowAuth] = useState(false);
 
   const showToast = (message) => {
     setToast(message);
@@ -488,7 +490,10 @@ const App = () => {
   }
 
   if (!session) {
-    return <AuthGate />;
+    if (showAuth) {
+      return <AuthGate onBack={() => setShowAuth(false)} />;
+    }
+    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
   }
 
   return (

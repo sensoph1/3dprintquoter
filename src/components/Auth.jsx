@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Layers, Mail, Lock } from 'lucide-react';
 
-const AuthGate = () => {
+const AuthGate = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -51,6 +51,15 @@ const AuthGate = () => {
           </button>
         </div>
         {message && <p className="mt-4 text-center text-xs font-bold text-red-500 uppercase tracking-tighter">{message}</p>}
+
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="mt-6 w-full text-center text-sm text-slate-500 hover:text-slate-700 transition"
+          >
+            &larr; Back to home
+          </button>
+        )}
       </div>
     </div>
   );
