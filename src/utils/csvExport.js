@@ -123,7 +123,7 @@ export const formatEstimatesCSV = (history, events, dateRange) => {
  * Format printed parts inventory as CSV.
  */
 export const formatPrintedPartsCSV = (printedParts) => {
-  const headers = ['Name', 'Category', 'Color', 'Qty', 'Low Threshold', 'Margin Price', 'Hourly Price', 'Material Price', 'Stock Value'];
+  const headers = ['Name', 'Category', 'Color', 'Qty', 'Margin Price', 'Hourly Price', 'Material Price', 'Stock Value'];
   const rows = printedParts.map(p => {
     const price = p.priceByProfitMargin || p.unitPrice || 0;
     return [
@@ -131,7 +131,6 @@ export const formatPrintedPartsCSV = (printedParts) => {
       p.category || '',
       p.color || '',
       p.qty || 0,
-      p.lowStockThreshold ?? 3,
       price.toFixed(2),
       (p.priceByHourlyRate || 0).toFixed(2),
       (p.priceByMaterialMultiplier || 0).toFixed(2),

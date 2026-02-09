@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Link, Check, RefreshCw, Upload, LogOut,
   AlertCircle, Store, MapPin, Clock, Settings,
-  ChevronDown
+  ChevronDown, FlaskConical
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
@@ -15,6 +15,7 @@ const SquareIntegration = ({
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [pushing, setPushing] = useState(false);
+  const [creatingTestOrders, setCreatingTestOrders] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [showOptions, setShowOptions] = useState(false);
@@ -295,6 +296,32 @@ const SquareIntegration = ({
     }
   };
 
+  const handleCreateTestOrders = async () => {
+    setError(null);
+    setSuccessMessage(null);
+    setCreatingTestOrders(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('square-test-orders', {
+        body: { count: 3 }
+      });
+
+      if (error) throw error;
+
+      if (data?.orders?.length > 0) {
+        const orderList = data.orders.map(o => `${o.quantity}x ${o.item} ($${o.total.toFixed(2)})`).join(', ');
+        setSuccessMessage(`Created ${data.orders.length} test orders: ${orderList}. Click "Sync Sales" to import them.`);
+      } else {
+        setError('No test orders created');
+      }
+    } catch (err) {
+      console.error('Test orders error:', err);
+      setError(err.message || 'Failed to create test orders');
+    } finally {
+      setCreatingTestOrders(false);
+    }
+  };
+
   const formatLastSync = (timestamp) => {
     if (!timestamp) return 'Never';
     const date = new Date(timestamp);
@@ -433,6 +460,15 @@ const SquareIntegration = ({
             >
               <LogOut size={14} />
               Disconnect
+            </button>
+            <button
+              onClick={handleCreateTestOrders}
+              disabled={creatingTestOrders}
+              className="flex items-center gap-2 px-5 py-3 bg-amber-50 text-amber-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-100 transition-all disabled:opacity-50"
+              title="Create test orders in Square Sandbox"
+            >
+              <FlaskConical size={14} className={creatingTestOrders ? 'animate-pulse' : ''} />
+              {creatingTestOrders ? 'Creating...' : 'Test Orders'}
             </button>
           </div>
 

@@ -12,23 +12,22 @@ const InventoryTab = ({ library, saveToDisk }) => {
     saveToDisk({ ...library, printedParts: newParts });
   };
 
-  const updatePartThreshold = (id, value) => {
-    const newParts = printedParts.map(p =>
-      p.id === id ? { ...p, lowStockThreshold: parseInt(value) || 0 } : p
-    );
-    saveToDisk({ ...library, printedParts: newParts });
-  };
-
   const deletePart = (id) => {
     if (window.confirm("Remove this item from inventory?")) {
       saveToDisk({ ...library, printedParts: printedParts.filter(p => p.id !== id) });
     }
   };
 
-  const isLowStock = (part) => {
-    const threshold = part.lowStockThreshold ?? 3;
-    return part.qty <= threshold;
+  const categoryThresholds = library.categoryThresholds || {};
+
+  const getThreshold = (part) => {
+    if (part.category && categoryThresholds[part.category] !== undefined) {
+      return categoryThresholds[part.category];
+    }
+    return 3; // default
   };
+
+  const isLowStock = (part) => part.qty <= getThreshold(part);
 
   const isCritical = (part) => part.qty === 0;
 
@@ -84,7 +83,7 @@ const InventoryTab = ({ library, saveToDisk }) => {
                     {p.name}
                   </span>
                   {' — '}
-                  {isCritical(p) ? 'Out of stock' : `${p.qty} left (threshold: ${p.lowStockThreshold ?? 3})`}
+                  {isCritical(p) ? 'Out of stock' : `${p.qty} left (low at ${getThreshold(p)})`}
                 </div>
               ))}
               {lowStockConsumables.map(i => (
@@ -112,7 +111,6 @@ const InventoryTab = ({ library, saveToDisk }) => {
                 <th className="pb-4 text-center whitespace-nowrap">Hourly</th>
                 <th className="pb-4 text-center whitespace-nowrap">Material</th>
                 <th className="pb-4 text-center whitespace-nowrap">Stock</th>
-                <th className="pb-4 text-center whitespace-nowrap">Low At</th>
                 <th className="pb-4 w-10"></th>
               </tr>
             </thead>
@@ -158,15 +156,6 @@ const InventoryTab = ({ library, saveToDisk }) => {
                           <button onClick={() => updatePartQty(part.id, -1)} className="p-0.5 bg-slate-100 rounded hover:bg-red-50 transition"><Minus size={10}/></button>
                         </div>
                       </div>
-                    </td>
-                    <td className="text-center">
-                      <input
-                        type="number"
-                        min="0"
-                        className="w-8 px-1.5 py-1 bg-white rounded-lg border text-sm font-bold text-center"
-                        value={part.lowStockThreshold ?? 3}
-                        onChange={(e) => updatePartThreshold(part.id, e.target.value)}
-                      />
                     </td>
                     <td className="text-center">
                       <button onClick={() => deletePart(part.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">

@@ -211,6 +211,7 @@ const HardwareFleet = ({ library, saveToDisk }) => {
 
 const CategoryManager = ({ library, saveToDisk }) => {
   const [newCategory, setNewCategory] = useState('');
+  const thresholds = library.categoryThresholds || {};
 
   const handleAdd = () => {
     if (!newCategory.trim()) return;
@@ -222,7 +223,14 @@ const CategoryManager = ({ library, saveToDisk }) => {
 
   const handleDelete = (cat) => {
     const categories = library.categories || [];
-    saveToDisk({ ...library, categories: categories.filter(c => c !== cat) });
+    const newThresholds = { ...thresholds };
+    delete newThresholds[cat];
+    saveToDisk({ ...library, categories: categories.filter(c => c !== cat), categoryThresholds: newThresholds });
+  };
+
+  const updateThreshold = (cat, value) => {
+    const val = parseInt(value) || 0;
+    saveToDisk({ ...library, categoryThresholds: { ...thresholds, [cat]: val } });
   };
 
   return (
@@ -244,10 +252,20 @@ const CategoryManager = ({ library, saveToDisk }) => {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="space-y-2">
         {(library.categories || []).map((cat, index) => (
-          <div key={index} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-full">
-            <span className="font-bold text-sm text-slate-700">{cat}</span>
+          <div key={index} className="flex items-center gap-3 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl">
+            <span className="font-bold text-sm text-slate-700 flex-1">{cat}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-slate-400 font-bold uppercase">Low at</span>
+              <input
+                type="number"
+                min="0"
+                value={thresholds[cat] ?? 3}
+                onChange={(e) => updateThreshold(cat, e.target.value)}
+                className="w-16 px-3 py-1 bg-white rounded-lg border text-sm font-bold text-center"
+              />
+            </div>
             <button
               onClick={() => handleDelete(cat)}
               className="p-1 text-slate-400 hover:text-red-500 transition-colors"
