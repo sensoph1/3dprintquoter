@@ -16,6 +16,9 @@ import RequestsTab from './components/RequestsTab';
 import QuoteRequestForm from './components/QuoteRequestForm';
 import AuthGate from './components/Auth';
 import LandingPage from './components/LandingPage';
+import UpgradePrompt from './components/UpgradePrompt';
+import SignupPrompt from './components/SignupPrompt';
+import FreshStartPrompt from './components/FreshStartPrompt';
 
 import { supabase } from './supabaseClient';
 import generateUniqueId from './utils/idGenerator';
@@ -151,11 +154,29 @@ const DEFAULT_HISTORY = [
   }
 ];
 
+// Subscription tier limits
+const TIER_LIMITS = {
+  free: { maxHistory: 10, maxEvents: 1, squareSync: false },
+  pro: { maxHistory: Infinity, maxEvents: Infinity, squareSync: true },
+};
+
 const App = () => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('calculator');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Subscription tier (localStorage for now, Supabase later)
+  const [userTier, setUserTier] = useState(() => {
+    return localStorage.getItem('user_tier') || 'free';
+  });
+
+  const tierLimits = TIER_LIMITS[userTier];
+
+  const updateTier = (newTier) => {
+    setUserTier(newTier);
+    localStorage.setItem('user_tier', newTier);
+  };
 
   // Check for public quote request form URL parameter
   const urlParams = new URLSearchParams(window.location.search);
@@ -214,6 +235,11 @@ const App = () => {
   const [requests, setRequests] = useState([]);
   const [toast, setToast] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [guestMode, setGuestMode] = useState(false);
+  const [wasGuestMode, setWasGuestMode] = useState(false); // Track if user came from guest mode
+  const [showFreshStartPrompt, setShowFreshStartPrompt] = useState(false);
+  const [upgradePrompt, setUpgradePrompt] = useState(null); // null | 'history' | 'events' | 'square'
+  const [signupPrompt, setSignupPrompt] = useState(null); // null | 'save' | 'sync'
 
   const showToast = (message) => {
     setToast(message);
@@ -252,7 +278,10 @@ const App = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        loadFromSupabase(session.user.id);
+        // Check if user was in guest mode before signing in
+        const wasGuest = localStorage.getItem('was_guest_mode') === 'true';
+        localStorage.removeItem('was_guest_mode');
+        loadFromSupabase(session.user.id, wasGuest);
       }
     });
 
@@ -262,7 +291,7 @@ const App = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const loadFromSupabase = async (userId) => {
+  const loadFromSupabase = async (userId, wasGuest = false) => {
     const { data, error } = await supabase
       .from('user_data')
       .select('library, history')
@@ -270,6 +299,7 @@ const App = () => {
       .single();
 
     if (data) {
+      // Existing user - load their data
       if (data.library) {
         setLibrary(data.library);
         localStorage.setItem('studio_db', JSON.stringify(data.library));
@@ -278,8 +308,14 @@ const App = () => {
         setHistory(data.history);
         localStorage.setItem('studio_history', JSON.stringify(data.history));
       }
-    } else if (error && error.code !== 'PGRST116') {
-      // PGRST116 = no rows returned, which is fine for new users
+    } else if (error && error.code === 'PGRST116') {
+      // New user - no data yet
+      if (wasGuest) {
+        // They were exploring in guest mode, ask if they want fresh start
+        setShowFreshStartPrompt(true);
+      }
+      // Otherwise keep current state (defaults)
+    } else if (error) {
       console.error('Error loading data:', error);
     }
   };
@@ -354,6 +390,18 @@ const App = () => {
   };
 
     const handleLogProduction = async () => {
+    // Check if guest mode - prompt to sign up
+    if (guestMode) {
+      setSignupPrompt('save');
+      return;
+    }
+
+    // Check tier limit for saved quotes
+    if (history.length >= tierLimits.maxHistory) {
+      setUpgradePrompt('history');
+      return;
+    }
+
     const finalPrice = job.landedPrice ?? stats.priceByProfitMargin;
     const newEntry = {
       id: generateUniqueId(),
@@ -489,11 +537,16 @@ const App = () => {
     return <QuoteRequestForm userId={requestUserId} shopName={library.shopName} />;
   }
 
-  if (!session) {
+  if (!session && !guestMode) {
     if (showAuth) {
       return <AuthGate onBack={() => setShowAuth(false)} />;
     }
-    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
+    return <LandingPage onGetStarted={() => setShowAuth(true)} onTryDemo={() => {
+      // Load sample data for demo
+      setLibrary(DEFAULT_LIBRARY);
+      setHistory(DEFAULT_HISTORY);
+      setGuestMode(true);
+    }} />;
   }
 
   return (
@@ -502,6 +555,76 @@ const App = () => {
       {toast && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-slate-900 text-white rounded-2xl shadow-xl font-bold text-sm animate-in fade-in slide-in-from-top-2 duration-300">
           {toast}
+        </div>
+      )}
+
+      {/* Upgrade prompt modal */}
+      {upgradePrompt && (
+        <UpgradePrompt
+          feature={upgradePrompt}
+          onClose={() => setUpgradePrompt(null)}
+          onUpgrade={() => {
+            setUpgradePrompt(null);
+            // TODO: Open Stripe checkout
+            showToast('Stripe checkout coming soon!');
+          }}
+        />
+      )}
+
+      {/* Signup prompt modal (for guest users) */}
+      {signupPrompt && (
+        <SignupPrompt
+          feature={signupPrompt}
+          onClose={() => setSignupPrompt(null)}
+          onSignup={() => {
+            setSignupPrompt(null);
+            localStorage.setItem('was_guest_mode', 'true');
+            setGuestMode(false);
+            setShowAuth(true);
+          }}
+        />
+      )}
+
+      {/* Fresh start prompt (for new users from guest mode) */}
+      {showFreshStartPrompt && (
+        <FreshStartPrompt
+          onFreshStart={() => {
+            // Clear to empty state
+            const freshLibrary = {
+              ...DEFAULT_LIBRARY,
+              shopName: library.shopName, // Keep their shop name if they set one
+              printedParts: [],
+              inventory: [],
+              events: [],
+              sales: [],
+            };
+            const freshHistory = [];
+            setLibrary(freshLibrary);
+            setHistory(freshHistory);
+            saveToDisk(freshLibrary, freshHistory);
+            setShowFreshStartPrompt(false);
+            showToast("You're all set! Start creating estimates.");
+          }}
+          onKeepSamples={() => {
+            // Keep current sample data and save to cloud
+            saveToDisk(library, history);
+            setShowFreshStartPrompt(false);
+            showToast("Sample data saved. Explore away!");
+          }}
+        />
+      )}
+      {/* Guest mode banner */}
+      {guestMode && (
+        <div className="bg-blue-600 text-white py-2 px-4 text-center text-sm">
+          <span className="font-medium">You're in demo mode.</span>
+          {' '}
+          <button
+            onClick={() => { localStorage.setItem('was_guest_mode', 'true'); setGuestMode(false); setShowAuth(true); }}
+            className="font-bold underline hover:no-underline"
+          >
+            Create a free account
+          </button>
+          {' '}to save your work.
         </div>
       )}
       <header className="max-w-[1600px] mx-auto pt-6 pb-8 px-4 sm:px-8 flex justify-between items-center">
@@ -650,13 +773,13 @@ const App = () => {
           </div>
         ) : (
           <div className="max-w-6xl mx-auto bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
-             {activeTab === 'events' && <EventsTab library={library} history={history} saveToDisk={saveToDisk} />}
+             {activeTab === 'events' && <EventsTab library={library} history={history} saveToDisk={saveToDisk} tierLimits={tierLimits} onUpgradeClick={() => setUpgradePrompt('events')} />}
              {activeTab === 'sales' && <SalesTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'requests' && <RequestsTab session={session} />}
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} handleReEvaluate={handleReEvaluate} />}
              {activeTab === 'quoteHistory' && <QuoteHistoryTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} handleAddToInventory={handleAddToInventory} />}
-             {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} onLogout={handleLogout} userEmail={session?.user?.email} session={session} />}
+             {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} onLogout={handleLogout} userEmail={session?.user?.email} session={session} userTier={userTier} updateTier={updateTier} tierLimits={tierLimits} onUpgradeClick={() => setUpgradePrompt('square')} />}
           </div>
         )}
       </main>

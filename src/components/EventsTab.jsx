@@ -7,7 +7,7 @@ import generateUniqueId from '../utils/idGenerator';
 import { calculateEventMetrics } from '../utils/eventMetrics';
 import { formatEventsCSV, downloadCSV } from '../utils/csvExport';
 
-const EventsTab = ({ library, history, saveToDisk }) => {
+const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick }) => {
   const [newEvent, setNewEvent] = useState({ name: '', date: '', location: '', boothFee: '', otherCosts: '', notes: '' });
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
@@ -25,6 +25,12 @@ const EventsTab = ({ library, history, saveToDisk }) => {
   // CRUD operations
   const handleAddEvent = () => {
     if (!newEvent.name || !newEvent.date) return;
+
+    // Check tier limit
+    if (tierLimits && events.length >= tierLimits.maxEvents) {
+      onUpgradeClick?.();
+      return;
+    }
     const updated = [
       ...events,
       {

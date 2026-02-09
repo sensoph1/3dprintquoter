@@ -4,7 +4,7 @@ import {
   TrendingUp, Check, ArrowRight, Zap
 } from 'lucide-react';
 
-const LandingPage = ({ onGetStarted }) => {
+const LandingPage = ({ onGetStarted, onTryDemo }) => {
   const features = [
     {
       icon: Calculator,
@@ -111,10 +111,10 @@ const LandingPage = ({ onGetStarted }) => {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
-            onClick={onGetStarted}
+            onClick={onTryDemo}
             className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2"
           >
-            Get Started Free <ArrowRight size={18} />
+            Try It Free <ArrowRight size={18} />
           </button>
           <button
             onClick={() => document.getElementById('how-it-works').scrollIntoView({ behavior: 'smooth' })}
@@ -123,6 +123,9 @@ const LandingPage = ({ onGetStarted }) => {
             See How It Works
           </button>
         </div>
+        <p className="mt-4 text-sm text-slate-500">
+          No account required to try. <button onClick={onGetStarted} className="text-blue-600 font-bold hover:underline">Sign in</button> to save your work.
+        </p>
       </section>
 
       {/* Social Proof */}

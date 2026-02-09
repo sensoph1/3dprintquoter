@@ -282,7 +282,7 @@ const CategoryManager = ({ library, saveToDisk }) => {
   );
 };
 
-const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail, session }) => {
+const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail, session, userTier, updateTier, tierLimits, onUpgradeClick }) => {
   const updateSetting = (key, value) => {
     saveToDisk({ ...library, [key]: value });
   };
@@ -324,16 +324,49 @@ const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail, sessio
                 </button>
               </div>
               <p className="text-xs text-slate-400">Your data is automatically synced to the cloud.</p>
+
+              {/* Subscription tier (for testing) */}
+              <div className="mt-6 pt-6 border-t border-slate-100">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subscription Plan</p>
+                    <p className="font-bold text-slate-800 capitalize">{userTier} Plan</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={userTier}
+                      onChange={(e) => updateTier(e.target.value)}
+                      className="text-xs font-bold px-3 py-2 rounded-lg border border-slate-200 bg-white"
+                    >
+                      <option value="free">Free</option>
+                      <option value="pro">Pro</option>
+                    </select>
+                    <span className="text-[9px] text-slate-400">(Testing)</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </Accordion>
         )}
 
         <Accordion title="Square Integration">
-          <SquareIntegration
-            session={session}
-            library={library}
-            saveToDisk={saveToDisk}
-          />
+          {tierLimits?.squareSync ? (
+            <SquareIntegration
+              session={session}
+              library={library}
+              saveToDisk={saveToDisk}
+            />
+          ) : (
+            <div className="p-6 bg-slate-50 rounded-2xl text-center space-y-4">
+              <p className="text-slate-600">Square integration is available on the Pro plan.</p>
+              <button
+                onClick={onUpgradeClick}
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
+              >
+                Upgrade to Pro
+              </button>
+            </div>
+          )}
         </Accordion>
 
         <Accordion title="Branding">
