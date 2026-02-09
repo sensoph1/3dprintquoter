@@ -268,9 +268,9 @@ const CalculatorTab = ({ job, setJob, library, stats, requests = [] }) => {
               <span className="text-xl font-black text-blue-800">${stats.costPerItem.toFixed(2)}</span>
             </div>
           </Tooltip>
-          <Tooltip text="Calculated as: (Material Cost * Material Cost Multiplier) / Quantity">
+          <Tooltip text="Calculated as: (Material Cost * Material Multiplier) / Quantity">
             <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
-              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Mat. Cost/Item</span>
+              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Material Price/Item</span>
               <span className="text-xl font-black text-blue-800">${stats.materialCostPerItemAdvanced.toFixed(2)}</span>
             </div>
           </Tooltip>
