@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Calendar, MapPin, DollarSign, Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronRight, TrendingUp, BarChart3 } from 'lucide-react';
+import { Calendar, MapPin, DollarSign, Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronRight, TrendingUp, BarChart3, Download } from 'lucide-react';
 import Accordion from './Accordion';
 import Tooltip from './Tooltip';
 import generateUniqueId from '../utils/idGenerator';
+import { calculateEventMetrics } from '../utils/eventMetrics';
+import { formatEventsCSV, downloadCSV } from '../utils/csvExport';
 
 const EventsTab = ({ library, history, saveToDisk }) => {
   const [newEvent, setNewEvent] = useState({ name: '', date: '', location: '', boothFee: '', otherCosts: '', notes: '' });
@@ -15,47 +17,9 @@ const EventsTab = ({ library, history, saveToDisk }) => {
 
   const events = library.events || [];
 
-  // Calculate metrics for an event — combines sales tab records + legacy history "sold" entries
-  const calculateEventMetrics = (event) => {
-    const sales = library.sales || [];
-    const linkedSalesRecords = sales.filter(s => s.eventId === event.id);
-    const linkedHistoryItems = history.filter(h => h.eventId === event.id && h.status === 'sold');
+  const sales = library.sales || [];
 
-    // Revenue from sales tab
-    const salesRevenue = linkedSalesRecords.reduce((sum, s) => sum + (s.total || 0), 0);
-    const salesItemCount = linkedSalesRecords.reduce((sum, s) => sum + (s.quantity || 1), 0);
-
-    // Revenue from legacy history sold items
-    const historyRevenue = linkedHistoryItems.reduce((sum, h) => {
-      const qty = h.details?.qty || 1;
-      return sum + (h.unitPrice * qty);
-    }, 0);
-    const historyItemCount = linkedHistoryItems.reduce((sum, h) => sum + (h.details?.qty || 1), 0);
-    const totalCOGS = linkedHistoryItems.reduce((sum, h) => {
-      const qty = h.details?.qty || 1;
-      return sum + ((h.costPerItem || 0) * qty);
-    }, 0);
-
-    const grossRevenue = salesRevenue + historyRevenue;
-    const eventCosts = (parseFloat(event.boothFee) || 0) + (parseFloat(event.otherCosts) || 0);
-    const netProfit = grossRevenue - eventCosts - totalCOGS;
-    const profitMargin = grossRevenue > 0 ? (netProfit / grossRevenue) * 100 : 0;
-    const itemsSold = salesItemCount + historyItemCount;
-
-    // Combined linked items for display
-    const linkedSales = [
-      ...linkedSalesRecords.map(s => ({
-        id: s.id,
-        name: s.itemName,
-        quoteNo: s.squareSource ? `SQ-${(s.squareOrderId || '').slice(-6)}` : 'Manual',
-        unitPrice: s.unitPrice,
-        details: { qty: s.quantity },
-      })),
-      ...linkedHistoryItems,
-    ];
-
-    return { grossRevenue, totalCOGS, eventCosts, netProfit, profitMargin, itemsSold, salesCount: linkedSales.length, linkedSales };
-  };
+  const getEventMetrics = (event) => calculateEventMetrics(event, sales, history);
 
   // CRUD operations
   const handleAddEvent = () => {
@@ -141,7 +105,7 @@ const EventsTab = ({ library, history, saveToDisk }) => {
 
   // Totals across all events
   const totals = events.reduce((acc, event) => {
-    const metrics = calculateEventMetrics(event);
+    const metrics = getEventMetrics(event);
     return {
       revenue: acc.revenue + metrics.grossRevenue,
       costs: acc.costs + metrics.eventCosts,
@@ -164,7 +128,7 @@ const EventsTab = ({ library, history, saveToDisk }) => {
 
   // Render a single event card
   const renderEventCard = (event) => {
-    const metrics = calculateEventMetrics(event);
+    const metrics = getEventMetrics(event);
     const isExpanded = expandedEventId === event.id;
     const isEditing = editingId === event.id;
 
@@ -330,6 +294,16 @@ const EventsTab = ({ library, history, saveToDisk }) => {
           </h2>
           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Track sales and profit by event or venue</p>
         </div>
+        <button
+          onClick={() => {
+            const csv = formatEventsCSV(events, sales, history);
+            downloadCSV(`events-export-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+          }}
+          disabled={events.length === 0}
+          className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <Download size={14} /> Export CSV
+        </button>
       </div>
 
       {/* VIEW TOGGLE */}
@@ -546,21 +520,21 @@ const EventsTab = ({ library, history, saveToDisk }) => {
                   <tbody>
                     {[
                       { label: 'Date', getValue: (e) => new Date(e.date + 'T00:00:00').toLocaleDateString() },
-                      { label: 'Revenue', getValue: (e) => '$' + calculateEventMetrics(e).grossRevenue.toFixed(2), isMoney: true },
+                      { label: 'Revenue', getValue: (e) => '$' + getEventMetrics(e).grossRevenue.toFixed(2), isMoney: true },
                       { label: 'Booth Fee', getValue: (e) => '$' + (e.boothFee || 0).toFixed(2) },
                       { label: 'Other Costs', getValue: (e) => '$' + (e.otherCosts || 0).toFixed(2) },
-                      { label: 'COGS', getValue: (e) => '$' + calculateEventMetrics(e).totalCOGS.toFixed(2) },
-                      { label: 'Net Profit', getValue: (e) => '$' + calculateEventMetrics(e).netProfit.toFixed(2), isProfit: true },
-                      { label: 'Margin %', getValue: (e) => calculateEventMetrics(e).profitMargin.toFixed(1) + '%' },
-                      { label: 'Items Sold', getValue: (e) => calculateEventMetrics(e).itemsSold.toString() },
-                      { label: 'Unique Products', getValue: (e) => calculateEventMetrics(e).salesCount.toString() },
+                      { label: 'COGS', getValue: (e) => '$' + getEventMetrics(e).totalCOGS.toFixed(2) },
+                      { label: 'Net Profit', getValue: (e) => '$' + getEventMetrics(e).netProfit.toFixed(2), isProfit: true },
+                      { label: 'Margin %', getValue: (e) => getEventMetrics(e).profitMargin.toFixed(1) + '%' },
+                      { label: 'Items Sold', getValue: (e) => getEventMetrics(e).itemsSold.toString() },
+                      { label: 'Unique Products', getValue: (e) => getEventMetrics(e).salesCount.toString() },
                     ].map(row => (
                       <tr key={row.label} className="border-b border-slate-100">
                         <td className="py-3 px-4 font-bold text-slate-600">{row.label}</td>
                         {compareEventIds.map(id => {
                           const event = events.find(e => e.id === id);
                           const value = event ? row.getValue(event) : '-';
-                          const metrics = event ? calculateEventMetrics(event) : null;
+                          const metrics = event ? getEventMetrics(event) : null;
                           return (
                             <td
                               key={id}

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import {
   ShoppingCart, Search, Trash2, ChevronDown, ChevronRight,
-  DollarSign, Hash, Tag, CreditCard
+  DollarSign, Hash, Tag, CreditCard, Download
 } from 'lucide-react';
 import Accordion from './Accordion';
 import Tooltip from './Tooltip';
 import generateUniqueId from '../utils/idGenerator';
+import { formatSalesCSV, downloadCSV } from '../utils/csvExport';
 
 const PAYMENT_METHODS = [
   { value: 'cash', label: 'Cash' },
@@ -35,6 +36,8 @@ const SalesTab = ({ library, saveToDisk }) => {
   });
   const [inventorySearch, setInventorySearch] = useState('');
   const [showInventoryDropdown, setShowInventoryDropdown] = useState(false);
+  const [exportFrom, setExportFrom] = useState('');
+  const [exportTo, setExportTo] = useState('');
 
   // Summary stats
   const totalRevenue = sales.reduce((sum, s) => sum + (s.total || 0), 0);
@@ -141,6 +144,21 @@ const SalesTab = ({ library, saveToDisk }) => {
             <ShoppingCart className="text-blue-600" size={28} /> Sales
           </h2>
           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Track actual sales — manual entries and Square imports</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input type="date" value={exportFrom} onChange={(e) => setExportFrom(e.target.value)} className="px-2 py-2 border border-slate-200 rounded-lg text-xs font-bold" />
+          <span className="text-slate-400 text-xs">to</span>
+          <input type="date" value={exportTo} onChange={(e) => setExportTo(e.target.value)} className="px-2 py-2 border border-slate-200 rounded-lg text-xs font-bold" />
+          <button
+            onClick={() => {
+              const csv = formatSalesCSV(sales, events, { from: exportFrom, to: exportTo });
+              downloadCSV(`sales-export-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+            }}
+            disabled={sales.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Download size={14} /> Export CSV
+          </button>
         </div>
       </div>
 
