@@ -198,7 +198,8 @@ const App = () => {
     materialCostMultiplier: 2,
     profitMargin: 20,
     rounding: ensureNumber(library.rounding, 1),
-    requestId: null
+    requestId: null,
+    landedPrice: null
   });
 
   const [job, setJob] = useState(() => getDefaultJob(library));
@@ -344,13 +345,15 @@ const App = () => {
   };
 
     const handleLogProduction = async () => {
+    const finalPrice = job.landedPrice ?? stats.priceByProfitMargin;
     const newEntry = {
       id: generateUniqueId(),
       date: new Date().toLocaleDateString(),
       quoteNo: `Q-${library.nextQuoteNo}`,
       name: job.name || "Untitled Project",
       category: job.category || "",
-      unitPrice: stats.priceByProfitMargin,
+      unitPrice: finalPrice,
+      landedPrice: finalPrice,
       priceByProfitMargin: stats.priceByProfitMargin,
       priceByHourlyRate: stats.priceByHourlyRate,
       priceByMaterialMultiplier: stats.priceByMaterialMultiplier,
@@ -375,13 +378,15 @@ const App = () => {
   };
 
   const handleUpdateJob = () => {
+    const finalPrice = job.landedPrice ?? stats.priceByProfitMargin;
     const newHistory = history.map(item => {
       if (item.id === editingJobId) {
         return {
           ...item,
           name: job.name,
           category: job.category || "",
-          unitPrice: stats.priceByProfitMargin,
+          unitPrice: finalPrice,
+          landedPrice: finalPrice,
           priceByProfitMargin: stats.priceByProfitMargin,
           priceByHourlyRate: stats.priceByHourlyRate,
           priceByMaterialMultiplier: stats.priceByMaterialMultiplier,
@@ -534,30 +539,54 @@ const App = () => {
             </div>
             <div className="right-engine">
               <div className="bg-[#1e60ff] rounded-studio p-6 sm:p-8 text-white shadow-2xl flex flex-col">
-                <div className="mb-8 px-1">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">Pricing Engine</h3>
-                  <p className="text-[9px] font-bold opacity-40 uppercase tracking-widest">Live Quote v2.4</p>
-                </div>
-                <div className="space-y-4 flex-grow">
-                  <div className="bg-white rounded-[2rem] p-6 text-blue-600 shadow-xl border-b-4 border-blue-50">
-                    <span className="text-[9px] font-black uppercase tracking-widest block mb-2 opacity-40">Profit Margin ({job.profitMargin}%)</span>
-                    <h2 className="text-2xl sm:text-3xl font-black tabular-nums tracking-tighter">${stats.priceByProfitMargin.toFixed(2)}</h2>
+                <div className="mb-8 px-1 flex justify-between items-start">
+                  <div>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">Pricing Engine</h3>
+                    <p className="text-[9px] font-bold opacity-40 uppercase tracking-widest">Live Quote v2.4</p>
                   </div>
-                  <div className="bg-white/10 border border-white/20 rounded-[2rem] p-6">
-                    <span className="text-[9px] font-black uppercase tracking-widest block mb-1 opacity-40">Hourly Rate (${job.overrideShopHourlyRate}/hr)</span>
-                    <h2 className="text-2xl sm:text-3xl font-black tabular-nums">${stats.priceByHourlyRate.toFixed(2)}</h2>
-                  </div>
-                  <div className="bg-white/10 border border-white/20 rounded-[2rem] p-6">
-                    <span className="text-[9px] font-black uppercase tracking-widest block mb-1 opacity-40">Material Cost (x{job.materialCostMultiplier})</span>
-                    <h2 className="text-2xl sm:text-3xl font-black tabular-nums">${stats.priceByMaterialMultiplier.toFixed(2)}</h2>
-                  </div>
-                </div>
-                <div className="mt-10 mb-8 border-t border-white/10 pt-8 px-1">
                   <div className="text-right">
                     <span className="text-[9px] font-black opacity-50 block mb-1">Cost Per Item</span>
                     <h3 className="text-lg sm:text-xl font-black text-blue-200">${stats.costPerItem.toFixed(2)}</h3>
                   </div>
                 </div>
+                <div className="space-y-4 flex-grow">
+                  <div
+                    onClick={() => setJob({ ...job, landedPrice: stats.priceByProfitMargin })}
+                    className="bg-white/10 border border-white/20 rounded-[2rem] p-6 cursor-pointer hover:bg-white/20 transition-all"
+                  >
+                    <span className="text-[9px] font-black uppercase tracking-widest block mb-1 opacity-40">Profit Margin ({job.profitMargin}%)</span>
+                    <h2 className="text-2xl sm:text-3xl font-black tabular-nums">${stats.priceByProfitMargin.toFixed(2)}</h2>
+                  </div>
+                  <div
+                    onClick={() => setJob({ ...job, landedPrice: stats.priceByHourlyRate })}
+                    className="bg-white/10 border border-white/20 rounded-[2rem] p-6 cursor-pointer hover:bg-white/20 transition-all"
+                  >
+                    <span className="text-[9px] font-black uppercase tracking-widest block mb-1 opacity-40">Hourly Rate (${job.overrideShopHourlyRate}/hr)</span>
+                    <h2 className="text-2xl sm:text-3xl font-black tabular-nums">${stats.priceByHourlyRate.toFixed(2)}</h2>
+                  </div>
+                  <div
+                    onClick={() => setJob({ ...job, landedPrice: stats.priceByMaterialMultiplier })}
+                    className="bg-white/10 border border-white/20 rounded-[2rem] p-6 cursor-pointer hover:bg-white/20 transition-all"
+                  >
+                    <span className="text-[9px] font-black uppercase tracking-widest block mb-1 opacity-40">Material Cost (x{job.materialCostMultiplier})</span>
+                    <h2 className="text-2xl sm:text-3xl font-black tabular-nums">${stats.priceByMaterialMultiplier.toFixed(2)}</h2>
+                  </div>
+                  <div className="bg-white rounded-[2rem] p-6">
+                    <span className="text-[9px] font-black uppercase tracking-widest block mb-1 text-blue-400">Landed Price</span>
+                    <div className="flex items-baseline text-blue-600">
+                      <span className="text-2xl sm:text-3xl font-black">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={job.landedPrice ?? ''}
+                        onChange={(e) => setJob({ ...job, landedPrice: e.target.value === '' ? null : parseFloat(e.target.value) })}
+                        placeholder={stats.priceByProfitMargin.toFixed(2)}
+                        className="landed-price-input font-black tabular-nums w-full text-blue-600 placeholder:text-blue-300"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-8"></div>
                 {editingJobId ? (
                   <div className="flex flex-col sm:flex-row gap-4">
                     <button onClick={handleUpdateJob} className="w-full py-4 sm:py-5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl transition-all">

@@ -63,6 +63,18 @@ textarea {
   border: 1px solid #e2e8f0 !important;
 }
 
+/* Landed price input - override global input styles */
+.landed-price-input {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  height: auto !important;
+  font-size: 1.875rem !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
 @media (max-width: 768px) {
   .studio-cockpit { flex-direction: column !important; }
   .right-engine { min-width: 100%; position: static !important; }
