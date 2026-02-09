@@ -1,8 +1,8 @@
 import React from 'react';
-import { Minus, Plus, Trash2, Box, AlertTriangle, Download } from 'lucide-react';
+import { Minus, Plus, Trash2, Box, AlertTriangle, Download, RefreshCw } from 'lucide-react';
 import { formatPrintedPartsCSV, formatConsumablesCSV, downloadCSV } from '../utils/csvExport';
 
-const InventoryTab = ({ library, saveToDisk }) => {
+const InventoryTab = ({ library, saveToDisk, handleReEvaluate }) => {
   const printedParts = library.printedParts || [];
 
   const updatePartQty = (id, delta) => {
@@ -107,11 +107,10 @@ const InventoryTab = ({ library, saveToDisk }) => {
               <tr className="text-left text-xs text-slate-400 uppercase font-black">
                 <th className="pb-4">Part Name</th>
                 <th className="pb-4">Category</th>
-                <th className="pb-4 text-center whitespace-nowrap">Margin</th>
-                <th className="pb-4 text-center whitespace-nowrap">Hourly</th>
-                <th className="pb-4 text-center whitespace-nowrap">Material</th>
+                <th className="pb-4 text-center whitespace-nowrap">Selling Price</th>
+                <th className="pb-4 text-center whitespace-nowrap">Cost</th>
                 <th className="pb-4 text-center whitespace-nowrap">Stock</th>
-                <th className="pb-4 w-10"></th>
+                <th className="pb-4 w-24"></th>
               </tr>
             </thead>
             <tbody>
@@ -123,6 +122,8 @@ const InventoryTab = ({ library, saveToDisk }) => {
                   : low
                     ? 'bg-amber-50/50'
                     : '';
+                const sellingPrice = part.sellingPrice ?? part.unitPrice ?? part.priceByProfitMargin ?? 0;
+                const costPerItem = part.costPerItem || 0;
 
                 return (
                   <tr key={part.id} className={`border-b border-slate-100 last:border-b-0 ${rowClass}`}>
@@ -132,7 +133,6 @@ const InventoryTab = ({ library, saveToDisk }) => {
                         {low && !critical && <AlertTriangle className="text-amber-500" size={14} />}
                         <div>
                           <div className="font-black text-slate-800 uppercase tracking-tight">{part.name}</div>
-                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{part.color}</div>
                         </div>
                       </div>
                     </td>
@@ -140,15 +140,26 @@ const InventoryTab = ({ library, saveToDisk }) => {
                       <div className="text-sm font-bold text-slate-500">{part.category || '—'}</div>
                     </td>
                     <td className="text-center">
-                      <div className="text-sm font-black text-blue-600">${(part.priceByProfitMargin || part.unitPrice || 0).toFixed(2)}</div>
+                      <div className="inline-flex items-center">
+                        <span className="text-sm font-black text-blue-600">$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={sellingPrice}
+                          onChange={(e) => {
+                            const newParts = printedParts.map(p =>
+                              p.id === part.id ? { ...p, sellingPrice: parseFloat(e.target.value) || 0 } : p
+                            );
+                            saveToDisk({ ...library, printedParts: newParts });
+                          }}
+                          className="w-24 text-sm font-black text-blue-600 bg-transparent border-b border-blue-200 text-center focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
                     </td>
                     <td className="text-center">
-                      <div className="text-sm font-black text-slate-600">${(part.priceByHourlyRate || 0).toFixed(2)}</div>
+                      <div className="text-sm font-bold text-slate-400">${costPerItem.toFixed(2)}</div>
                     </td>
                     <td className="text-center">
-                      <div className="text-sm font-black text-slate-600">${(part.priceByMaterialMultiplier || 0).toFixed(2)}</div>
-                    </td>
-                    <td>
                       <div className={`inline-flex items-center gap-1 bg-white px-1.5 py-1 rounded-lg border ${critical ? 'border-red-200' : low ? 'border-amber-200' : 'border-slate-200'}`}>
                         <div className={`w-8 text-center font-black text-sm ${critical ? 'text-red-600' : low ? 'text-amber-600' : ''}`}>{part.qty}</div>
                         <div className="flex flex-col gap-px">
@@ -157,10 +168,21 @@ const InventoryTab = ({ library, saveToDisk }) => {
                         </div>
                       </div>
                     </td>
-                    <td className="text-center">
-                      <button onClick={() => deletePart(part.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
-                        <Trash2 size={16}/>
-                      </button>
+                    <td className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {part.details && (
+                          <button
+                            onClick={() => handleReEvaluate(part)}
+                            className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition"
+                            title="Re-evaluate in calculator"
+                          >
+                            <RefreshCw size={16}/>
+                          </button>
+                        )}
+                        <button onClick={() => deletePart(part.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                          <Trash2 size={16}/>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

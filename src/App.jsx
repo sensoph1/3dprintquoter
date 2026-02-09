@@ -209,7 +209,14 @@ const App = () => {
     return saved ? JSON.parse(saved) : DEFAULT_HISTORY;
   });
   const [editingJobId, setEditingJobId] = useState(null);
+  const [reEvaluatePartId, setReEvaluatePartId] = useState(null);
   const [requests, setRequests] = useState([]);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // TODO: Remove hardcoded ID after testing
   const TEST_USER_ID = 'c4ffce99-d61c-49c1-a77f-904fcb532e3e';
@@ -363,7 +370,24 @@ const App = () => {
       status: job.requestId ? 'quoted' : 'draft',
       details: { ...job }
     };
-    saveToDisk({ ...library, nextQuoteNo: library.nextQuoteNo + 1 }, [newEntry, ...history]);
+
+    let updatedLibrary = { ...library, nextQuoteNo: library.nextQuoteNo + 1 };
+
+    // If this was a re-evaluation from inventory, prompt to update inventory price
+    if (reEvaluatePartId) {
+      const part = library.printedParts.find(p => p.id === reEvaluatePartId);
+      if (part && window.confirm(`Update inventory price for "${part.name}" to $${finalPrice.toFixed(2)}?`)) {
+        updatedLibrary = {
+          ...updatedLibrary,
+          printedParts: library.printedParts.map(p =>
+            p.id === reEvaluatePartId ? { ...p, sellingPrice: finalPrice } : p
+          )
+        };
+      }
+      setReEvaluatePartId(null);
+    }
+
+    saveToDisk(updatedLibrary, [newEntry, ...history]);
 
     // Update request status to "quoted" if linked to a request
     if (job.requestId) {
@@ -374,7 +398,7 @@ const App = () => {
       loadRequests(); // Refresh requests list
     }
 
-    alert("Production logged with notes!");
+    showToast("Estimate saved!");
   };
 
   const handleUpdateJob = () => {
@@ -400,7 +424,7 @@ const App = () => {
     saveToDisk(library, newHistory);
     setEditingJobId(null);
     setJob(getDefaultJob(library));
-    alert("Job updated successfully!");
+    showToast("Job updated!");
   };
 
   const handleCancelEdit = () => {
@@ -426,15 +450,24 @@ const App = () => {
         name: item.name,
         category: item.category || "",
         qty: item.details.qty,
-        unitPrice: item.unitPrice,
-        priceByProfitMargin: item.priceByProfitMargin || item.unitPrice,
-        priceByHourlyRate: item.priceByHourlyRate || 0,
-        priceByMaterialMultiplier: item.priceByMaterialMultiplier || 0,
-        color: 'Multi-Mat'
+        sellingPrice: item.unitPrice,
+        estimateId: item.id,
+        details: item.details,
+        costPerItem: item.costPerItem || 0
       });
     }
     saveToDisk({ ...library, printedParts: newPrintedParts });
-    alert(`${item.details.qty} x ${item.name} added to inventory!`);
+    showToast(`${item.details.qty} x ${item.name} added to inventory`);
+  };
+
+  const handleReEvaluate = (part) => {
+    if (part.details) {
+      setJob(part.details);
+      setReEvaluatePartId(part.id);
+      setActiveTab('calculator');
+    } else {
+      showToast("No original job data available for this item");
+    }
   };
 
   // Show loading state
@@ -460,6 +493,12 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-12 font-sans">
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-slate-900 text-white rounded-2xl shadow-xl font-bold text-sm animate-in fade-in slide-in-from-top-2 duration-300">
+          {toast}
+        </div>
+      )}
       <header className="max-w-[1600px] mx-auto pt-6 pb-8 px-4 sm:px-8 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <div className="bg-slate-900 p-2.5 rounded-2xl text-white shadow-lg"><tabs.calculator.icon size={22} /></div>
@@ -610,7 +649,7 @@ const App = () => {
              {activeTab === 'sales' && <SalesTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'requests' && <RequestsTab session={session} />}
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
-             {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} />}
+             {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} handleReEvaluate={handleReEvaluate} />}
              {activeTab === 'quoteHistory' && <QuoteHistoryTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} handleAddToInventory={handleAddToInventory} />}
              {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} onLogout={handleLogout} userEmail={session?.user?.email} session={session} />}
           </div>

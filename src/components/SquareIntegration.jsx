@@ -237,7 +237,7 @@ const SquareIntegration = ({
         id: p.id,
         name: p.name,
         category: p.category,
-        unitPrice: p.unitPrice || p.priceByProfitMargin,
+        unitPrice: p.sellingPrice ?? p.unitPrice ?? p.priceByProfitMargin ?? 0,
         qty: p.qty || 0,
         squareCatalogId: p.squareCatalogId,
         squareVariationId: p.squareVariationId,
