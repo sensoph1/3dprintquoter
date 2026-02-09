@@ -73,6 +73,14 @@ textarea {
   font-size: 1.875rem !important;
   padding: 0 !important;
   border-radius: 0 !important;
+  width: 5ch !important;
+  min-width: 0 !important;
+}
+
+.landed-price-input::-webkit-inner-spin-button,
+.landed-price-input::-webkit-outer-spin-button {
+  opacity: 1 !important;
+  margin-left: 2px !important;
 }
 
 @media (max-width: 768px) {

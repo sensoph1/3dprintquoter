@@ -581,7 +581,7 @@ const App = () => {
                         value={job.landedPrice ?? ''}
                         onChange={(e) => setJob({ ...job, landedPrice: e.target.value === '' ? null : parseFloat(e.target.value) })}
                         placeholder={stats.priceByProfitMargin.toFixed(2)}
-                        className="landed-price-input font-black tabular-nums w-full text-blue-600 placeholder:text-blue-300"
+                        className="landed-price-input font-black tabular-nums text-blue-600 placeholder:text-blue-300"
                       />
                     </div>
                   </div>
