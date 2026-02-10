@@ -236,7 +236,6 @@ const App = () => {
   const [toast, setToast] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [guestMode, setGuestMode] = useState(false);
-  const [wasGuestMode, setWasGuestMode] = useState(false); // Track if user came from guest mode
   const [showFreshStartPrompt, setShowFreshStartPrompt] = useState(false);
   const [upgradePrompt, setUpgradePrompt] = useState(null); // null | 'history' | 'events' | 'square'
   const [signupPrompt, setSignupPrompt] = useState(null); // null | 'save' | 'sync'
@@ -278,10 +277,7 @@ const App = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        // Check if user was in guest mode before signing in
-        const wasGuest = localStorage.getItem('was_guest_mode') === 'true';
-        localStorage.removeItem('was_guest_mode');
-        loadFromSupabase(session.user.id, wasGuest);
+        loadFromSupabase(session.user.id);
       }
     });
 
@@ -291,7 +287,7 @@ const App = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const loadFromSupabase = async (userId, wasGuest = false) => {
+  const loadFromSupabase = async (userId) => {
     const { data, error } = await supabase
       .from('user_data')
       .select('library, history')
@@ -309,12 +305,8 @@ const App = () => {
         localStorage.setItem('studio_history', JSON.stringify(data.history));
       }
     } else if (error && error.code === 'PGRST116') {
-      // New user - no data yet
-      if (wasGuest) {
-        // They were exploring in guest mode, ask if they want fresh start
-        setShowFreshStartPrompt(true);
-      }
-      // Otherwise keep current state (defaults)
+      // New user - no data yet, show fresh start prompt
+      setShowFreshStartPrompt(true);
     } else if (error) {
       console.error('Error loading data:', error);
     }
@@ -578,7 +570,6 @@ const App = () => {
           onClose={() => setSignupPrompt(null)}
           onSignup={() => {
             setSignupPrompt(null);
-            localStorage.setItem('was_guest_mode', 'true');
             setGuestMode(false);
             setShowAuth(true);
           }}
@@ -619,7 +610,7 @@ const App = () => {
           <span className="font-medium">You're in demo mode.</span>
           {' '}
           <button
-            onClick={() => { localStorage.setItem('was_guest_mode', 'true'); setGuestMode(false); setShowAuth(true); }}
+            onClick={() => { setGuestMode(false); setShowAuth(true); }}
             className="font-bold underline hover:no-underline"
           >
             Create a free account
