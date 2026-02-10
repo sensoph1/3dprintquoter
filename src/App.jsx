@@ -269,16 +269,16 @@ const App = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // TODO: Remove hardcoded ID after testing
-  const TEST_USER_ID = 'c4ffce99-d61c-49c1-a77f-904fcb532e3e';
-  const userId = session?.user?.id || TEST_USER_ID;
-
   // Load quote requests from Supabase
-  const loadRequests = async () => {
+  const loadRequests = async (uid) => {
+    if (!uid) {
+      setRequests([]);
+      return;
+    }
     const { data, error } = await supabase
       .from('quote_requests')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', uid)
       .order('created_at', { ascending: false });
 
     if (!error && data) {
@@ -294,6 +294,7 @@ const App = () => {
       if (session) {
         loadFromSupabase(session.user.id);
         loadUserTier(session.user.id);
+        loadRequests(session.user.id);
       }
       setLoading(false);
     });
@@ -304,11 +305,11 @@ const App = () => {
       if (session) {
         loadFromSupabase(session.user.id);
         loadUserTier(session.user.id);
+        loadRequests(session.user.id);
+      } else {
+        setRequests([]);
       }
     });
-
-    // Load quote requests
-    loadRequests();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -463,7 +464,7 @@ const App = () => {
         .from('quote_requests')
         .update({ status: 'quoted' })
         .eq('id', job.requestId);
-      loadRequests(); // Refresh requests list
+      loadRequests(session?.user?.id); // Refresh requests list
     }
 
     showToast("Estimate saved!");
@@ -792,10 +793,10 @@ const App = () => {
           <div className="max-w-6xl mx-auto bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
              {activeTab === 'events' && <EventsTab library={library} history={history} saveToDisk={saveToDisk} tierLimits={tierLimits} onUpgradeClick={() => setUpgradePrompt('events')} />}
              {activeTab === 'sales' && <SalesTab library={library} saveToDisk={saveToDisk} />}
-             {activeTab === 'requests' && <RequestsTab session={session} />}
+             {activeTab === 'requests' && <RequestsTab session={session} history={history} />}
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} handleReEvaluate={handleReEvaluate} />}
-             {activeTab === 'quoteHistory' && <QuoteHistoryTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} handleAddToInventory={handleAddToInventory} />}
+             {activeTab === 'quoteHistory' && <QuoteHistoryTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} handleAddToInventory={handleAddToInventory} requests={requests} />}
              {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} onLogout={handleLogout} userEmail={session?.user?.email} session={session} userTier={userTier} updateTier={updateTier} tierLimits={tierLimits} onUpgradeClick={() => setUpgradePrompt('square')} />}
           </div>
         )}

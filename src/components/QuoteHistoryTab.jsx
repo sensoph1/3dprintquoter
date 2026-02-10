@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   ChevronDown, ChevronUp, FileText,
-  Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2, Archive, History, Calendar, Download
+  Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2, Archive, History, Calendar, Download, Inbox
 } from 'lucide-react';
 import Tooltip from './Tooltip';
 import { formatEstimatesCSV, downloadCSV } from '../utils/csvExport';
@@ -19,7 +19,7 @@ const getStatusConfig = (status) => {
   return STATUS_OPTIONS.find(s => s.value === status) || STATUS_OPTIONS[0];
 };
 
-const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAddToInventory }) => {
+const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAddToInventory, requests = [] }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [exportFrom, setExportFrom] = useState('');
@@ -39,6 +39,18 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
       item.id === itemId ? { ...item, eventId: eventId || undefined } : item
     );
     saveToDisk(library, newHistory);
+  };
+
+  const assignRequest = (itemId, requestId) => {
+    const newHistory = history.map(item =>
+      item.id === itemId ? { ...item, requestId: requestId || undefined } : item
+    );
+    saveToDisk(library, newHistory);
+  };
+
+  const getRequestName = (requestId) => {
+    const request = requests.find(r => r.id === requestId);
+    return request ? request.customer_name : null;
   };
 
   const updateStatus = (itemId, newStatus) => {
@@ -153,11 +165,16 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
                     </td>
                     <td className="p-6">
                       <div className="font-bold text-slate-700">{item.name}</div>
-                      <div className="text-[10px] text-slate-400 uppercase font-black tracking-widest flex items-center gap-2">
+                      <div className="text-[10px] text-slate-400 uppercase font-black tracking-widest flex items-center gap-2 flex-wrap">
                         {item.details?.qty} Units • {item.details?.hours} Hrs
                         {item.eventId && getEventName(item.eventId) && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[9px]">
                             <Calendar size={10} /> {getEventName(item.eventId)}
+                          </span>
+                        )}
+                        {item.requestId && getRequestName(item.requestId) && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full text-[9px]">
+                            <Inbox size={10} /> {getRequestName(item.requestId)}
                           </span>
                         )}
                       </div>
@@ -242,6 +259,19 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
                                     <option value="">No Event</option>
                                     {events.map(event => (
                                       <option key={event.id} value={event.id}>{event.name}</option>
+                                    ))}
+                                  </select>
+                                )}
+                                {requests.length > 0 && (
+                                  <select
+                                    value={item.requestId || ''}
+                                    onChange={(e) => { e.stopPropagation(); assignRequest(item.id, e.target.value || null); }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-[9px] font-bold px-2 py-1 rounded-lg border border-slate-200 bg-white"
+                                  >
+                                    <option value="">No Request</option>
+                                    {requests.map(request => (
+                                      <option key={request.id} value={request.id}>{request.customer_name}</option>
                                     ))}
                                   </select>
                                 )}

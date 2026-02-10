@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Inbox, Mail, Phone, ChevronDown, ChevronRight, Check, X, Clock, Trash2, Copy, ExternalLink } from 'lucide-react';
+import { Inbox, Mail, Phone, ChevronDown, ChevronRight, Check, X, Clock, Trash2, Copy, ExternalLink, FileText } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
-const RequestsTab = ({ session }) => {
+const RequestsTab = ({ session, history = [] }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [copied, setCopied] = useState(false);
 
   const userId = session?.user?.id;
+
+  // Get estimates linked to a specific request
+  const getLinkedEstimates = (requestId) => {
+    return history.filter(item => item.requestId === requestId);
+  };
 
   const shareableLink = `${window.location.origin}?request=${userId}`;
 
@@ -196,6 +201,29 @@ const RequestsTab = ({ session }) => {
                         <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Request Details</div>
                         <p className="text-sm text-slate-700 whitespace-pre-wrap">{request.description}</p>
                       </div>
+
+                      {/* Linked Estimates */}
+                      {(() => {
+                        const linkedEstimates = getLinkedEstimates(request.id);
+                        return linkedEstimates.length > 0 && (
+                          <div className="bg-white p-4 rounded-xl border border-slate-200">
+                            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+                              <FileText size={12} /> Linked Estimates ({linkedEstimates.length})
+                            </div>
+                            <div className="space-y-2">
+                              {linkedEstimates.map(estimate => (
+                                <div key={estimate.id} className="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
+                                  <div>
+                                    <div className="font-bold text-sm text-slate-700">{estimate.name}</div>
+                                    <div className="text-[10px] text-slate-400">{estimate.quoteNo} • {estimate.date}</div>
+                                  </div>
+                                  <div className="font-black text-blue-600">${(estimate.unitPrice || 0).toFixed(2)}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Actions */}
                       <div className="flex flex-wrap items-center gap-3">
