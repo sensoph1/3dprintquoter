@@ -235,12 +235,37 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
           <div className="border-t border-slate-100 p-4 bg-slate-50 space-y-4">
             {/* Edit fields */}
             {isEditing && (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-4 bg-white rounded-xl">
-                <input type="date" value={editData.date} onChange={(e) => setEditData({ ...editData, date: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" title="Start Date" />
-                <input type="date" value={editData.endDate || ''} onChange={(e) => setEditData({ ...editData, endDate: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" title="End Date (optional)" placeholder="End Date" />
-                <input type="text" placeholder="Location" value={editData.location || ''} onChange={(e) => setEditData({ ...editData, location: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
-                <input type="number" placeholder="Booth Fee" value={editData.boothFee} onChange={(e) => setEditData({ ...editData, boothFee: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
-                <input type="number" placeholder="Other Costs" value={editData.otherCosts} onChange={(e) => setEditData({ ...editData, otherCosts: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+              <div className="p-4 bg-white rounded-xl space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Start Date</label>
+                    <input type="date" value={editData.date} onChange={(e) => setEditData({ ...editData, date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">End Date <span className="text-slate-300 normal-case">(optional)</span></label>
+                    <input type="date" value={editData.endDate || ''} onChange={(e) => setEditData({ ...editData, endDate: e.target.value })} min={editData.date} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Location</label>
+                    <input type="text" placeholder="Location" value={editData.location || ''} onChange={(e) => setEditData({ ...editData, location: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Booth Fee</label>
+                    <div className="flex items-center gap-2 px-3 border rounded-lg">
+                      <span className="text-slate-400 font-bold">$</span>
+                      <input type="number" step="0.01" placeholder="0.00" value={editData.boothFee} onChange={(e) => setEditData({ ...editData, boothFee: e.target.value })} className="w-full py-2 bg-transparent outline-none text-sm" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Other Costs</label>
+                    <div className="flex items-center gap-2 px-3 border rounded-lg">
+                      <span className="text-slate-400 font-bold">$</span>
+                      <input type="number" step="0.01" placeholder="0.00" value={editData.otherCosts} onChange={(e) => setEditData({ ...editData, otherCosts: e.target.value })} className="w-full py-2 bg-transparent outline-none text-sm" />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -380,18 +405,18 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                     className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
                   />
                 </div>
-                <div>
-                  <div className="flex items-baseline gap-4 mb-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</label>
-                    <span className="text-[10px] text-slate-300">(end date optional for multi-day events)</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Start Date</label>
                     <input
                       type="date"
                       value={newEvent.date}
                       onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
                       className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">End Date <span className="text-slate-300 normal-case">(optional)</span></label>
                     <input
                       type="date"
                       value={newEvent.endDate}
@@ -411,7 +436,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                     className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Booth Fee</label>
                     <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
