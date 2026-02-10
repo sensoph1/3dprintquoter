@@ -16,7 +16,13 @@ const EventCalendar = ({ events, onDateClick, onEventClick }) => {
   const getEventsForDate = (year, month, day) => {
     if (!day) return [];
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return events.filter(e => e.date === dateStr);
+    const checkDate = new Date(dateStr + 'T00:00:00');
+
+    return events.filter(e => {
+      const startDate = new Date(e.date + 'T00:00:00');
+      const endDate = e.endDate ? new Date(e.endDate + 'T00:00:00') : startDate;
+      return checkDate >= startDate && checkDate <= endDate;
+    });
   };
 
   const isToday = (year, month, day) => {

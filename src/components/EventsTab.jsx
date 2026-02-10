@@ -7,8 +7,31 @@ import generateUniqueId from '../utils/idGenerator';
 import { calculateEventMetrics } from '../utils/eventMetrics';
 import { formatEventsCSV, downloadCSV } from '../utils/csvExport';
 
+// Helper to format date range display
+const formatDateRange = (startDate, endDate) => {
+  const start = new Date(startDate + 'T00:00:00');
+  if (!endDate || endDate === startDate) {
+    return start.toLocaleDateString();
+  }
+  const end = new Date(endDate + 'T00:00:00');
+  // Same month: "Feb 15-17, 2025"
+  if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+    return `${start.toLocaleDateString('en-US', { month: 'short' })} ${start.getDate()}-${end.getDate()}, ${start.getFullYear()}`;
+  }
+  // Different months: "Feb 28 - Mar 2, 2025"
+  return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${end.getFullYear()}`;
+};
+
+// Calculate number of days for an event
+const getEventDays = (event) => {
+  if (!event.endDate || event.endDate === event.date) return 1;
+  const start = new Date(event.date + 'T00:00:00');
+  const end = new Date(event.endDate + 'T00:00:00');
+  return Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+};
+
 const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick }) => {
-  const [newEvent, setNewEvent] = useState({ name: '', date: '', location: '', boothFee: '', otherCosts: '', notes: '' });
+  const [newEvent, setNewEvent] = useState({ name: '', date: '', endDate: '', location: '', boothFee: '', otherCosts: '', notes: '' });
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
   const [activeView, setActiveView] = useState('list');
@@ -37,6 +60,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
         id: generateUniqueId(),
         name: newEvent.name,
         date: newEvent.date,
+        endDate: newEvent.endDate || null,
         location: newEvent.location,
         boothFee: parseFloat(newEvent.boothFee) || 0,
         otherCosts: parseFloat(newEvent.otherCosts) || 0,
@@ -44,7 +68,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
       }
     ];
     saveToDisk({ ...library, events: updated });
-    setNewEvent({ name: '', date: '', location: '', boothFee: '', otherCosts: '', notes: '' });
+    setNewEvent({ name: '', date: '', endDate: '', location: '', boothFee: '', otherCosts: '', notes: '' });
   };
 
   const handleDeleteEvent = (id) => {
@@ -64,6 +88,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
   const saveEdit = () => {
     const updated = events.map(e => e.id === editingId ? {
       ...editData,
+      endDate: editData.endDate || null,
       boothFee: parseFloat(editData.boothFee) || 0,
       otherCosts: parseFloat(editData.otherCosts) || 0
     } : e);
@@ -121,16 +146,18 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
     };
   }, { revenue: 0, costs: 0, profit: 0, items: 0 });
 
-  // Split events into upcoming and past
+  // Split events into upcoming and past (use endDate if available)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const getEventEndDate = (e) => new Date((e.endDate || e.date) + 'T00:00:00');
+
   const upcomingEvents = events
-    .filter(e => new Date(e.date + 'T00:00:00') >= today)
+    .filter(e => getEventEndDate(e) >= today)
     .sort((a, b) => new Date(a.date) - new Date(b.date)); // Soonest first
 
   const pastEvents = events
-    .filter(e => new Date(e.date + 'T00:00:00') < today)
+    .filter(e => getEventEndDate(e) < today)
     .sort((a, b) => new Date(b.date) - new Date(a.date)); // Most recent first
 
   // Render a single event card
@@ -161,7 +188,12 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                 <div className="font-black text-slate-800">{event.name}</div>
               )}
               <div className="text-xs text-slate-400 flex items-center gap-2">
-                <Calendar size={12} /> {new Date(event.date + 'T00:00:00').toLocaleDateString()}
+                <Calendar size={12} /> {formatDateRange(event.date, event.endDate)}
+                {getEventDays(event) > 1 && (
+                  <span className="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                    {getEventDays(event)} days
+                  </span>
+                )}
                 {event.location && (
                   <>
                     <span className="mx-1">•</span>
@@ -203,8 +235,9 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
           <div className="border-t border-slate-100 p-4 bg-slate-50 space-y-4">
             {/* Edit fields */}
             {isEditing && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-white rounded-xl">
-                <input type="date" value={editData.date} onChange={(e) => setEditData({ ...editData, date: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-4 bg-white rounded-xl">
+                <input type="date" value={editData.date} onChange={(e) => setEditData({ ...editData, date: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" title="Start Date" />
+                <input type="date" value={editData.endDate || ''} onChange={(e) => setEditData({ ...editData, endDate: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" title="End Date (optional)" placeholder="End Date" />
                 <input type="text" placeholder="Location" value={editData.location || ''} onChange={(e) => setEditData({ ...editData, location: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
                 <input type="number" placeholder="Booth Fee" value={editData.boothFee} onChange={(e) => setEditData({ ...editData, boothFee: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
                 <input type="number" placeholder="Other Costs" value={editData.otherCosts} onChange={(e) => setEditData({ ...editData, otherCosts: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
@@ -337,78 +370,86 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
           <>
             <Accordion title="Add New Event">
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Tooltip text="Name of the event or venue (e.g., Downtown Craft Fair)">
-                      <input
-                        type="text"
-                        placeholder="Event Name"
-                        value={newEvent.name}
-                        onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })}
-                        className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
-                      />
-                    </Tooltip>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Event Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Downtown Craft Fair"
+                    value={newEvent.name}
+                    onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })}
+                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-baseline gap-4 mb-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</label>
+                    <span className="text-[10px] text-slate-300">(end date optional for multi-day events)</span>
                   </div>
-                  <div>
-                    <Tooltip text="Date of the event">
-                      <input
-                        type="date"
-                        value={newEvent.date}
-                        onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                        className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
-                      />
-                    </Tooltip>
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="date"
+                      value={newEvent.date}
+                      onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                      className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
+                    />
+                    <input
+                      type="date"
+                      value={newEvent.endDate}
+                      onChange={(e) => setNewEvent({ ...newEvent, endDate: e.target.value })}
+                      min={newEvent.date}
+                      className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
+                    />
                   </div>
                 </div>
                 <div>
-                  <Tooltip text="Location or address of the event">
-                    <input
-                      type="text"
-                      placeholder="Location"
-                      value={newEvent.location}
-                      onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                      className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
-                    />
-                  </Tooltip>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Location <span className="text-slate-300 normal-case">(optional)</span></label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Convention Center, 123 Main St"
+                    value={newEvent.location}
+                    onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
+                  />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                    <span className="text-slate-400 font-bold">$</span>
-                    <Tooltip text="Cost for booth or table rental">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Booth Fee</label>
+                    <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <span className="text-slate-400 font-bold">$</span>
                       <input
                         type="number"
                         step="0.01"
-                        placeholder="Booth Fee"
+                        placeholder="0.00"
                         value={newEvent.boothFee}
                         onChange={(e) => setNewEvent({ ...newEvent, boothFee: e.target.value })}
                         className="w-full py-4 bg-transparent outline-none font-bold text-sm"
                       />
-                    </Tooltip>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                    <span className="text-slate-400 font-bold">$</span>
-                    <Tooltip text="Other costs like travel, parking, supplies">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Other Costs <span className="text-slate-300 normal-case">(travel, parking, etc.)</span></label>
+                    <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <span className="text-slate-400 font-bold">$</span>
                       <input
                         type="number"
                         step="0.01"
-                        placeholder="Other Costs"
+                        placeholder="0.00"
                         value={newEvent.otherCosts}
                         onChange={(e) => setNewEvent({ ...newEvent, otherCosts: e.target.value })}
                         className="w-full py-4 bg-transparent outline-none font-bold text-sm"
                       />
-                    </Tooltip>
+                    </div>
                   </div>
                 </div>
                 <div>
-                  <Tooltip text="Notes about this event">
-                    <input
-                      type="text"
-                      placeholder="Notes (optional)"
-                      value={newEvent.notes}
-                      onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })}
-                      className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
-                    />
-                  </Tooltip>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Notes <span className="text-slate-300 normal-case">(optional)</span></label>
+                  <input
+                    type="text"
+                    placeholder="Any additional notes about this event"
+                    value={newEvent.notes}
+                    onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })}
+                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
+                  />
                 </div>
                 <button
                   onClick={handleAddEvent}
@@ -546,12 +587,15 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                   </thead>
                   <tbody>
                     {[
-                      { label: 'Date', getValue: (e) => new Date(e.date + 'T00:00:00').toLocaleDateString() },
+                      { label: 'Date', getValue: (e) => formatDateRange(e.date, e.endDate) },
+                      { label: 'Days', getValue: (e) => getEventDays(e).toString() },
                       { label: 'Revenue', getValue: (e) => '$' + getEventMetrics(e).grossRevenue.toFixed(2), isMoney: true },
+                      { label: 'Revenue/Day', getValue: (e) => '$' + getEventMetrics(e).revenuePerDay.toFixed(2), isMoney: true },
                       { label: 'Booth Fee', getValue: (e) => '$' + (e.boothFee || 0).toFixed(2) },
                       { label: 'Other Costs', getValue: (e) => '$' + (e.otherCosts || 0).toFixed(2) },
                       { label: 'COGS', getValue: (e) => '$' + getEventMetrics(e).totalCOGS.toFixed(2) },
                       { label: 'Net Profit', getValue: (e) => '$' + getEventMetrics(e).netProfit.toFixed(2), isProfit: true },
+                      { label: 'Profit/Day', getValue: (e) => '$' + getEventMetrics(e).profitPerDay.toFixed(2), isProfit: true },
                       { label: 'Margin %', getValue: (e) => getEventMetrics(e).profitMargin.toFixed(1) + '%' },
                       { label: 'Items Sold', getValue: (e) => getEventMetrics(e).itemsSold.toString() },
                       { label: 'Unique Products', getValue: (e) => getEventMetrics(e).salesCount.toString() },

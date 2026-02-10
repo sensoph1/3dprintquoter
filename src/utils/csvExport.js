@@ -161,19 +161,23 @@ export const formatConsumablesCSV = (inventory) => {
  * Format events summary as CSV.
  */
 export const formatEventsCSV = (events, sales, history) => {
-  const headers = ['Name', 'Date', 'Location', 'Booth Fee', 'Other Costs', 'Total Costs', 'Revenue', 'COGS', 'Net Profit', 'Margin %', 'Items Sold', 'Notes'];
+  const headers = ['Name', 'Start Date', 'End Date', 'Days', 'Location', 'Booth Fee', 'Other Costs', 'Total Costs', 'Revenue', 'Revenue/Day', 'COGS', 'Net Profit', 'Profit/Day', 'Margin %', 'Items Sold', 'Notes'];
   const rows = events.map(event => {
     const metrics = calculateEventMetrics(event, sales, history);
     return [
       event.name || '',
       event.date || '',
+      event.endDate || '',
+      metrics.days,
       event.location || '',
       (event.boothFee || 0).toFixed(2),
       (event.otherCosts || 0).toFixed(2),
       metrics.eventCosts.toFixed(2),
       metrics.grossRevenue.toFixed(2),
+      metrics.revenuePerDay.toFixed(2),
       metrics.totalCOGS.toFixed(2),
       metrics.netProfit.toFixed(2),
+      metrics.profitPerDay.toFixed(2),
       metrics.profitMargin.toFixed(1),
       metrics.itemsSold,
       event.notes || '',

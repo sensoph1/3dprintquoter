@@ -1,4 +1,14 @@
 /**
+ * Calculate number of days for an event
+ */
+export const getEventDays = (event) => {
+  if (!event.endDate || event.endDate === event.date) return 1;
+  const start = new Date(event.date + 'T00:00:00');
+  const end = new Date(event.endDate + 'T00:00:00');
+  return Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+};
+
+/**
  * Calculate financial metrics for an event by combining sales records and legacy history entries.
  */
 export const calculateEventMetrics = (event, sales, history) => {
@@ -35,5 +45,10 @@ export const calculateEventMetrics = (event, sales, history) => {
     ...linkedHistoryItems,
   ];
 
-  return { grossRevenue, totalCOGS, eventCosts, netProfit, profitMargin, itemsSold, salesCount: linkedSales.length, linkedSales };
+  // Per-day metrics for multi-day events
+  const days = getEventDays(event);
+  const revenuePerDay = grossRevenue / days;
+  const profitPerDay = netProfit / days;
+
+  return { grossRevenue, totalCOGS, eventCosts, netProfit, profitMargin, itemsSold, salesCount: linkedSales.length, linkedSales, days, revenuePerDay, profitPerDay };
 };
