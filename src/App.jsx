@@ -166,16 +166,40 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('calculator');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Subscription tier (localStorage for now, Supabase later)
+  // Subscription tier (Supabase for logged-in users, localStorage fallback for guests)
   const [userTier, setUserTier] = useState(() => {
     return localStorage.getItem('user_tier') || 'free';
   });
 
   const tierLimits = TIER_LIMITS[userTier];
 
-  const updateTier = (newTier) => {
+  const loadUserTier = async (userId) => {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('tier')
+      .eq('id', userId)
+      .single();
+
+    if (data?.tier) {
+      setUserTier(data.tier);
+      localStorage.setItem('user_tier', data.tier);
+    } else if (error?.code === 'PGRST116') {
+      // No profile yet - create one (trigger should handle this, but just in case)
+      await supabase.from('user_profiles').insert({ id: userId, tier: 'free' });
+      setUserTier('free');
+    }
+  };
+
+  const updateTier = async (newTier) => {
     setUserTier(newTier);
     localStorage.setItem('user_tier', newTier);
+
+    // Save to Supabase if logged in
+    if (session?.user?.id) {
+      await supabase
+        .from('user_profiles')
+        .upsert({ id: session.user.id, tier: newTier, updated_at: new Date().toISOString() });
+    }
   };
 
   // Check for public quote request form URL parameter
@@ -269,6 +293,7 @@ const App = () => {
       setSession(session);
       if (session) {
         loadFromSupabase(session.user.id);
+        loadUserTier(session.user.id);
       }
       setLoading(false);
     });
@@ -278,6 +303,7 @@ const App = () => {
       setSession(session);
       if (session) {
         loadFromSupabase(session.user.id);
+        loadUserTier(session.user.id);
       }
     });
 
