@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Plus, Trash2, Edit2, Check, X,
-  RefreshCw, AlertCircle, Copy, DollarSign, CreditCard
+  RefreshCw, AlertCircle, Copy, DollarSign, CreditCard, ExternalLink
 } from 'lucide-react';
 
 import generateUniqueId from '../utils/idGenerator';
@@ -11,9 +11,11 @@ import Accordion from './Accordion';
 const FilamentTab = ({ library, saveToDisk }) => {
   const [newFilament, setNewFilament] = useState({ name: '', colorName: '', price: '', grams: 1000, color: '#3b82f6' });
   const [newConsumable, setNewConsumable] = useState({ name: '', qty: '', totalCost: '' });
-  const [newSubscription, setNewSubscription] = useState({ name: '', monthlyCost: '', cycle: 'monthly' });
+  const [newSubscription, setNewSubscription] = useState({ name: '', monthlyCost: '', cycle: 'monthly', url: '' });
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
+  const [editingSubId, setEditingSubId] = useState(null);
+  const [editSubData, setEditSubData] = useState({});
 
   const handleAdd = () => {
     if (!newFilament.name || !newFilament.price) return;
@@ -79,17 +81,26 @@ const FilamentTab = ({ library, saveToDisk }) => {
         id: generateUniqueId(),
         name: newSubscription.name,
         monthlyCost: parseFloat(newSubscription.monthlyCost),
-        cycle: newSubscription.cycle
+        cycle: newSubscription.cycle,
+        url: newSubscription.url || ''
       }
     ];
     saveToDisk({ ...library, subscriptions: updatedSubscriptions });
-    setNewSubscription({ name: '', monthlyCost: '', cycle: 'monthly' });
+    setNewSubscription({ name: '', monthlyCost: '', cycle: 'monthly', url: '' });
   };
 
   const deleteSubscription = (id) => {
     if (window.confirm("Remove this subscription?")) {
       saveToDisk({ ...library, subscriptions: (library.subscriptions || []).filter(s => s.id !== id) });
     }
+  };
+
+  const saveSubscription = () => {
+    const updated = (library.subscriptions || []).map(s =>
+      s.id === editingSubId ? { ...editSubData, monthlyCost: parseFloat(editSubData.monthlyCost) } : s
+    );
+    saveToDisk({ ...library, subscriptions: updated });
+    setEditingSubId(null);
   };
 
   const totalMonthlyCost = (library.subscriptions || []).reduce((sum, s) => {
@@ -291,23 +302,28 @@ const FilamentTab = ({ library, saveToDisk }) => {
               <Plus size={12} /> Add Subscription
             </div>
             <div className="flex gap-3 items-center">
-              <div className="w-[50%]">
+              <div className="w-[40%]">
                 <Tooltip text="Name of the subscription (e.g., Patreon - MakersMuse, Fusion 360, Cura Pro).">
                   <input placeholder="Subscription Name" value={newSubscription.name} onChange={(e) => setNewSubscription({...newSubscription, name: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
                 </Tooltip>
               </div>
-              <div className="w-[25%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <div className="w-[20%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
                 <span className="text-slate-400 font-bold">$</span>
                 <Tooltip text="Cost per billing cycle.">
                   <input type="number" step="0.01" placeholder="Cost" value={newSubscription.monthlyCost} onChange={(e) => setNewSubscription({...newSubscription, monthlyCost: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
                 </Tooltip>
               </div>
-              <div className="w-[25%]">
+              <div className="w-[20%]">
                 <Tooltip text="How often you're billed.">
                   <select value={newSubscription.cycle} onChange={(e) => setNewSubscription({...newSubscription, cycle: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm">
                     <option value="monthly">Monthly</option>
                     <option value="yearly">Yearly</option>
                   </select>
+                </Tooltip>
+              </div>
+              <div className="w-[20%]">
+                <Tooltip text="Optional link to manage the subscription.">
+                  <input placeholder="URL (optional)" value={newSubscription.url} onChange={(e) => setNewSubscription({...newSubscription, url: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
                 </Tooltip>
               </div>
             </div>
@@ -332,28 +348,91 @@ const FilamentTab = ({ library, saveToDisk }) => {
             <tbody>
               {(library.subscriptions || []).map(sub => (
                 <tr key={sub.id} className="border-b border-slate-100 last:border-b-0">
-                  <td className="py-4">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="text-blue-500" size={16} />
-                      <span className="font-black uppercase text-sm">{sub.name}</span>
-                    </div>
-                  </td>
-                  <td className="text-center">
-                    <span className="text-xs font-bold text-slate-500 uppercase">{sub.cycle}</span>
-                  </td>
-                  <td className="text-center">
-                    <span className="text-sm font-bold text-slate-700">${sub.monthlyCost.toFixed(2)}</span>
-                  </td>
-                  <td className="text-center">
-                    <span className="text-sm font-bold text-blue-600">
-                      ${(sub.cycle === 'yearly' ? sub.monthlyCost / 12 : sub.monthlyCost).toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="text-center">
-                    <button onClick={() => deleteSubscription(sub.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
-                      <Trash2 size={16}/>
-                    </button>
-                  </td>
+                  {editingSubId === sub.id ? (
+                    <>
+                      <td className="py-3">
+                        <input
+                          className="w-full px-3 py-2 bg-white rounded-lg border font-bold text-sm outline-none"
+                          value={editSubData.name}
+                          onChange={e => setEditSubData({...editSubData, name: e.target.value})}
+                          placeholder="Name"
+                        />
+                        <input
+                          className="w-full px-3 py-2 mt-1 bg-white rounded-lg border font-medium text-xs outline-none text-slate-500"
+                          value={editSubData.url || ''}
+                          onChange={e => setEditSubData({...editSubData, url: e.target.value})}
+                          placeholder="URL (optional)"
+                        />
+                      </td>
+                      <td className="text-center">
+                        <select
+                          className="px-2 py-2 bg-white rounded-lg border font-bold text-xs"
+                          value={editSubData.cycle}
+                          onChange={e => setEditSubData({...editSubData, cycle: e.target.value})}
+                        >
+                          <option value="monthly">Monthly</option>
+                          <option value="yearly">Yearly</option>
+                        </select>
+                      </td>
+                      <td className="text-center">
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="w-20 px-2 py-2 bg-white rounded-lg border font-bold text-sm text-center"
+                          value={editSubData.monthlyCost}
+                          onChange={e => setEditSubData({...editSubData, monthlyCost: e.target.value})}
+                        />
+                      </td>
+                      <td></td>
+                      <td className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button onClick={saveSubscription} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition">
+                            <Check size={16}/>
+                          </button>
+                          <button onClick={() => setEditingSubId(null)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition">
+                            <X size={16}/>
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="py-4">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="text-blue-500" size={16} />
+                          {sub.url ? (
+                            <a href={sub.url} target="_blank" rel="noopener noreferrer" className="font-black uppercase text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                              {sub.name}
+                              <ExternalLink size={12} />
+                            </a>
+                          ) : (
+                            <span className="font-black uppercase text-sm">{sub.name}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="text-center">
+                        <span className="text-xs font-bold text-slate-500 uppercase">{sub.cycle}</span>
+                      </td>
+                      <td className="text-center">
+                        <span className="text-sm font-bold text-slate-700">${sub.monthlyCost.toFixed(2)}</span>
+                      </td>
+                      <td className="text-center">
+                        <span className="text-sm font-bold text-blue-600">
+                          ${(sub.cycle === 'yearly' ? sub.monthlyCost / 12 : sub.monthlyCost).toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button onClick={() => { setEditingSubId(sub.id); setEditSubData(sub); }} className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition">
+                            <Edit2 size={16}/>
+                          </button>
+                          <button onClick={() => deleteSubscription(sub.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                            <Trash2 size={16}/>
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>
