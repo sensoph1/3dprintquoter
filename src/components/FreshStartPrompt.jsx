@@ -44,6 +44,10 @@ const FreshStartPrompt = ({ onFreshStart, onKeepSamples }) => {
             </div>
           </button>
         </div>
+
+        <p className="text-center text-xs text-slate-400 mt-4">
+          You can clear or manage your data anytime in Settings → Your Data
+        </p>
       </div>
     </div>
   );
