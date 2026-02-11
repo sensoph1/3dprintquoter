@@ -76,7 +76,16 @@ const DEFAULT_LIBRARY = {
     { id: 405, name: "Spring Artisan Market", date: "2026-03-15", location: "Riverside Park", boothFee: 125, otherCosts: 30, notes: "Outdoor event - bring tent" },
     { id: 406, name: "Local Flea Market", date: "2026-02-22", location: "Fairgrounds", boothFee: 40, otherCosts: 10, notes: "Monthly recurring event" }
   ],
-  sales: [],
+  sales: [
+    { id: "sale-501", date: "12/14/2024", itemName: "Phone Stand", quantity: 3, unitPrice: 12.50, total: 37.50, paymentMethod: "card", eventId: 403, inventoryId: 101, notes: "" },
+    { id: "sale-502", date: "12/14/2024", itemName: "Cable Organizer", quantity: 5, unitPrice: 4.00, total: 20.00, paymentMethod: "cash", eventId: 403, inventoryId: 102, notes: "" },
+    { id: "sale-503", date: "12/14/2024", itemName: "Desk Nameplate", quantity: 2, unitPrice: 18.00, total: 36.00, paymentMethod: "card", eventId: 403, inventoryId: 103, notes: "Custom engraving" },
+    { id: "sale-504", date: "11/20/2024", itemName: "Phone Stand", quantity: 1, unitPrice: 12.50, total: 12.50, paymentMethod: "cash", eventId: 404, inventoryId: 101, notes: "" },
+    { id: "sale-505", date: "1/18/2025", itemName: "Cable Organizer", quantity: 8, unitPrice: 4.00, total: 32.00, paymentMethod: "card", eventId: 401, inventoryId: 102, notes: "" },
+    { id: "sale-506", date: "1/18/2025", itemName: "Desk Nameplate", quantity: 4, unitPrice: 18.00, total: 72.00, paymentMethod: "card", eventId: 401, inventoryId: 103, notes: "" },
+    { id: "sale-507", date: "1/25/2025", itemName: "Phone Stand", quantity: 2, unitPrice: 12.50, total: 25.00, paymentMethod: "cash", eventId: 402, inventoryId: 101, notes: "" },
+    { id: "sale-508", date: "2/5/2025", itemName: "Custom Order", quantity: 1, unitPrice: 45.00, total: 45.00, paymentMethod: "card", eventId: null, inventoryId: null, notes: "Commission piece" }
+  ],
   rounding: 1
 };
 
