@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import {
   ChevronDown, ChevronUp, FileText,
-  Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2, Archive, History, Calendar, Inbox
+  Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2, Archive, History, Calendar, Inbox, Receipt
 } from 'lucide-react';
 import Tooltip from './Tooltip';
+import InvoiceModal from './InvoiceModal';
 
 const STATUS_OPTIONS = [
   { value: 'draft', label: 'Draft', color: 'bg-slate-100 text-slate-600' },
@@ -21,6 +22,7 @@ const getStatusConfig = (status) => {
 const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAddToInventory, requests = [] }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [invoiceEstimate, setInvoiceEstimate] = useState(null);
 
   const events = library.events || [];
 
@@ -256,6 +258,12 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
                                   </select>
                                 )}
                                 <button
+                                  onClick={(e) => { e.stopPropagation(); setInvoiceEstimate(item); }}
+                                  className="flex items-center gap-1 text-[9px] font-black uppercase text-green-500 hover:text-green-700 transition-colors"
+                                >
+                                  <Receipt size={12} /> Invoice
+                                </button>
+                                <button
                                   onClick={(e) => { e.stopPropagation(); handleAddToInventory(item); }}
                                   className="flex items-center gap-1 text-[9px] font-black uppercase text-blue-500 hover:text-blue-700 transition-colors"
                                 >
@@ -299,6 +307,16 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
           </tbody>
         </table>
       </div>
+
+      {/* Invoice Modal */}
+      {invoiceEstimate && (
+        <InvoiceModal
+          estimate={invoiceEstimate}
+          shopName={library.shopName}
+          requests={requests}
+          onClose={() => setInvoiceEstimate(null)}
+        />
+      )}
     </div>
   );
 };
