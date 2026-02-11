@@ -152,9 +152,9 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
                             <Calendar size={10} /> {getEventName(item.eventId)}
                           </span>
                         )}
-                        {item.requestId && getRequestName(item.requestId) && (
+                        {item.requestId && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full text-[9px]">
-                            <Inbox size={10} /> {getRequestName(item.requestId)}
+                            <Inbox size={10} /> {getRequestName(item.requestId) || 'Linked Request'}
                           </span>
                         )}
                       </div>

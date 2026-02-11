@@ -493,6 +493,7 @@ const App = () => {
           priceByMaterialMultiplier: stats.priceByMaterialMultiplier,
           costPerItem: stats.costPerItem,
           notes: job.notes,
+          requestId: job.requestId || null,
           details: { ...job }
         };
       }
