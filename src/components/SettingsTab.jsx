@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive, Tag, ChevronDown, AlertTriangle, FileSpreadsheet, FileText, FileJson, UploadCloud } from 'lucide-react';
+import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive, Tag, ChevronDown, AlertTriangle, FileSpreadsheet, FileText, FileJson, UploadCloud, Calendar } from 'lucide-react';
 import Tooltip from './Tooltip';
 import Accordion from './Accordion';
 import SquareIntegration from './SquareIntegration';
+import AnnualSummaryModal from './AnnualSummaryModal';
 import { supabase } from '../supabaseClient';
 import {
   downloadCSV,
@@ -312,6 +313,7 @@ const SettingsTab = ({ library, saveToDisk, history, session, tierLimits, onUpgr
   });
   const [restoreStatus, setRestoreStatus] = useState(null); // null | 'success' | 'error'
   const [restoreError, setRestoreError] = useState('');
+  const [showAnnualSummary, setShowAnnualSummary] = useState(false);
   const fileInputRef = useRef(null);
 
   const updateSetting = (key, value) => {
@@ -515,6 +517,19 @@ const SettingsTab = ({ library, saveToDisk, history, session, tierLimits, onUpgr
                 <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Next Quote</span>
                 <span className="text-xl font-black text-slate-800">#{library.nextQuoteNo}</span>
               </div>
+            </div>
+
+            {/* Annual Summary */}
+            <div className="pt-4 border-t border-slate-100">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                <Calendar size={12} /> Tax Reports
+              </p>
+              <button
+                onClick={() => setShowAnnualSummary(true)}
+                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl text-sm font-bold hover:from-blue-700 hover:to-blue-800 transition flex items-center justify-center gap-2"
+              >
+                <FileText size={16} /> Generate Annual Summary
+              </button>
             </div>
 
             {/* Export CSV */}
@@ -726,6 +741,16 @@ const SettingsTab = ({ library, saveToDisk, history, session, tierLimits, onUpgr
             </div>
           </div>
         </div>
+      )}
+
+      {/* Annual Summary Modal */}
+      {showAnnualSummary && (
+        <AnnualSummaryModal
+          library={library}
+          history={history}
+          sales={library.sales || []}
+          onClose={() => setShowAnnualSummary(false)}
+        />
       )}
     </div>
   );
