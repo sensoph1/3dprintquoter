@@ -56,9 +56,17 @@ const DEFAULT_LIBRARY = {
     { id: 203, name: "Bubble Wrap Roll", qty: 3, unitCost: 12.00, lowStockThreshold: 2 }
   ],
   subscriptions: [
-    { id: 301, name: "Thangs Pro", monthlyCost: 9.99, cycle: "monthly" },
-    { id: 302, name: "Adobe Creative Cloud", monthlyCost: 59.99, cycle: "monthly" },
-    { id: 303, name: "Cloud Backup", monthlyCost: 99.99, cycle: "yearly" }
+    { id: 301, name: "Thangs Pro", monthlyCost: 9.99, cycle: "monthly", url: "https://thangs.com/pro", priceHistory: [
+      { id: 3011, price: 7.99, startDate: "2024-03-01", endDate: "2024-12-31" },
+      { id: 3012, price: 9.99, startDate: "2025-01-01", endDate: null }
+    ]},
+    { id: 302, name: "Adobe Creative Cloud", monthlyCost: 59.99, cycle: "monthly", url: "https://www.adobe.com/creativecloud.html", priceHistory: [
+      { id: 3021, price: 54.99, startDate: "2023-06-15", endDate: "2024-06-14" },
+      { id: 3022, price: 59.99, startDate: "2024-06-15", endDate: null }
+    ]},
+    { id: 303, name: "Cloud Backup", monthlyCost: 99.99, cycle: "yearly", url: "", priceHistory: [
+      { id: 3031, price: 99.99, startDate: "2024-01-01", endDate: null }
+    ]}
   ],
   events: [
     { id: 401, name: "Downtown Craft Fair", date: "2025-01-18", location: "City Convention Center", boothFee: 150, otherCosts: 45, notes: "Corner booth near entrance" },
@@ -216,7 +224,7 @@ const App = () => {
     events: { name: 'Events', icon: Calendar },
     sales: { name: 'Sales', icon: ShoppingCart },
     requests: { name: 'Requests', icon: Inbox },
-    filament: { name: 'Costs', icon: FlaskConical },
+    filament: { name: 'Expenses', icon: FlaskConical },
     inventory: { name: 'Inventory', icon: Box, badge: lowStockCount || null },
     settings: { name: 'Settings', icon: SettingsIcon },
   };
