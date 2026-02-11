@@ -186,3 +186,96 @@ export const formatEventsCSV = (events, sales, history) => {
 
   return arrayToCSV(headers, rows);
 };
+
+/**
+ * Format materials/filaments as CSV.
+ */
+export const formatMaterialsCSV = (filaments) => {
+  const headers = ['Name', 'Color Name', 'Price', 'Grams', 'Cost/Gram'];
+  const rows = filaments.map(f => [
+    f.name || '',
+    f.colorName || '',
+    (f.price || 0).toFixed(2),
+    f.grams || 1000,
+    ((f.price || 0) / (f.grams || 1000)).toFixed(4),
+  ]);
+
+  return arrayToCSV(headers, rows);
+};
+
+/**
+ * Format printers as CSV.
+ */
+export const formatPrintersCSV = (printers) => {
+  const headers = ['Name', 'Make/Model', 'Watts', 'Cost', 'Hours of Life', 'Depreciation/Hour'];
+  const rows = printers.map(p => [
+    p.name || '',
+    p.makeModel || '',
+    p.watts || 0,
+    (p.cost || 0).toFixed(2),
+    p.hoursOfLife || 0,
+    p.hoursOfLife ? ((p.cost || 0) / p.hoursOfLife).toFixed(4) : '0',
+  ]);
+
+  return arrayToCSV(headers, rows);
+};
+
+/**
+ * Create a full JSON backup of all data.
+ */
+export const createJSONBackup = (library, history) => {
+  const backup = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    library,
+    history,
+  };
+  return JSON.stringify(backup, null, 2);
+};
+
+/**
+ * Download a JSON backup file.
+ */
+export const downloadJSONBackup = (library, history) => {
+  const json = createJSONBackup(library, history);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `printprice-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+/**
+ * Parse and validate a JSON backup file.
+ * Returns { valid: boolean, data?: { library, history }, error?: string }
+ */
+export const parseJSONBackup = (jsonString) => {
+  try {
+    const data = JSON.parse(jsonString);
+
+    // Basic validation
+    if (!data.library || typeof data.library !== 'object') {
+      return { valid: false, error: 'Invalid backup: missing library data' };
+    }
+
+    // Check for required library fields
+    const requiredFields = ['filaments', 'printers'];
+    for (const field of requiredFields) {
+      if (!Array.isArray(data.library[field])) {
+        return { valid: false, error: `Invalid backup: missing ${field}` };
+      }
+    }
+
+    return {
+      valid: true,
+      data: {
+        library: data.library,
+        history: Array.isArray(data.history) ? data.history : [],
+      },
+    };
+  } catch (e) {
+    return { valid: false, error: 'Invalid JSON format' };
+  }
+};

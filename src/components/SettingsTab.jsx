@@ -1,9 +1,21 @@
-import React, { useState } from 'react';
-import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive, Tag, ChevronDown, AlertTriangle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive, Tag, ChevronDown, AlertTriangle, FileSpreadsheet, FileText, FileJson, UploadCloud } from 'lucide-react';
 import Tooltip from './Tooltip';
 import Accordion from './Accordion';
 import SquareIntegration from './SquareIntegration';
 import { supabase } from '../supabaseClient';
+import {
+  downloadCSV,
+  formatSalesCSV,
+  formatEstimatesCSV,
+  formatPrintedPartsCSV,
+  formatConsumablesCSV,
+  formatEventsCSV,
+  formatMaterialsCSV,
+  formatPrintersCSV,
+  downloadJSONBackup,
+  parseJSONBackup,
+} from '../utils/csvExport';
 
 const InputBlock = ({ label, icon: Icon, type = "text", value, onChange, prefix }) => (
   <div className="space-y-2">
@@ -297,13 +309,35 @@ const SettingsTab = ({ library, saveToDisk, history, session, tierLimits, onUpgr
     subscriptions: true,
     categories: true,
   });
+  const [restoreStatus, setRestoreStatus] = useState(null); // null | 'success' | 'error'
+  const [restoreError, setRestoreError] = useState('');
+  const fileInputRef = useRef(null);
 
   const updateSetting = (key, value) => {
     saveToDisk({ ...library, [key]: value });
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleRestore = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = parseJSONBackup(event.target.result);
+      if (result.valid) {
+        if (window.confirm('This will replace all your current data with the backup. Continue?')) {
+          saveToDisk(result.data.library, result.data.history);
+          setRestoreStatus('success');
+          setTimeout(() => setRestoreStatus(null), 3000);
+        }
+      } else {
+        setRestoreError(result.error);
+        setRestoreStatus('error');
+        setTimeout(() => setRestoreStatus(null), 5000);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // Reset so same file can be selected again
   };
 
   const toggleSelection = (key) => {
@@ -465,41 +499,116 @@ const SettingsTab = ({ library, saveToDisk, history, session, tierLimits, onUpgr
         </Accordion>
 
         <Accordion title="Your Data">
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
                 <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Quotes</span>
-                <span className="text-2xl font-black text-slate-800">{history.length}</span>
+                <span className="text-xl font-black text-slate-800">{history.length}</span>
               </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
                 <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Materials</span>
-                <span className="text-2xl font-black text-slate-800">{library.filaments.length}</span>
+                <span className="text-xl font-black text-slate-800">{library.filaments?.length || 0}</span>
               </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
                 <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Next Quote</span>
-                <span className="text-2xl font-black text-slate-800">#{library.nextQuoteNo}</span>
+                <span className="text-xl font-black text-slate-800">#{library.nextQuoteNo}</span>
               </div>
             </div>
 
-            {/* Export */}
+            {/* Export CSV */}
             <div className="pt-4 border-t border-slate-100">
-              <button
-                onClick={handlePrint}
-                className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition flex items-center justify-center gap-2"
-              >
-                <Database size={16} /> Export Data Report
-              </button>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                <FileSpreadsheet size={12} /> Export CSV
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => downloadCSV('quotes.csv', formatEstimatesCSV(history, library.events || []))}
+                  className="py-2 px-3 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition"
+                >
+                  Quotes
+                </button>
+                <button
+                  onClick={() => downloadCSV('sales.csv', formatSalesCSV(library.sales || [], library.events || []))}
+                  className="py-2 px-3 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition"
+                >
+                  Sales
+                </button>
+                <button
+                  onClick={() => downloadCSV('events.csv', formatEventsCSV(library.events || [], library.sales || [], history))}
+                  className="py-2 px-3 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition"
+                >
+                  Events
+                </button>
+                <button
+                  onClick={() => downloadCSV('inventory.csv', formatPrintedPartsCSV(library.printedParts || []))}
+                  className="py-2 px-3 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition"
+                >
+                  Inventory
+                </button>
+                <button
+                  onClick={() => downloadCSV('consumables.csv', formatConsumablesCSV(library.inventory || []))}
+                  className="py-2 px-3 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition"
+                >
+                  Consumables
+                </button>
+                <button
+                  onClick={() => downloadCSV('materials.csv', formatMaterialsCSV(library.filaments || []))}
+                  className="py-2 px-3 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition"
+                >
+                  Materials
+                </button>
+              </div>
             </div>
 
-            {/* Reset */}
+            {/* Backup & Restore */}
             <div className="pt-4 border-t border-slate-100">
-              <p className="text-xs text-slate-400 mb-3">Reset all data to initial state. This cannot be undone.</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                <FileJson size={12} /> Backup & Restore
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => downloadJSONBackup(library, history)}
+                  className="py-2 px-3 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex items-center justify-center gap-1"
+                >
+                  <Download size={14} /> Download Backup
+                </button>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="py-2 px-3 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition flex items-center justify-center gap-1"
+                >
+                  <UploadCloud size={14} /> Restore Backup
+                </button>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleRestore}
+                className="hidden"
+              />
+              {restoreStatus === 'success' && (
+                <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                  <Check size={14} /> Data restored successfully!
+                </p>
+              )}
+              {restoreStatus === 'error' && (
+                <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
+                  <X size={14} /> {restoreError}
+                </p>
+              )}
+            </div>
+
+            {/* Delete */}
+            <div className="pt-4 border-t border-slate-100">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                <Trash2 size={12} /> Danger Zone
+              </p>
               <button
                 onClick={() => setResetModalOpen(true)}
-                className="w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold text-sm hover:bg-red-100 transition"
+                className="w-full py-2 bg-red-50 text-red-600 rounded-lg font-bold text-xs hover:bg-red-100 transition"
               >
-                Reset All Data
+                Delete Data...
               </button>
             </div>
           </div>
