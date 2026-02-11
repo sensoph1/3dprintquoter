@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
 import {
-  Plus, Trash2, Edit2, Check, X,
-  RefreshCw, AlertCircle, Copy, DollarSign, CreditCard, ExternalLink
+  Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronUp,
+  RefreshCw, AlertCircle, Copy, DollarSign, CreditCard, ExternalLink, History
 } from 'lucide-react';
 
 import generateUniqueId from '../utils/idGenerator';
 import Tooltip from './Tooltip';
 import Accordion from './Accordion';
+
+// Calculate months between two dates
+const monthsBetween = (startDate, endDate) => {
+  const start = new Date(startDate);
+  const end = endDate ? new Date(endDate) : new Date();
+  const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  // Add partial month if we're past the start day
+  const dayDiff = end.getDate() - start.getDate();
+  return Math.max(0, months + (dayDiff >= 0 ? 1 : 0));
+};
 
 const FilamentTab = ({ library, saveToDisk }) => {
   const [newFilament, setNewFilament] = useState({ name: '', colorName: '', price: '', grams: 1000, color: '#3b82f6' });
@@ -16,6 +26,9 @@ const FilamentTab = ({ library, saveToDisk }) => {
   const [editData, setEditData] = useState({});
   const [editingSubId, setEditingSubId] = useState(null);
   const [editSubData, setEditSubData] = useState({});
+  const [expandedSubId, setExpandedSubId] = useState(null);
+  const [newPriceEntry, setNewPriceEntry] = useState({ price: '', startDate: '' });
+  const [showPriceChangeForm, setShowPriceChangeForm] = useState(null); // subId or null
 
   const handleAdd = () => {
     if (!newFilament.name || !newFilament.price) return;
@@ -101,6 +114,75 @@ const FilamentTab = ({ library, saveToDisk }) => {
     );
     saveToDisk({ ...library, subscriptions: updated });
     setEditingSubId(null);
+  };
+
+  // Initialize price tracking for a subscription
+  const startPriceTracking = (subId) => {
+    const sub = (library.subscriptions || []).find(s => s.id === subId);
+    if (!sub) return;
+
+    const startDate = window.prompt("When did this subscription start? (YYYY-MM-DD)", new Date().toISOString().split('T')[0]);
+    if (!startDate) return;
+
+    const updated = (library.subscriptions || []).map(s =>
+      s.id === subId ? {
+        ...s,
+        priceHistory: [{
+          id: generateUniqueId(),
+          price: s.monthlyCost,
+          startDate: startDate,
+          endDate: null
+        }]
+      } : s
+    );
+    saveToDisk({ ...library, subscriptions: updated });
+    setExpandedSubId(subId);
+  };
+
+  // Add a new price period (closes the previous one)
+  const addPricePeriod = (subId) => {
+    if (!newPriceEntry.price || !newPriceEntry.startDate) return;
+
+    const updated = (library.subscriptions || []).map(s => {
+      if (s.id !== subId) return s;
+
+      const history = [...(s.priceHistory || [])];
+      // Close the previous period
+      if (history.length > 0) {
+        const lastIndex = history.length - 1;
+        const prevEndDate = new Date(newPriceEntry.startDate);
+        prevEndDate.setDate(prevEndDate.getDate() - 1);
+        history[lastIndex] = { ...history[lastIndex], endDate: prevEndDate.toISOString().split('T')[0] };
+      }
+      // Add new period
+      history.push({
+        id: generateUniqueId(),
+        price: parseFloat(newPriceEntry.price),
+        startDate: newPriceEntry.startDate,
+        endDate: null
+      });
+
+      return { ...s, priceHistory: history, monthlyCost: parseFloat(newPriceEntry.price) };
+    });
+
+    saveToDisk({ ...library, subscriptions: updated });
+    setNewPriceEntry({ price: '', startDate: '' });
+  };
+
+  // Delete a price period
+  const deletePricePeriod = (subId, periodId) => {
+    const updated = (library.subscriptions || []).map(s => {
+      if (s.id !== subId) return s;
+
+      const history = (s.priceHistory || []).filter(p => p.id !== periodId);
+      // If we deleted the last one and there's a previous, re-open it
+      if (history.length > 0) {
+        history[history.length - 1] = { ...history[history.length - 1], endDate: null };
+      }
+
+      return { ...s, priceHistory: history };
+    });
+    saveToDisk({ ...library, subscriptions: updated });
   };
 
   const totalMonthlyCost = (library.subscriptions || []).reduce((sum, s) => {
@@ -346,95 +428,208 @@ const FilamentTab = ({ library, saveToDisk }) => {
               </tr>
             </thead>
             <tbody>
-              {(library.subscriptions || []).map(sub => (
-                <tr key={sub.id} className="border-b border-slate-100 last:border-b-0">
-                  {editingSubId === sub.id ? (
-                    <>
-                      <td className="py-3">
-                        <input
-                          className="w-full px-3 py-2 bg-white rounded-lg border font-bold text-sm outline-none"
-                          value={editSubData.name}
-                          onChange={e => setEditSubData({...editSubData, name: e.target.value})}
-                          placeholder="Name"
-                        />
-                        <input
-                          className="w-full px-3 py-2 mt-1 bg-white rounded-lg border font-medium text-xs outline-none text-slate-500"
-                          value={editSubData.url || ''}
-                          onChange={e => setEditSubData({...editSubData, url: e.target.value})}
-                          placeholder="URL (optional)"
-                        />
-                      </td>
-                      <td className="text-center">
-                        <select
-                          className="px-2 py-2 bg-white rounded-lg border font-bold text-xs"
-                          value={editSubData.cycle}
-                          onChange={e => setEditSubData({...editSubData, cycle: e.target.value})}
-                        >
-                          <option value="monthly">Monthly</option>
-                          <option value="yearly">Yearly</option>
-                        </select>
-                      </td>
-                      <td className="text-center">
-                        <input
-                          type="number"
-                          step="0.01"
-                          className="w-20 px-2 py-2 bg-white rounded-lg border font-bold text-sm text-center"
-                          value={editSubData.monthlyCost}
-                          onChange={e => setEditSubData({...editSubData, monthlyCost: e.target.value})}
-                        />
-                      </td>
-                      <td></td>
-                      <td className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button onClick={saveSubscription} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition">
-                            <Check size={16}/>
-                          </button>
-                          <button onClick={() => setEditingSubId(null)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition">
-                            <X size={16}/>
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="py-4">
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="text-blue-500" size={16} />
-                          {sub.url ? (
-                            <a href={sub.url} target="_blank" rel="noopener noreferrer" className="font-black uppercase text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                              {sub.name}
-                              <ExternalLink size={12} />
-                            </a>
-                          ) : (
-                            <span className="font-black uppercase text-sm">{sub.name}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="text-center">
-                        <span className="text-xs font-bold text-slate-500 uppercase">{sub.cycle}</span>
-                      </td>
-                      <td className="text-center">
-                        <span className="text-sm font-bold text-slate-700">${sub.monthlyCost.toFixed(2)}</span>
-                      </td>
-                      <td className="text-center">
-                        <span className="text-sm font-bold text-blue-600">
-                          ${(sub.cycle === 'yearly' ? sub.monthlyCost / 12 : sub.monthlyCost).toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => { setEditingSubId(sub.id); setEditSubData(sub); }} className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition">
-                            <Edit2 size={16}/>
-                          </button>
-                          <button onClick={() => deleteSubscription(sub.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
-                            <Trash2 size={16}/>
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
+              {(library.subscriptions || []).map(sub => {
+                const isExpanded = expandedSubId === sub.id;
+                const hasHistory = sub.priceHistory && sub.priceHistory.length > 0;
+
+                return (
+                  <React.Fragment key={sub.id}>
+                    <tr className={`border-b border-slate-100 ${isExpanded ? 'bg-slate-50/50' : ''}`}>
+                      {editingSubId === sub.id ? (
+                        <>
+                          <td className="py-3">
+                            <input
+                              className="w-full px-3 py-2 bg-white rounded-lg border font-bold text-sm outline-none"
+                              value={editSubData.name}
+                              onChange={e => setEditSubData({...editSubData, name: e.target.value})}
+                              placeholder="Name"
+                            />
+                            <input
+                              className="w-full px-3 py-2 mt-1 bg-white rounded-lg border font-medium text-xs outline-none text-slate-500"
+                              value={editSubData.url || ''}
+                              onChange={e => setEditSubData({...editSubData, url: e.target.value})}
+                              placeholder="URL (optional)"
+                            />
+                          </td>
+                          <td className="text-center">
+                            <select
+                              className="px-2 py-2 bg-white rounded-lg border font-bold text-xs"
+                              value={editSubData.cycle}
+                              onChange={e => setEditSubData({...editSubData, cycle: e.target.value})}
+                            >
+                              <option value="monthly">Monthly</option>
+                              <option value="yearly">Yearly</option>
+                            </select>
+                          </td>
+                          <td className="text-center">
+                            <input
+                              type="number"
+                              step="0.01"
+                              className="w-20 px-2 py-2 bg-white rounded-lg border font-bold text-sm text-center"
+                              value={editSubData.monthlyCost}
+                              onChange={e => setEditSubData({...editSubData, monthlyCost: e.target.value})}
+                            />
+                          </td>
+                          <td></td>
+                          <td className="text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <button onClick={saveSubscription} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition">
+                                <Check size={16}/>
+                              </button>
+                              <button onClick={() => setEditingSubId(null)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition">
+                                <X size={16}/>
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="py-4">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setExpandedSubId(isExpanded ? null : sub.id)}
+                                className="p-1 text-slate-400 hover:text-blue-500 transition"
+                              >
+                                {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                              </button>
+                              <CreditCard className="text-blue-500" size={16} />
+                              {sub.url ? (
+                                <a href={sub.url} target="_blank" rel="noopener noreferrer" className="font-black uppercase text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                                  {sub.name}
+                                  <ExternalLink size={12} />
+                                </a>
+                              ) : (
+                                <span className="font-black uppercase text-sm">{sub.name}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="text-center">
+                            <span className="text-xs font-bold text-slate-500 uppercase">{sub.cycle}</span>
+                          </td>
+                          <td className="text-center">
+                            <span className="text-sm font-bold text-slate-700">${sub.monthlyCost.toFixed(2)}</span>
+                          </td>
+                          <td className="text-center">
+                            <span className="text-sm font-bold text-blue-600">
+                              ${(sub.cycle === 'yearly' ? sub.monthlyCost / 12 : sub.monthlyCost).toFixed(2)}
+                            </span>
+                          </td>
+                          <td className="text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <button onClick={() => { setEditingSubId(sub.id); setEditSubData(sub); }} className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition">
+                                <Edit2 size={16}/>
+                              </button>
+                              <button onClick={() => deleteSubscription(sub.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                                <Trash2 size={16}/>
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+
+                    {/* Expanded Price History */}
+                    {isExpanded && (
+                      <tr className="bg-slate-50/80">
+                        <td colSpan="5" className="px-6 py-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                Price History
+                              </span>
+                            </div>
+
+                            {hasHistory ? (
+                              <div className="space-y-2">
+                                {sub.priceHistory.map((period, idx) => (
+                                  <div key={period.id} className="flex items-center gap-4 bg-white px-4 py-2 rounded-xl border border-slate-200">
+                                    <span className="text-sm font-bold text-blue-600 w-20">
+                                      ${period.price.toFixed(2)}
+                                    </span>
+                                    <span className="text-xs text-slate-500 flex-1">
+                                      {period.startDate}
+                                      <span className="mx-2">→</span>
+                                      {period.endDate || 'Current'}
+                                    </span>
+                                    <span className="text-xs font-bold text-slate-400">
+                                      {monthsBetween(period.startDate, period.endDate)} mo
+                                    </span>
+                                    {idx === sub.priceHistory.length - 1 && (
+                                      <button
+                                        onClick={() => deletePricePeriod(sub.id, period.id)}
+                                        className="p-1 text-slate-400 hover:text-red-500 transition"
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+
+                                {/* Add Price Change */}
+                                <div className="mt-3 pt-3 border-t border-slate-200">
+                                  {showPriceChangeForm === sub.id ? (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-bold text-slate-400 uppercase">New Price:</span>
+                                      <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-3">
+                                        <span className="text-slate-400">$</span>
+                                        <input
+                                          type="number"
+                                          step="0.01"
+                                          placeholder="0.00"
+                                          value={newPriceEntry.price}
+                                          onChange={e => setNewPriceEntry({...newPriceEntry, price: e.target.value})}
+                                          className="w-24 py-2 bg-transparent outline-none text-sm font-bold"
+                                        />
+                                      </div>
+                                      <span className="text-[10px] font-bold text-slate-400 uppercase">Starting:</span>
+                                      <input
+                                        type="date"
+                                        value={newPriceEntry.startDate}
+                                        onChange={e => setNewPriceEntry({...newPriceEntry, startDate: e.target.value})}
+                                        className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-sm outline-none"
+                                      />
+                                      <button
+                                        onClick={() => { addPricePeriod(sub.id); setShowPriceChangeForm(null); }}
+                                        disabled={!newPriceEntry.price || !newPriceEntry.startDate}
+                                        className="px-3 py-1 bg-blue-600 text-white text-[10px] font-bold uppercase rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                      >
+                                        Add
+                                      </button>
+                                      <button
+                                        onClick={() => { setShowPriceChangeForm(null); setNewPriceEntry({ price: '', startDate: '' }); }}
+                                        className="px-2 py-1 text-slate-400 hover:text-slate-600 text-[10px] font-bold uppercase transition"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => setShowPriceChangeForm(sub.id)}
+                                      className="text-[10px] font-bold text-blue-500 hover:text-blue-700 flex items-center gap-1 transition"
+                                    >
+                                      <Plus size={12} /> Price Changed?
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-center py-4">
+                                <p className="text-sm text-slate-400 mb-2">No price history tracked yet.</p>
+                                <button
+                                  onClick={() => startPriceTracking(sub.id)}
+                                  className="px-4 py-2 bg-blue-600 text-white text-[10px] font-bold uppercase rounded-lg hover:bg-blue-700 transition"
+                                >
+                                  Start Tracking
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
 

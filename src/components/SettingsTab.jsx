@@ -13,6 +13,7 @@ import {
   formatEventsCSV,
   formatMaterialsCSV,
   formatPrintersCSV,
+  formatSubscriptionsCSV,
   downloadJSONBackup,
   parseJSONBackup,
 } from '../utils/csvExport';
@@ -450,9 +451,9 @@ const SettingsTab = ({ library, saveToDisk, history, session, tierLimits, onUpgr
               <DollarSign size={12} /> Financial Rates
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Tooltip text="The hourly rate your shop charges for machine usage, independent of material or labor costs.">
+              <Tooltip text="Multiplier applied to print hours for the time-based pricing strategy. E.g., 2.00 means $2 per print hour.">
                 <InputBlock 
-                  label="Shop Hourly Rate" 
+                  label="Print Hour Multiplier" 
                   prefix="$" 
                   type="number" 
                   value={library.shopHourlyRate} 
@@ -557,6 +558,12 @@ const SettingsTab = ({ library, saveToDisk, history, session, tierLimits, onUpgr
                   className="py-2 px-3 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition"
                 >
                   Materials
+                </button>
+                <button
+                  onClick={() => downloadCSV('subscriptions.csv', formatSubscriptionsCSV(library.subscriptions || []))}
+                  className="py-2 px-3 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition"
+                >
+                  Subscriptions
                 </button>
               </div>
             </div>

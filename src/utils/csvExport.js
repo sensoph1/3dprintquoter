@@ -221,6 +221,57 @@ export const formatPrintersCSV = (printers) => {
 };
 
 /**
+ * Calculate months between two dates for subscription tracking.
+ */
+const monthsBetween = (startDate, endDate) => {
+  const start = new Date(startDate);
+  const end = endDate ? new Date(endDate) : new Date();
+  const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  const dayDiff = end.getDate() - start.getDate();
+  return Math.max(0, months + (dayDiff >= 0 ? 1 : 0));
+};
+
+/**
+ * Format subscriptions as CSV with price history.
+ */
+export const formatSubscriptionsCSV = (subscriptions) => {
+  const headers = ['Name', 'Cycle', 'Current Price', 'Monthly Equiv.', 'URL', 'Start Date', 'Total Months', 'Total Spent', 'Price History'];
+  const rows = (subscriptions || []).map(s => {
+    const monthlyEquiv = s.cycle === 'yearly' ? s.monthlyCost / 12 : s.monthlyCost;
+
+    let totalMonths = 0;
+    let totalSpent = 0;
+    let historyStr = '';
+    let startDate = '';
+
+    if (s.priceHistory && s.priceHistory.length > 0) {
+      startDate = s.priceHistory[0].startDate || '';
+      historyStr = s.priceHistory.map(p => {
+        const months = monthsBetween(p.startDate, p.endDate);
+        const periodCost = s.cycle === 'yearly' ? p.price / 12 : p.price;
+        totalMonths += months;
+        totalSpent += months * periodCost;
+        return `$${p.price.toFixed(2)} (${p.startDate} to ${p.endDate || 'current'})`;
+      }).join('; ');
+    }
+
+    return [
+      s.name || '',
+      s.cycle || 'monthly',
+      (s.monthlyCost || 0).toFixed(2),
+      monthlyEquiv.toFixed(2),
+      s.url || '',
+      startDate,
+      totalMonths,
+      totalSpent.toFixed(2),
+      historyStr,
+    ];
+  });
+
+  return arrayToCSV(headers, rows);
+};
+
+/**
  * Create a full JSON backup of all data.
  */
 export const createJSONBackup = (library, history) => {

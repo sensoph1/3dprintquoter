@@ -138,8 +138,8 @@ const CalculatorTab = ({ job, setJob, library, stats, requests = [] }) => {
         {/* Hourly Rate, Material Multiplier, Profit Margin, Rounding - same line */}
         <div className="grid grid-cols-4 gap-6">
           <div>
-            <Tooltip text="Override the global shop hourly rate from settings for this specific job. This rate is factored into the 'Hourly Rate' pricing strategy.">
-              <label>Hourly Rate ($)</label>
+            <Tooltip text="Override the global print hour multiplier from settings for this specific job. Used in the time-based pricing strategy.">
+              <label>Print Hour Multiplier ($)</label>
             </Tooltip>
             <input type="number" className="w-full shadow-sm" value={job.overrideShopHourlyRate} onChange={(e) => update('overrideShopHourlyRate', parseFloat(e.target.value) || 0)} />
           </div>
