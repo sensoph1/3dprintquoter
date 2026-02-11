@@ -206,6 +206,10 @@ const App = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const requestUserId = urlParams.get('request');
 
+  // Check for Stripe checkout success
+  const checkoutSuccess = urlParams.get('success');
+  const checkoutCanceled = urlParams.get('canceled');
+
   const [library, setLibrary] = useState(() => {
     const saved = localStorage.getItem('studio_db');
     return saved ? JSON.parse(saved) : DEFAULT_LIBRARY;
@@ -313,6 +317,20 @@ const App = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Handle Stripe checkout return
+  useEffect(() => {
+    if (checkoutSuccess && session?.user?.id) {
+      // Reload tier after successful checkout
+      loadUserTier(session.user.id);
+      showToast('Welcome to Pro! Your subscription is active.');
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (checkoutCanceled) {
+      showToast('Checkout canceled');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [checkoutSuccess, checkoutCanceled, session]);
 
   const loadFromSupabase = async (userId) => {
     const { data, error } = await supabase
@@ -582,11 +600,7 @@ const App = () => {
         <UpgradePrompt
           feature={upgradePrompt}
           onClose={() => setUpgradePrompt(null)}
-          onUpgrade={() => {
-            setUpgradePrompt(null);
-            // TODO: Open Stripe checkout
-            showToast('Stripe checkout coming soon!');
-          }}
+          session={session}
         />
       )}
 

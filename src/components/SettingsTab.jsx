@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive, Tag, LogOut, User, ChevronDown } from 'lucide-react';
+import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive, Tag, LogOut, User, ChevronDown, CreditCard, Sparkles } from 'lucide-react';
 import Tooltip from './Tooltip';
 import Accordion from './Accordion';
 import SquareIntegration from './SquareIntegration';
+import { supabase } from '../supabaseClient';
 
 const InputBlock = ({ label, icon: Icon, type = "text", value, onChange, prefix }) => (
   <div className="space-y-2">
@@ -325,24 +326,55 @@ const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail, sessio
               </div>
               <p className="text-xs text-slate-400">Your data is automatically synced to the cloud.</p>
 
-              {/* Subscription tier (for testing) */}
+              {/* Subscription tier */}
               <div className="mt-6 pt-6 border-t border-slate-100">
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subscription Plan</p>
-                    <p className="font-bold text-slate-800 capitalize">{userTier} Plan</p>
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subscription Plan</p>
+                      <p className="font-bold text-slate-800 capitalize flex items-center gap-2">
+                        {userTier === 'pro' && <Sparkles size={14} className="text-blue-600" />}
+                        {userTier} Plan
+                      </p>
+                    </div>
+                    {userTier === 'pro' ? (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const { data, error } = await supabase.functions.invoke('stripe-portal', {
+                              body: {
+                                userId: session?.user?.id,
+                                returnUrl: window.location.origin,
+                              },
+                            });
+                            if (data?.url) {
+                              window.location.href = data.url;
+                            } else {
+                              alert('Could not open billing portal');
+                            }
+                          } catch (err) {
+                            console.error('Portal error:', err);
+                            alert('Failed to open billing portal');
+                          }
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
+                      >
+                        <CreditCard size={14} /> Manage Billing
+                      </button>
+                    ) : (
+                      <button
+                        onClick={onUpgradeClick}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition"
+                      >
+                        <Sparkles size={14} /> Upgrade to Pro
+                      </button>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={userTier}
-                      onChange={(e) => updateTier(e.target.value)}
-                      className="text-xs font-bold px-3 py-2 rounded-lg border border-slate-200 bg-white"
-                    >
-                      <option value="free">Free</option>
-                      <option value="pro">Pro</option>
-                    </select>
-                    <span className="text-[9px] text-slate-400">(Testing)</span>
-                  </div>
+                  {userTier === 'free' && (
+                    <p className="text-xs text-slate-500">
+                      Upgrade to Pro for unlimited estimates, events, and Square integration.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
