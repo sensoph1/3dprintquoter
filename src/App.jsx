@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   Calculator, FlaskConical,
   Settings as SettingsIcon, History,
-  Box, Menu, X, Calendar, Inbox, ShoppingCart
+  Box, Menu, X, Calendar, Inbox, ShoppingCart, User,
+  LogOut, CreditCard, Sparkles
 } from 'lucide-react';
 
 import CalculatorTab from './components/CalculatorTab';
@@ -29,7 +30,7 @@ const ensureNumber = (value, defaultValue = 0) => {
 };
 
 const DEFAULT_LIBRARY = {
-  shopName: "Studio OS",
+  shopName: "My Studio",
   shopHourlyRate: 2.00,
   laborRate: 20.00,
   kwhRate: 0.12,
@@ -165,6 +166,7 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('calculator');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
 
   // Subscription tier (Supabase for logged-in users, localStorage fallback for guests)
   const [userTier, setUserTier] = useState(() => {
@@ -187,18 +189,6 @@ const App = () => {
       // No profile yet - create one (trigger should handle this, but just in case)
       await supabase.from('user_profiles').insert({ id: userId, tier: 'free' });
       setUserTier('free');
-    }
-  };
-
-  const updateTier = async (newTier) => {
-    setUserTier(newTier);
-    localStorage.setItem('user_tier', newTier);
-
-    // Save to Supabase if logged in
-    if (session?.user?.id) {
-      await supabase
-        .from('user_profiles')
-        .upsert({ id: session.user.id, tier: newTier, updated_at: new Date().toISOString() });
     }
   };
 
@@ -662,9 +652,8 @@ const App = () => {
       <header className="max-w-[1600px] mx-auto pt-6 pb-8 px-4 sm:px-8 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <div className="bg-slate-900 p-2.5 rounded-2xl text-white shadow-lg"><tabs.calculator.icon size={22} /></div>
-          <h1 className="text-lg font-black uppercase tracking-tighter leading-none">
-            {library.shopName} <br/>
-            <span className="text-blue-600 text-[9px] tracking-[0.2em] font-black uppercase">Studio OS</span>
+          <h1 className="text-xl font-black tracking-tight">
+            PrintPrice Pro
           </h1>
         </div>
 
@@ -686,6 +675,73 @@ const App = () => {
               )}
             </button>
           ))}
+          {session && (
+            <>
+              <div className="w-px h-6 bg-slate-200 mx-2" />
+              <div className="relative">
+                <button
+                  onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-full font-bold text-[10px] uppercase tracking-widest transition-all ${accountMenuOpen ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                >
+                  <User size={14} />
+                </button>
+                {accountMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setAccountMenuOpen(false)} />
+                    <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 space-y-4">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Signed in as</p>
+                        <p className="font-bold text-slate-800 truncate">{session.user?.email}</p>
+                      </div>
+                      <div className="border-t border-slate-100 pt-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Plan</p>
+                            <p className="font-bold text-slate-800 capitalize flex items-center gap-1">
+                              {userTier === 'pro' && <Sparkles size={12} className="text-blue-600" />}
+                              {userTier}
+                            </p>
+                          </div>
+                          {userTier === 'pro' ? (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const { data } = await supabase.functions.invoke('stripe-portal', {
+                                    body: { userId: session.user?.id, returnUrl: window.location.origin },
+                                  });
+                                  if (data?.url) window.location.href = data.url;
+                                } catch (err) {
+                                  console.error('Portal error:', err);
+                                }
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+                            >
+                              <CreditCard size={12} /> Billing
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => { setAccountMenuOpen(false); setUpgradePrompt('account'); }}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition"
+                            >
+                              <Sparkles size={12} /> Upgrade
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="border-t border-slate-100 pt-4">
+                        <button
+                          onClick={() => { handleLogout(); setAccountMenuOpen(false); }}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-100 transition-all"
+                        >
+                          <LogOut size={14} /> Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </nav>
       </header>
 
@@ -720,6 +776,53 @@ const App = () => {
                 );
               })}
             </div>
+            {session && (
+              <div className="mt-6 pt-6 border-t border-slate-100 space-y-4">
+                <div className="px-4">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Signed in as</p>
+                  <p className="font-bold text-slate-800 truncate">{session.user?.email}</p>
+                </div>
+                <div className="px-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Plan</p>
+                    <p className="font-bold text-slate-800 capitalize flex items-center gap-1">
+                      {userTier === 'pro' && <Sparkles size={12} className="text-blue-600" />}
+                      {userTier}
+                    </p>
+                  </div>
+                  {userTier === 'pro' ? (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const { data } = await supabase.functions.invoke('stripe-portal', {
+                            body: { userId: session.user?.id, returnUrl: window.location.origin },
+                          });
+                          if (data?.url) window.location.href = data.url;
+                        } catch (err) {
+                          console.error('Portal error:', err);
+                        }
+                      }}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+                    >
+                      <CreditCard size={12} /> Billing
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { setMobileMenuOpen(false); setUpgradePrompt('account'); }}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition"
+                    >
+                      <Sparkles size={12} /> Upgrade
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-100 transition-all"
+                >
+                  <LogOut size={14} /> Sign Out
+                </button>
+              </div>
+            )}
           </nav>
         </div>
       )}
@@ -811,7 +914,7 @@ const App = () => {
              {activeTab === 'filament' && <FilamentTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'inventory' && <InventoryTab library={library} saveToDisk={saveToDisk} handleReEvaluate={handleReEvaluate} />}
              {activeTab === 'quoteHistory' && <QuoteHistoryTab history={history} saveToDisk={saveToDisk} library={library} handleJobLoad={handleJobLoad} handleAddToInventory={handleAddToInventory} requests={requests} />}
-             {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} onLogout={handleLogout} userEmail={session?.user?.email} session={session} userTier={userTier} updateTier={updateTier} tierLimits={tierLimits} onUpgradeClick={() => setUpgradePrompt('square')} />}
+             {activeTab === 'settings' && <SettingsTab library={library} saveToDisk={saveToDisk} history={history} session={session} tierLimits={tierLimits} onUpgradeClick={() => setUpgradePrompt('square')} />}
           </div>
         )}
       </main>

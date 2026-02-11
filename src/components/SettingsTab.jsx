@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive, Tag, LogOut, User, ChevronDown, CreditCard, Sparkles } from 'lucide-react';
+import { Settings, DollarSign, Database, Home, Percent, Zap, Upload, Download, Plus, Trash2, Cloud, Edit2, Check, X, Cpu, Gauge, HardDrive, Tag, ChevronDown, AlertTriangle } from 'lucide-react';
 import Tooltip from './Tooltip';
 import Accordion from './Accordion';
 import SquareIntegration from './SquareIntegration';
@@ -283,13 +283,82 @@ const CategoryManager = ({ library, saveToDisk }) => {
   );
 };
 
-const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail, session, userTier, updateTier, tierLimits, onUpgradeClick }) => {
+const SettingsTab = ({ library, saveToDisk, history, session, tierLimits, onUpgradeClick }) => {
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState('');
+  const [deleteSelections, setDeleteSelections] = useState({
+    quotes: true,
+    materials: true,
+    printers: true,
+    inventory: true,
+    consumables: true,
+    events: true,
+    sales: true,
+    subscriptions: true,
+    categories: true,
+  });
+
   const updateSetting = (key, value) => {
     saveToDisk({ ...library, [key]: value });
   };
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const toggleSelection = (key) => {
+    setDeleteSelections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const selectedCount = Object.values(deleteSelections).filter(Boolean).length;
+
+  const handleReset = () => {
+    const newLibrary = { ...library };
+    let newHistory = [...history];
+
+    if (deleteSelections.quotes) {
+      newHistory = [];
+      newLibrary.nextQuoteNo = 1001;
+    }
+    if (deleteSelections.materials) {
+      newLibrary.filaments = [{ id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#3b82f6" }];
+    }
+    if (deleteSelections.printers) {
+      newLibrary.printers = [{ id: 1, name: "Bambu Lab X1C", watts: 350 }];
+    }
+    if (deleteSelections.inventory) {
+      newLibrary.printedParts = [];
+    }
+    if (deleteSelections.consumables) {
+      newLibrary.inventory = [];
+    }
+    if (deleteSelections.events) {
+      newLibrary.events = [];
+    }
+    if (deleteSelections.sales) {
+      newLibrary.sales = [];
+    }
+    if (deleteSelections.subscriptions) {
+      newLibrary.subscriptions = [];
+    }
+    if (deleteSelections.categories) {
+      newLibrary.categories = ["Client Work", "Prototypes", "Personal"];
+    }
+
+    saveToDisk(newLibrary, newHistory);
+    setResetModalOpen(false);
+    setResetConfirmText('');
+    setDeleteSelections({
+      quotes: true,
+      materials: true,
+      printers: true,
+      inventory: true,
+      consumables: true,
+      events: true,
+      sales: true,
+      subscriptions: true,
+      categories: true,
+    });
   };
 
   return (
@@ -306,81 +375,6 @@ const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail, sessio
       </div>
 
       <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 space-y-4">
-{userEmail && (
-          <Accordion title="Account">
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
-                <User size={12} /> Account
-              </div>
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Signed in as</p>
-                  <p className="font-bold text-slate-800">{userEmail}</p>
-                </div>
-                <button
-                  onClick={onLogout}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-100 transition-all"
-                >
-                  <LogOut size={14} /> Sign Out
-                </button>
-              </div>
-              <p className="text-xs text-slate-400">Your data is automatically synced to the cloud.</p>
-
-              {/* Subscription tier */}
-              <div className="mt-6 pt-6 border-t border-slate-100">
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subscription Plan</p>
-                      <p className="font-bold text-slate-800 capitalize flex items-center gap-2">
-                        {userTier === 'pro' && <Sparkles size={14} className="text-blue-600" />}
-                        {userTier} Plan
-                      </p>
-                    </div>
-                    {userTier === 'pro' ? (
-                      <button
-                        onClick={async () => {
-                          try {
-                            const { data, error } = await supabase.functions.invoke('stripe-portal', {
-                              body: {
-                                userId: session?.user?.id,
-                                returnUrl: window.location.origin,
-                              },
-                            });
-                            if (data?.url) {
-                              window.location.href = data.url;
-                            } else {
-                              alert('Could not open billing portal');
-                            }
-                          } catch (err) {
-                            console.error('Portal error:', err);
-                            alert('Failed to open billing portal');
-                          }
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
-                      >
-                        <CreditCard size={14} /> Manage Billing
-                      </button>
-                    ) : (
-                      <button
-                        onClick={onUpgradeClick}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition"
-                      >
-                        <Sparkles size={14} /> Upgrade to Pro
-                      </button>
-                    )}
-                  </div>
-                  {userTier === 'free' && (
-                    <p className="text-xs text-slate-500">
-                      Upgrade to Pro for unlimited estimates, events, and Square integration.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </Accordion>
-        )}
-
         <Accordion title="Square Integration">
           {tierLimits?.squareSync ? (
             <SquareIntegration
@@ -470,76 +464,133 @@ const SettingsTab = ({ library, saveToDisk, history, onLogout, userEmail, sessio
           <HardwareFleet library={library} saveToDisk={saveToDisk} />
         </Accordion>
 
-        <Accordion title="Database Info">
+        <Accordion title="Your Data">
           <div className="space-y-6">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-3 py-1 rounded-full">
-              <Database size={12} /> Database Info
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 text-center">
-                <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Total Quotes</span>
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Quotes</span>
                 <span className="text-2xl font-black text-slate-800">{history.length}</span>
               </div>
-              <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 text-center">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
                 <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Materials</span>
                 <span className="text-2xl font-black text-slate-800">{library.filaments.length}</span>
               </div>
-              <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 text-center">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
                 <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Next Quote</span>
                 <span className="text-2xl font-black text-slate-800">#{library.nextQuoteNo}</span>
               </div>
             </div>
-          </div>
-        </Accordion>
 
-        <Accordion title="Danger Zone">
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-50 w-fit px-3 py-1 rounded-full">
-              <Zap size={12} /> Danger Zone
+            {/* Export */}
+            <div className="pt-4 border-t border-slate-100">
+              <button
+                onClick={handlePrint}
+                className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition flex items-center justify-center gap-2"
+              >
+                <Database size={16} /> Export Data Report
+              </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <p className="text-sm text-slate-500">
-                  Reset all your data to the initial state. This action cannot be undone.
-                </p>
-                <button 
-                  onClick={() => {
-                    if (window.confirm('Are you sure you want to reset all data? This cannot be undone.')) {
-                      saveToDisk({
-                        shopName: "Studio OS",
-                        shopHourlyRate: 2.00,
-                        laborRate: 20.00,
-                        kwhRate: 0.12,
-                        nextQuoteNo: 1001,
-                        filaments: [{ id: 1, name: "Matte PLA", colorName: "Black", price: 22, grams: 1000, color: "#3b82f6" }],
-                        printers: [{ id: 1, name: "Bambu Lab X1C", watts: 350 }],
-                        categories: ["Client Work", "Prototypes", "Personal"],
-                        printedParts: [],
-                        inventory: [],
-                        rounding: 1
-                      }, []);
-                    }
-                  }}
-                  className="mt-4 w-full py-3 bg-red-600 text-white rounded-lg font-bold text-sm"
-                >
-                  Reset All Data
-                </button>
-              </div>
-            </div>
-          </div>
-        </Accordion>
 
-        <Accordion title="Print Shop Data Report">
-          <div className="pt-6 flex gap-4">
-            <button 
-              onClick={handlePrint}
-              className="w-full py-5 bg-white text-black border-2 border-black rounded-[2rem] font-black text-[10px] tracking-[0.2em] uppercase hover:bg-gray-200 transition shadow-xl"
-            >
-              Print Shop Data Report
-            </button>
+            {/* Reset */}
+            <div className="pt-4 border-t border-slate-100">
+              <p className="text-xs text-slate-400 mb-3">Reset all data to initial state. This cannot be undone.</p>
+              <button
+                onClick={() => setResetModalOpen(true)}
+                className="w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold text-sm hover:bg-red-100 transition"
+              >
+                Reset All Data
+              </button>
+            </div>
           </div>
         </Accordion>
       </div>
+
+      {/* Reset Confirmation Modal */}
+      {resetModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setResetModalOpen(false)}>
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-6">
+              <div className="bg-red-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="text-red-600" size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-2">Delete Data</h3>
+              <p className="text-slate-600">Select what you want to delete:</p>
+            </div>
+
+            <div className="space-y-2 mb-6">
+              {[
+                { key: 'quotes', label: 'Quotes & Estimates', count: history.length },
+                { key: 'materials', label: 'Materials', count: library.filaments?.length || 0 },
+                { key: 'printers', label: 'Printers', count: library.printers?.length || 0 },
+                { key: 'inventory', label: 'Printed Parts', count: library.printedParts?.length || 0 },
+                { key: 'consumables', label: 'Consumables', count: library.inventory?.length || 0 },
+                { key: 'events', label: 'Events', count: library.events?.length || 0 },
+                { key: 'sales', label: 'Sales', count: library.sales?.length || 0 },
+                { key: 'subscriptions', label: 'Subscriptions', count: library.subscriptions?.length || 0 },
+                { key: 'categories', label: 'Categories', count: library.categories?.length || 0 },
+              ].map(({ key, label, count }) => (
+                <label
+                  key={key}
+                  className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition ${
+                    deleteSelections[key] ? 'bg-red-50 border-2 border-red-200' : 'bg-slate-50 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={deleteSelections[key]}
+                      onChange={() => toggleSelection(key)}
+                      className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                    />
+                    <span className={`font-bold ${deleteSelections[key] ? 'text-red-700' : 'text-slate-600'}`}>
+                      {label}
+                    </span>
+                  </div>
+                  <span className={`text-sm font-mono ${deleteSelections[key] ? 'text-red-500' : 'text-slate-400'}`}>
+                    {count}
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            {selectedCount > 0 && (
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Type <span className="font-mono bg-slate-100 px-2 py-0.5 rounded">DELETE</span> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={resetConfirmText}
+                  onChange={(e) => setResetConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-mono text-center text-lg focus:border-red-500 focus:outline-none"
+                />
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setResetModalOpen(false); setResetConfirmText(''); }}
+                className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReset}
+                disabled={selectedCount === 0 || resetConfirmText !== 'DELETE'}
+                className={`flex-1 py-3 rounded-xl font-bold transition ${
+                  selectedCount > 0 && resetConfirmText === 'DELETE'
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+                }`}
+              >
+                Delete {selectedCount > 0 ? `(${selectedCount})` : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
