@@ -509,77 +509,97 @@ const SettingsTab = ({ library, saveToDisk, history, session, tierLimits, onUpgr
       {/* Reset Confirmation Modal */}
       {resetModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setResetModalOpen(false)}>
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="text-center mb-6">
-              <div className="bg-red-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <AlertTriangle className="text-red-600" size={32} />
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-red-100 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="text-red-600" size={20} />
               </div>
-              <h3 className="text-2xl font-black text-slate-900 mb-2">Delete Data</h3>
-              <p className="text-slate-600">Select what you want to delete:</p>
+              <div>
+                <h3 className="text-lg font-black text-slate-900">Delete Data</h3>
+                <p className="text-xs text-slate-500">Select what to delete</p>
+              </div>
             </div>
 
-            <div className="space-y-2 mb-6">
-              {[
-                { key: 'quotes', label: 'Quotes & Estimates', count: history.length },
-                { key: 'materials', label: 'Materials', count: library.filaments?.length || 0 },
-                { key: 'printers', label: 'Printers', count: library.printers?.length || 0 },
-                { key: 'inventory', label: 'Printed Parts', count: library.printedParts?.length || 0 },
-                { key: 'consumables', label: 'Consumables', count: library.inventory?.length || 0 },
-                { key: 'events', label: 'Events', count: library.events?.length || 0 },
-                { key: 'sales', label: 'Sales', count: library.sales?.length || 0 },
-                { key: 'subscriptions', label: 'Subscriptions', count: library.subscriptions?.length || 0 },
-                { key: 'categories', label: 'Categories', count: library.categories?.length || 0 },
-              ].map(({ key, label, count }) => (
-                <label
-                  key={key}
-                  className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition ${
-                    deleteSelections[key] ? 'bg-red-50 border-2 border-red-200' : 'bg-slate-50 border-2 border-transparent'
-                  }`}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-1">
+                <button
+                  onClick={() => {
+                    const allSelected = selectedCount === 9;
+                    setDeleteSelections({
+                      quotes: !allSelected,
+                      materials: !allSelected,
+                      printers: !allSelected,
+                      inventory: !allSelected,
+                      consumables: !allSelected,
+                      events: !allSelected,
+                      sales: !allSelected,
+                      subscriptions: !allSelected,
+                      categories: !allSelected,
+                    });
+                  }}
+                  className="text-[10px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-wide"
                 >
-                  <div className="flex items-center gap-3">
+                  {selectedCount === 9 ? 'Deselect All' : 'Select All'}
+                </button>
+                <span className="text-[10px] text-slate-400">{selectedCount} selected</span>
+              </div>
+              <div className="grid grid-cols-2 gap-1">
+                {[
+                  { key: 'quotes', label: 'Quotes', count: history.length },
+                  { key: 'materials', label: 'Materials', count: library.filaments?.length || 0 },
+                  { key: 'printers', label: 'Printers', count: library.printers?.length || 0 },
+                  { key: 'inventory', label: 'Printed Parts', count: library.printedParts?.length || 0 },
+                  { key: 'consumables', label: 'Consumables', count: library.inventory?.length || 0 },
+                  { key: 'events', label: 'Events', count: library.events?.length || 0 },
+                  { key: 'sales', label: 'Sales', count: library.sales?.length || 0 },
+                  { key: 'subscriptions', label: 'Subscriptions', count: library.subscriptions?.length || 0 },
+                  { key: 'categories', label: 'Categories', count: library.categories?.length || 0 },
+                ].map(({ key, label, count }) => (
+                  <label
+                    key={key}
+                    className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer transition text-xs ${
+                      deleteSelections[key] ? 'bg-red-50 text-red-700' : 'text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
                     <input
                       type="checkbox"
                       checked={deleteSelections[key]}
                       onChange={() => toggleSelection(key)}
-                      className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                      className="w-3 h-3 rounded border-slate-300 text-red-600 focus:ring-red-500"
                     />
-                    <span className={`font-bold ${deleteSelections[key] ? 'text-red-700' : 'text-slate-600'}`}>
-                      {label}
-                    </span>
-                  </div>
-                  <span className={`text-sm font-mono ${deleteSelections[key] ? 'text-red-500' : 'text-slate-400'}`}>
-                    {count}
-                  </span>
-                </label>
-              ))}
+                    <span className="flex-1 truncate">{label}</span>
+                    <span className="font-mono text-[10px] opacity-60">{count}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             {selectedCount > 0 && (
-              <div className="mb-6">
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Type <span className="font-mono bg-slate-100 px-2 py-0.5 rounded">DELETE</span> to confirm
+              <div className="mb-4">
+                <label className="block text-xs font-bold text-slate-600 mb-1">
+                  Type <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">DELETE</span> to confirm
                 </label>
                 <input
                   type="text"
                   value={resetConfirmText}
                   onChange={(e) => setResetConfirmText(e.target.value)}
                   placeholder="DELETE"
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-mono text-center text-lg focus:border-red-500 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg font-mono text-center text-sm focus:border-red-500 focus:outline-none"
                 />
               </div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 onClick={() => { setResetModalOpen(false); setResetConfirmText(''); }}
-                className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition"
+                className="flex-1 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-200 transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleReset}
                 disabled={selectedCount === 0 || resetConfirmText !== 'DELETE'}
-                className={`flex-1 py-3 rounded-xl font-bold transition ${
+                className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${
                   selectedCount > 0 && resetConfirmText === 'DELETE'
                     ? 'bg-red-600 text-white hover:bg-red-700'
                     : 'bg-slate-100 text-slate-300 cursor-not-allowed'
