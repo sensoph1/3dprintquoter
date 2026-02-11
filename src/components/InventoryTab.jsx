@@ -1,6 +1,5 @@
 import React from 'react';
-import { Minus, Plus, Trash2, Box, AlertTriangle, Download, RefreshCw } from 'lucide-react';
-import { formatPrintedPartsCSV, formatConsumablesCSV, downloadCSV } from '../utils/csvExport';
+import { Minus, Plus, Trash2, Box, AlertTriangle, RefreshCw } from 'lucide-react';
 
 const InventoryTab = ({ library, saveToDisk, handleReEvaluate }) => {
   const printedParts = library.printedParts || [];
@@ -39,35 +38,11 @@ const InventoryTab = ({ library, saveToDisk, handleReEvaluate }) => {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
 
       {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
-            <Box className="text-blue-600" size={28} /> Inventory
-          </h2>
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Finished products ready for sale</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              const csv = formatPrintedPartsCSV(printedParts);
-              downloadCSV(`parts-inventory-${new Date().toISOString().slice(0, 10)}.csv`, csv);
-            }}
-            disabled={printedParts.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Download size={14} /> Parts CSV
-          </button>
-          <button
-            onClick={() => {
-              const csv = formatConsumablesCSV(library.inventory || []);
-              downloadCSV(`consumables-inventory-${new Date().toISOString().slice(0, 10)}.csv`, csv);
-            }}
-            disabled={(library.inventory || []).length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Download size={14} /> Consumables CSV
-          </button>
-        </div>
+      <div>
+        <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
+          <Box className="text-blue-600" size={28} /> Inventory
+        </h2>
+        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Finished products ready for sale</p>
       </div>
 
       {/* LOW STOCK ALERT BANNER */}

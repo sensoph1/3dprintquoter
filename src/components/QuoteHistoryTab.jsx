@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import {
   ChevronDown, ChevronUp, FileText,
-  Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2, Archive, History, Calendar, Download, Inbox
+  Trash2, Search, TrendingUp, Filter, RefreshCw, Edit2, Archive, History, Calendar, Inbox
 } from 'lucide-react';
 import Tooltip from './Tooltip';
-import { formatEstimatesCSV, downloadCSV } from '../utils/csvExport';
 
 const STATUS_OPTIONS = [
   { value: 'draft', label: 'Draft', color: 'bg-slate-100 text-slate-600' },
@@ -22,8 +21,6 @@ const getStatusConfig = (status) => {
 const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAddToInventory, requests = [] }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [exportFrom, setExportFrom] = useState('');
-  const [exportTo, setExportTo] = useState('');
 
   const events = library.events || [];
 
@@ -79,28 +76,11 @@ const QuoteHistoryTab = ({ history, saveToDisk, library, handleJobLoad, handleAd
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-10">
-        <div>
-          <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
-            <History className="text-blue-600" size={28} /> Estimates
-          </h2>
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Track pricing estimates from draft to sold</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <input type="date" value={exportFrom} onChange={(e) => setExportFrom(e.target.value)} className="px-2 py-2 border border-slate-200 rounded-lg text-xs font-bold" />
-          <span className="text-slate-400 text-xs">to</span>
-          <input type="date" value={exportTo} onChange={(e) => setExportTo(e.target.value)} className="px-2 py-2 border border-slate-200 rounded-lg text-xs font-bold" />
-          <button
-            onClick={() => {
-              const csv = formatEstimatesCSV(history, events, { from: exportFrom, to: exportTo });
-              downloadCSV(`estimates-export-${new Date().toISOString().slice(0, 10)}.csv`, csv);
-            }}
-            disabled={history.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Download size={14} /> Export CSV
-          </button>
-        </div>
+      <div className="mb-10">
+        <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800 flex items-center gap-3">
+          <History className="text-blue-600" size={28} /> Estimates
+        </h2>
+        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Track pricing estimates from draft to sold</p>
       </div>
 
       {/* SEARCH BAR */}
