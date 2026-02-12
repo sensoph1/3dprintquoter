@@ -3,7 +3,7 @@ import {
   Calculator, FlaskConical,
   Settings as SettingsIcon, History,
   Box, Menu, X, Calendar, Inbox, ShoppingCart, User,
-  LogOut, CreditCard, Sparkles
+  LogOut, CreditCard, Sparkles, BarChart3
 } from 'lucide-react';
 
 import CalculatorTab from './components/CalculatorTab';
@@ -14,6 +14,7 @@ import InventoryTab from './components/InventoryTab';
 import EventsTab from './components/EventsTab';
 import SalesTab from './components/SalesTab';
 import RequestsTab from './components/RequestsTab';
+import DashboardTab from './components/DashboardTab';
 import QuoteRequestForm from './components/QuoteRequestForm';
 import AuthGate from './components/Auth';
 import LandingPage from './components/LandingPage';
@@ -229,6 +230,7 @@ const App = () => {
 
   const tabs = {
     calculator: { name: 'Calculator', icon: Calculator },
+    dashboard: { name: 'Dashboard', icon: BarChart3 },
     quoteHistory: { name: 'Estimates', icon: History },
     events: { name: 'Events', icon: Calendar },
     sales: { name: 'Sales', icon: ShoppingCart },
@@ -926,6 +928,7 @@ const App = () => {
           </div>
         ) : (
           <div className="max-w-6xl mx-auto bg-white rounded-studio border border-slate-100 shadow-sm p-4 sm:p-6">
+             {activeTab === 'dashboard' && <DashboardTab library={library} history={history} />}
              {activeTab === 'events' && <EventsTab library={library} history={history} saveToDisk={saveToDisk} tierLimits={tierLimits} onUpgradeClick={() => setUpgradePrompt('events')} />}
              {activeTab === 'sales' && <SalesTab library={library} saveToDisk={saveToDisk} />}
              {activeTab === 'requests' && <RequestsTab session={session} history={history} />}
