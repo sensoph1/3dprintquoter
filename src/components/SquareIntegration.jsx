@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Link, Check, RefreshCw, Upload, LogOut,
-  AlertCircle, Store, MapPin, Clock, Settings,
-  ChevronDown, FlaskConical
+  AlertCircle, Store, MapPin, Clock, FlaskConical
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
@@ -18,10 +17,9 @@ const SquareIntegration = ({
   const [creatingTestOrders, setCreatingTestOrders] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [showOptions, setShowOptions] = useState(false);
 
   // Sync options — persisted in library
-  const syncOptions = library.squareSyncOptions || { linkToEvent: true, updateInventory: false };
+  const syncOptions = library.squareSyncOptions || { linkToEvent: true, updateInventory: true };
   const setSyncOptions = (opts) => saveToDisk({ ...library, squareSyncOptions: opts });
 
   // Check for connection status
@@ -472,42 +470,26 @@ const SquareIntegration = ({
             </button>
           </div>
 
-          {/* Sync Options */}
-          <div className="border border-slate-100 rounded-2xl overflow-hidden">
-            <button
-              onClick={() => setShowOptions(!showOptions)}
-              className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-all"
-            >
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600">
-                <Settings size={12} /> Sync Options
-              </div>
-              <ChevronDown
-                size={16}
-                className={`text-slate-400 transition-transform ${showOptions ? 'rotate-180' : ''}`}
+          {/* Sync Options - 2 column grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex items-center gap-3 cursor-pointer p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all">
+              <input
+                type="checkbox"
+                checked={syncOptions.linkToEvent}
+                onChange={(e) => setSyncOptions({ ...syncOptions, linkToEvent: e.target.checked })}
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
               />
-            </button>
-            {showOptions && (
-              <div className="p-4 border-t border-slate-100 space-y-3">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={syncOptions.linkToEvent}
-                    onChange={(e) => setSyncOptions({ ...syncOptions, linkToEvent: e.target.checked })}
-                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-slate-700">Auto-link sales to events by matching date</span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={syncOptions.updateInventory}
-                    onChange={(e) => setSyncOptions({ ...syncOptions, updateInventory: e.target.checked })}
-                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-slate-700">Update inventory quantities from Square</span>
-                </label>
-              </div>
-            )}
+              <span className="text-xs font-bold text-slate-600">Auto-link to events</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all">
+              <input
+                type="checkbox"
+                checked={syncOptions.updateInventory}
+                onChange={(e) => setSyncOptions({ ...syncOptions, updateInventory: e.target.checked })}
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-xs font-bold text-slate-600">Update inventory qty</span>
+            </label>
           </div>
         </div>
       ) : (

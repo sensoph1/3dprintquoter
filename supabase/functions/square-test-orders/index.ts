@@ -95,6 +95,7 @@ serve(async (req: Request) => {
       orderDate.setDate(orderDate.getDate() - daysAgo);
       orderDate.setHours(Math.floor(Math.random() * 12) + 9); // 9am - 9pm
 
+      // Create order (without COMPLETED state - payment will complete it)
       const orderBody = {
         idempotency_key: `test-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`,
         order: {
@@ -109,27 +110,54 @@ serve(async (req: Request) => {
               },
             },
           ],
-          state: "COMPLETED",
         },
       };
 
-      const response = await fetch(`${apiBaseUrl}/v2/orders`, {
+      const orderResponse = await fetch(`${apiBaseUrl}/v2/orders`, {
         method: "POST",
         headers,
         body: JSON.stringify(orderBody),
       });
 
-      const data = await response.json();
+      const orderData = await orderResponse.json();
 
-      if (response.ok && data.order) {
+      if (!orderResponse.ok || !orderData.order) {
+        console.error("Failed to create order:", orderData);
+        continue;
+      }
+
+      const order = orderData.order;
+      const totalAmount = order.total_money?.amount || item.price * quantity;
+
+      // Create payment with sandbox test nonce to complete the order
+      const paymentBody = {
+        idempotency_key: `pay-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`,
+        source_id: "cnon:card-nonce-ok", // Sandbox test nonce - always succeeds
+        amount_money: {
+          amount: totalAmount,
+          currency: "USD",
+        },
+        order_id: order.id,
+        location_id: connection.location_id,
+      };
+
+      const paymentResponse = await fetch(`${apiBaseUrl}/v2/payments`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(paymentBody),
+      });
+
+      const paymentData = await paymentResponse.json();
+
+      if (paymentResponse.ok && paymentData.payment) {
         createdOrders.push({
-          orderId: data.order.id,
+          orderId: order.id,
           item: item.name,
           quantity,
-          total: (item.price * quantity) / 100,
+          total: totalAmount / 100,
         });
       } else {
-        console.error("Failed to create order:", data);
+        console.error("Failed to create payment:", paymentData);
       }
     }
 

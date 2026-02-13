@@ -52,11 +52,13 @@ serve(async (req: Request) => {
     const scopes = [
       "MERCHANT_PROFILE_READ",
       "ORDERS_READ",
+      "ORDERS_WRITE",
       "ITEMS_READ",
       "ITEMS_WRITE",
       "INVENTORY_READ",
       "INVENTORY_WRITE",
       "PAYMENTS_READ",
+      "PAYMENTS_WRITE",
     ].join("+");
 
     // State includes user ID for callback verification
