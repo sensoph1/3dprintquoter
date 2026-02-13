@@ -372,8 +372,28 @@ const SalesTab = ({ library, saveToDisk }) => {
                     {expandedId === sale.id && (
                       <tr className="bg-slate-50/50">
                         <td colSpan="8" className="p-6 border-t border-slate-100">
-                          <div className="flex justify-between items-start">
-                            <div className="space-y-2">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="space-y-3 flex-1">
+                              {/* Event Link */}
+                              <div>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">Link to Event</span>
+                                <select
+                                  value={sale.eventId || ''}
+                                  onChange={(e) => {
+                                    const updatedSales = sales.map(s =>
+                                      s.id === sale.id ? { ...s, eventId: e.target.value ? parseInt(e.target.value) : null } : s
+                                    );
+                                    saveToDisk({ ...library, sales: updatedSales });
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 min-w-[200px]"
+                                >
+                                  <option value="">No Event</option>
+                                  {events.map(event => (
+                                    <option key={event.id} value={event.id}>{event.name}</option>
+                                  ))}
+                                </select>
+                              </div>
                               {sale.notes && (
                                 <div>
                                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Notes</span>

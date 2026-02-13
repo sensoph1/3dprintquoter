@@ -110,7 +110,7 @@ const SquareIntegration = ({
     }
   };
 
-  const handleSync = async () => {
+  const handleSync = async (fullResync = false) => {
     setError(null);
     setSuccessMessage(null);
     setSyncing(true);
@@ -119,7 +119,7 @@ const SquareIntegration = ({
       const { data, error } = await supabase.functions.invoke('square-sync', {
         body: {
           action: 'pull',
-          lastSyncTime: connection?.last_sync_at,
+          lastSyncTime: fullResync ? null : connection?.last_sync_at,
           initialSyncDays: syncOptions.initialSyncDays || 30
         }
       });
@@ -438,12 +438,21 @@ const SquareIntegration = ({
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={handleSync}
+              onClick={() => handleSync(false)}
               disabled={syncing}
               className="flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50"
             >
               <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
               {syncing ? 'Syncing...' : 'Sync Sales'}
+            </button>
+            <button
+              onClick={() => handleSync(true)}
+              disabled={syncing}
+              className="flex items-center gap-2 px-5 py-3 bg-blue-50 text-blue-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-100 transition-all disabled:opacity-50"
+              title="Ignore last sync time and pull from the selected time period"
+            >
+              <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
+              Full Re-sync
             </button>
             <button
               onClick={handlePushInventory}
