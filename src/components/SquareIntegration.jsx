@@ -19,7 +19,7 @@ const SquareIntegration = ({
   const [successMessage, setSuccessMessage] = useState(null);
 
   // Sync options — persisted in library
-  const syncOptions = library.squareSyncOptions || { linkToEvent: true, updateInventory: true };
+  const syncOptions = library.squareSyncOptions || { linkToEvent: true, updateInventory: true, initialSyncDays: 30 };
   const setSyncOptions = (opts) => saveToDisk({ ...library, squareSyncOptions: opts });
 
   // Check for connection status
@@ -119,7 +119,8 @@ const SquareIntegration = ({
       const { data, error } = await supabase.functions.invoke('square-sync', {
         body: {
           action: 'pull',
-          lastSyncTime: connection?.last_sync_at
+          lastSyncTime: connection?.last_sync_at,
+          initialSyncDays: syncOptions.initialSyncDays || 30
         }
       });
 
@@ -470,8 +471,8 @@ const SquareIntegration = ({
             </button>
           </div>
 
-          {/* Sync Options - 2 column grid */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Sync Options - 3 column grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <label className="flex items-center gap-3 cursor-pointer p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all">
               <input
                 type="checkbox"
@@ -490,6 +491,20 @@ const SquareIntegration = ({
               />
               <span className="text-xs font-bold text-slate-600">Update inventory qty</span>
             </label>
+            <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl">
+              <span className="text-xs font-bold text-slate-600">Initial sync:</span>
+              <select
+                value={syncOptions.initialSyncDays || 30}
+                onChange={(e) => setSyncOptions({ ...syncOptions, initialSyncDays: parseInt(e.target.value) })}
+                className="text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg px-2 py-1"
+              >
+                <option value={30}>30 days</option>
+                <option value={60}>60 days</option>
+                <option value={90}>90 days</option>
+                <option value={180}>180 days</option>
+                <option value={365}>1 year</option>
+              </select>
+            </div>
           </div>
         </div>
       ) : (

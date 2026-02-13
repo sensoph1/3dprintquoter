@@ -72,7 +72,8 @@ async function refreshTokenIfNeeded(
 async function pullTransactions(
   accessToken: string,
   locationId: string | null,
-  lastSyncTime?: string
+  lastSyncTime?: string,
+  initialSyncDays: number = 30
 ): Promise<any[]> {
   const squareEnvironment = Deno.env.get("SQUARE_ENVIRONMENT") || "production";
   const apiBaseUrl = squareEnvironment === "sandbox"
@@ -80,7 +81,7 @@ async function pullTransactions(
     : "https://connect.squareup.com";
 
   // Use orders API to get completed orders
-  const beginTime = lastSyncTime || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const beginTime = lastSyncTime || new Date(Date.now() - initialSyncDays * 24 * 60 * 60 * 1000).toISOString();
 
   const searchBody: any = {
     return_entries: false,
@@ -299,7 +300,7 @@ serve(async (req: Request) => {
 
     // Get request body
     const body = await req.json();
-    const { action, items, lastSyncTime } = body;
+    const { action, items, lastSyncTime, initialSyncDays } = body;
 
     if (!action || !["pull", "push", "both"].includes(action)) {
       return new Response(
@@ -337,7 +338,8 @@ serve(async (req: Request) => {
       const transactions = await pullTransactions(
         accessToken,
         connection.location_id,
-        lastSyncTime
+        lastSyncTime,
+        initialSyncDays || 30
       );
       result.transactions = transactions;
       result.pullCount = transactions.length;
