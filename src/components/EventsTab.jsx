@@ -98,6 +98,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
   const startEdit = (event) => {
     setEditingId(event.id);
     setEditData({ ...event });
+    setExpandedEventId(event.id); // Open the event to show edit form
   };
 
   const saveEdit = () => {
