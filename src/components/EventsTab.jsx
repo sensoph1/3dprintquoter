@@ -225,10 +225,10 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="text-blue-500 hover:text-blue-700"
+                      className="flex items-center gap-1 text-blue-500 hover:text-blue-700 text-[10px] font-bold"
                       title="Open signup link"
                     >
-                      <Link size={14} />
+                      <Link size={12} /> Link
                     </a>
                   )}
                 </div>
