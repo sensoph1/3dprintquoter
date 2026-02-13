@@ -210,3 +210,52 @@ No code changes needed — config only:
 - [x] Cloud data sync when logged in
 - [x] localStorage persistence for offline use
 - [x] Works without account (auth bypass)
+
+---
+
+## Technical Q&A
+
+### How does Square catalog ID linking work?
+
+When you push inventory items to Square, the `square-sync` edge function calls Square's Catalog API to create/update items. Square returns:
+- `catalog_object.id` — the item's unique ID in Square's catalog
+- `catalog_object.item_data.variations[0].id` — the variation ID (needed for inventory counts)
+
+These are stored on your local `printedParts` items as:
+- `squareCatalogId` — maps to the Square item
+- `squareVariationId` — maps to the specific variation
+
+On subsequent pushes, if these IDs exist, the function fetches the current `version` from Square (required for updates to avoid conflicts) and upserts rather than creating duplicates.
+
+### How is profit calculated?
+
+The app uses a sophisticated COGS (Cost of Goods Sold) calculation:
+
+```
+baseCost = materialCost + energyCost + laborCost + extraCosts + depreciationCost
+```
+
+Where:
+- **materialCost**: Filament cost based on grams used × cost per gram (from spool price/weight)
+- **energyCost**: Printer wattage × print hours × energy rate ($/kWh)
+- **laborCost**: Print hours × labor rate ($/hr)
+- **extraCosts**: Hardware, supports, other per-job costs
+- **depreciationCost**: Printer price ÷ lifespan hours × print hours
+
+Then profit is:
+```
+profit = salePrice - baseCost
+```
+
+For events, the app sums all linked sales' profits and subtracts event costs (booth fee, other fees).
+
+### What's the event data retention strategy?
+
+Currently the app keeps all event data indefinitely — there's no automatic archival or deletion. Events are sorted into "upcoming" vs "past" based on date, but past events remain accessible.
+
+**Options to consider:**
+1. **Keep everything** — storage is cheap, historical data valuable for year-over-year comparisons
+2. **Archive after X months** — move to separate "archived" list, exclude from default views
+3. **Export & delete** — offer CSV export before manual cleanup
+
+For now, keeping all data is recommended since it enables trend analysis and event comparison features.

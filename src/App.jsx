@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Calculator, FlaskConical,
   Settings as SettingsIcon, History,
@@ -341,6 +341,39 @@ const App = () => {
     }
   }, [checkoutSuccess, checkoutCanceled, session]);
 
+  // Flush pending saves on visibility change (more reliable than beforeunload)
+  useEffect(() => {
+    const flushPendingSave = () => {
+      if (pendingSaveRef.current && session?.user?.id && saveTimerRef.current) {
+        // Clear the debounce timer and save immediately
+        clearTimeout(saveTimerRef.current);
+        const pending = pendingSaveRef.current;
+        supabase
+          .from('user_data')
+          .upsert({
+            user_id: session.user.id,
+            library: pending.library,
+            history: pending.history,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' });
+        pendingSaveRef.current = null;
+      }
+    };
+
+    // Flush when tab becomes hidden (user switching away)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushPendingSave();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      flushPendingSave();
+    };
+  }, [session?.user?.id]);
+
   const loadFromSupabase = async (userId) => {
     const { data, error } = await supabase
       .from('user_data')
@@ -366,22 +399,41 @@ const App = () => {
     }
   };
 
-  const saveToSupabase = async (newLib, newHist) => {
+  // Debounce timer ref for batching saves
+  const saveTimerRef = useRef(null);
+  const pendingSaveRef = useRef(null);
+
+  const saveToSupabase = useCallback(async (newLib, newHist) => {
     if (!session?.user?.id) return;
 
-    const { error } = await supabase
-      .from('user_data')
-      .upsert({
-        user_id: session.user.id,
-        library: newLib,
-        history: newHist,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id' });
+    // Store pending data
+    pendingSaveRef.current = { library: newLib, history: newHist };
 
-    if (error) {
-      console.error('Error saving to cloud:', error);
+    // Clear existing timer
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
     }
-  };
+
+    // Debounce: wait 1.5s before saving to batch rapid changes
+    saveTimerRef.current = setTimeout(async () => {
+      const pending = pendingSaveRef.current;
+      if (!pending) return;
+
+      const { error } = await supabase
+        .from('user_data')
+        .upsert({
+          user_id: session.user.id,
+          library: pending.library,
+          history: pending.history,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+
+      if (error) {
+        console.error('Error saving to cloud:', error);
+      }
+      pendingSaveRef.current = null;
+    }, 1500);
+  }, [session?.user?.id]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
