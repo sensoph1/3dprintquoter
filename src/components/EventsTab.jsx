@@ -322,7 +322,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
             {/* Edit fields */}
             {isEditing && (
               <div className="p-4 bg-white rounded-xl space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Start Date</label>
                     <input type="date" value={editData.date} onChange={(e) => setEditData({ ...editData, date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
@@ -336,7 +336,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                     <input type="text" placeholder="Location" value={editData.location || ''} onChange={(e) => setEditData({ ...editData, location: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-4 gap-4">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Status</label>
                     <select
@@ -593,7 +593,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Location <span className="text-slate-300 normal-case">(optional)</span></label>
                     <input
@@ -617,7 +617,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Signup Deadline <span className="text-slate-300 normal-case">(optional)</span></label>
                     <input
@@ -689,7 +689,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
 
             {/* SUMMARY STATS */}
             {events.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
+              <div className="grid grid-cols-4 gap-4 py-4">
                 <div className="bg-slate-50 p-4 rounded-2xl text-center">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Events</span>
                   <span className="text-2xl font-black text-slate-800">{events.length}</span>

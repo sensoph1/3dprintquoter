@@ -109,7 +109,7 @@ const LandingPage = ({ onGetStarted, onTryDemo }) => {
           Stop guessing at craft fairs. The all-in-one calculator and inventory system
           built for makers who sell at markets, fairs, and online.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-row gap-4 justify-center">
           <button
             onClick={onTryDemo}
             className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2"
