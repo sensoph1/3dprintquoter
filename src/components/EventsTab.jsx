@@ -10,7 +10,7 @@ import Accordion from './Accordion';
 import Tooltip from './Tooltip';
 import EventCalendar from './EventCalendar';
 import generateUniqueId from '../utils/idGenerator';
-import { calculateEventMetrics } from '../utils/eventMetrics';
+import { calculateEventMetrics, getManualSalesTotal } from '../utils/eventMetrics';
 
 // Helper to format date range display
 const formatDateRange = (startDate, endDate) => {
@@ -36,7 +36,7 @@ const getEventDays = (event) => {
 };
 
 const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick }) => {
-  const [newEvent, setNewEvent] = useState({ name: '', date: '', endDate: '', location: '', boothFee: '', otherCosts: '', notes: '', status: 'watching', signupUrl: '', signupDeadline: '' });
+  const [newEvent, setNewEvent] = useState({ name: '', date: '', endDate: '', location: '', boothFee: '', otherCosts: '', notes: '', status: 'watching', signupUrl: '', signupDeadline: '', manualSales: { cash: '', card: '', venmo: '', paypal: '', other: '' } });
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
   const [activeView, setActiveView] = useState('list');
@@ -72,11 +72,18 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
         notes: newEvent.notes,
         status: newEvent.status || 'watching',
         signupUrl: newEvent.signupUrl || '',
-        signupDeadline: newEvent.signupDeadline || null
+        signupDeadline: newEvent.signupDeadline || null,
+        manualSales: {
+          cash: parseFloat(newEvent.manualSales?.cash) || 0,
+          card: parseFloat(newEvent.manualSales?.card) || 0,
+          venmo: parseFloat(newEvent.manualSales?.venmo) || 0,
+          paypal: parseFloat(newEvent.manualSales?.paypal) || 0,
+          other: parseFloat(newEvent.manualSales?.other) || 0
+        }
       }
     ];
     saveToDisk({ ...library, events: updated });
-    setNewEvent({ name: '', date: '', endDate: '', location: '', boothFee: '', otherCosts: '', notes: '', status: 'watching', signupUrl: '', signupDeadline: '' });
+    setNewEvent({ name: '', date: '', endDate: '', location: '', boothFee: '', otherCosts: '', notes: '', status: 'watching', signupUrl: '', signupDeadline: '', manualSales: { cash: '', card: '', venmo: '', paypal: '', other: '' } });
   };
 
   const handleDeleteEvent = (id) => {
@@ -101,7 +108,14 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
       otherCosts: parseFloat(editData.otherCosts) || 0,
       status: editData.status || 'watching',
       signupUrl: editData.signupUrl || '',
-      signupDeadline: editData.signupDeadline || null
+      signupDeadline: editData.signupDeadline || null,
+      manualSales: {
+        cash: parseFloat(editData.manualSales?.cash) || 0,
+        card: parseFloat(editData.manualSales?.card) || 0,
+        venmo: parseFloat(editData.manualSales?.venmo) || 0,
+        paypal: parseFloat(editData.manualSales?.paypal) || 0,
+        other: parseFloat(editData.manualSales?.other) || 0
+      }
     } : e);
     saveToDisk({ ...library, events: updated });
     setEditingId(null);
@@ -357,10 +371,55 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Signup Deadline</label>
                   <input type="date" value={editData.signupDeadline || ''} onChange={(e) => setEditData({ ...editData, signupDeadline: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
+                <div className="col-span-full">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Notes</label>
+                  <textarea placeholder="Any additional notes" value={editData.notes || ''} onChange={(e) => setEditData({ ...editData, notes: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm resize-y min-h-[40px]" rows={2} />
+                </div>
+                {/* Manual Sales Section */}
+                <div className="col-span-full pt-4 border-t border-slate-200">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Manual Sales (not from Square)</label>
+                  <div className="grid grid-cols-5 gap-3">
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-400 mb-1">Cash</label>
+                      <div className="flex items-center gap-1 px-2 border rounded-lg">
+                        <span className="text-slate-400 font-bold text-sm">$</span>
+                        <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.cash || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, cash: e.target.value } })} className="w-full py-2 bg-transparent outline-none text-sm" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-400 mb-1">Card</label>
+                      <div className="flex items-center gap-1 px-2 border rounded-lg">
+                        <span className="text-slate-400 font-bold text-sm">$</span>
+                        <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.card || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, card: e.target.value } })} className="w-full py-2 bg-transparent outline-none text-sm" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-400 mb-1">Venmo</label>
+                      <div className="flex items-center gap-1 px-2 border rounded-lg">
+                        <span className="text-slate-400 font-bold text-sm">$</span>
+                        <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.venmo || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, venmo: e.target.value } })} className="w-full py-2 bg-transparent outline-none text-sm" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-400 mb-1">PayPal</label>
+                      <div className="flex items-center gap-1 px-2 border rounded-lg">
+                        <span className="text-slate-400 font-bold text-sm">$</span>
+                        <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.paypal || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, paypal: e.target.value } })} className="w-full py-2 bg-transparent outline-none text-sm" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-400 mb-1">Other</label>
+                      <div className="flex items-center gap-1 px-2 border rounded-lg">
+                        <span className="text-slate-400 font-bold text-sm">$</span>
+                        <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.other || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, other: e.target.value } })} className="w-full py-2 bg-transparent outline-none text-sm" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Costs Breakdown */}
+            {/* Costs & Revenue Breakdown */}
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-white p-3 rounded-xl text-center">
                 <div className="text-[10px] text-slate-400 uppercase font-bold">Booth Fee</div>
@@ -375,6 +434,49 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                 <div className="font-black text-slate-700">{metrics.itemsSold}</div>
               </div>
             </div>
+
+            {/* Manual Sales Breakdown */}
+            {getManualSalesTotal(event.manualSales) > 0 && (
+              <div className="bg-green-50 p-4 rounded-xl">
+                <div className="text-[10px] text-green-600 uppercase font-bold mb-3">Manual Sales</div>
+                <div className="grid grid-cols-5 gap-3 text-center">
+                  {event.manualSales?.cash > 0 && (
+                    <div>
+                      <div className="text-[9px] text-slate-400 font-bold">Cash</div>
+                      <div className="font-black text-green-700">${parseFloat(event.manualSales.cash).toFixed(2)}</div>
+                    </div>
+                  )}
+                  {event.manualSales?.card > 0 && (
+                    <div>
+                      <div className="text-[9px] text-slate-400 font-bold">Card</div>
+                      <div className="font-black text-green-700">${parseFloat(event.manualSales.card).toFixed(2)}</div>
+                    </div>
+                  )}
+                  {event.manualSales?.venmo > 0 && (
+                    <div>
+                      <div className="text-[9px] text-slate-400 font-bold">Venmo</div>
+                      <div className="font-black text-green-700">${parseFloat(event.manualSales.venmo).toFixed(2)}</div>
+                    </div>
+                  )}
+                  {event.manualSales?.paypal > 0 && (
+                    <div>
+                      <div className="text-[9px] text-slate-400 font-bold">PayPal</div>
+                      <div className="font-black text-green-700">${parseFloat(event.manualSales.paypal).toFixed(2)}</div>
+                    </div>
+                  )}
+                  {event.manualSales?.other > 0 && (
+                    <div>
+                      <div className="text-[9px] text-slate-400 font-bold">Other</div>
+                      <div className="font-black text-green-700">${parseFloat(event.manualSales.other).toFixed(2)}</div>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-3 pt-3 border-t border-green-200 text-right">
+                  <span className="text-[10px] text-green-600 font-bold uppercase">Total Manual: </span>
+                  <span className="font-black text-green-700">${getManualSalesTotal(event.manualSales).toFixed(2)}</span>
+                </div>
+              </div>
+            )}
 
             {/* Notes */}
             {event.notes && (
@@ -582,12 +684,12 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Notes <span className="text-slate-300 normal-case">(optional)</span></label>
-                  <input
-                    type="text"
+                  <textarea
                     placeholder="Any additional notes about this event"
                     value={newEvent.notes}
                     onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })}
-                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
+                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm resize-y min-h-[50px]"
+                    rows={2}
                   />
                 </div>
                 <button
@@ -729,6 +831,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                       { label: 'Date', getValue: (e) => formatDateRange(e.date, e.endDate) },
                       { label: 'Days', getValue: (e) => getEventDays(e).toString() },
                       { label: 'Revenue', getValue: (e) => '$' + getEventMetrics(e).grossRevenue.toFixed(2), isMoney: true },
+                      { label: 'Manual Sales', getValue: (e) => '$' + getManualSalesTotal(e.manualSales).toFixed(2), isMoney: true },
                       { label: 'Revenue/Day', getValue: (e) => '$' + getEventMetrics(e).revenuePerDay.toFixed(2), isMoney: true },
                       { label: 'Booth Fee', getValue: (e) => '$' + (e.boothFee || 0).toFixed(2) },
                       { label: 'Other Costs', getValue: (e) => '$' + (e.otherCosts || 0).toFixed(2) },

@@ -9,6 +9,18 @@ export const getEventDays = (event) => {
 };
 
 /**
+ * Calculate total from manual sales object
+ */
+export const getManualSalesTotal = (manualSales) => {
+  if (!manualSales) return 0;
+  return (parseFloat(manualSales.cash) || 0) +
+         (parseFloat(manualSales.card) || 0) +
+         (parseFloat(manualSales.venmo) || 0) +
+         (parseFloat(manualSales.paypal) || 0) +
+         (parseFloat(manualSales.other) || 0);
+};
+
+/**
  * Calculate financial metrics for an event by combining sales records and legacy history entries.
  */
 export const calculateEventMetrics = (event, sales, history) => {
@@ -28,7 +40,9 @@ export const calculateEventMetrics = (event, sales, history) => {
     return sum + ((h.costPerItem || 0) * qty);
   }, 0);
 
-  const grossRevenue = salesRevenue + historyRevenue;
+  // Include manual sales in gross revenue
+  const manualSalesTotal = getManualSalesTotal(event.manualSales);
+  const grossRevenue = salesRevenue + historyRevenue + manualSalesTotal;
   const eventCosts = (parseFloat(event.boothFee) || 0) + (parseFloat(event.otherCosts) || 0);
   const netProfit = grossRevenue - eventCosts - totalCOGS;
   const profitMargin = grossRevenue > 0 ? (netProfit / grossRevenue) * 100 : 0;
@@ -50,5 +64,5 @@ export const calculateEventMetrics = (event, sales, history) => {
   const revenuePerDay = grossRevenue / days;
   const profitPerDay = netProfit / days;
 
-  return { grossRevenue, totalCOGS, eventCosts, netProfit, profitMargin, itemsSold, salesCount: linkedSales.length, linkedSales, days, revenuePerDay, profitPerDay };
+  return { grossRevenue, totalCOGS, eventCosts, netProfit, profitMargin, itemsSold, salesCount: linkedSales.length, linkedSales, days, revenuePerDay, profitPerDay, manualSalesTotal };
 };
