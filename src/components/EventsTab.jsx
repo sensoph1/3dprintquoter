@@ -352,14 +352,14 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Booth Fee</label>
                     <div className="flex items-center gap-2 px-3 border rounded-lg">
                       <span className="text-slate-400 font-bold">$</span>
-                      <input type="number" step="0.01" placeholder="0.00" value={editData.boothFee} onChange={(e) => setEditData({ ...editData, boothFee: e.target.value })} className="w-full py-2 bg-transparent outline-none text-sm" />
+                      <input type="number" step="0.01" placeholder="0.00" value={editData.boothFee} onChange={(e) => setEditData({ ...editData, boothFee: e.target.value })} className="input-nested w-full py-2 bg-transparent outline-none text-sm" />
                     </div>
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Other Costs</label>
                     <div className="flex items-center gap-2 px-3 border rounded-lg">
                       <span className="text-slate-400 font-bold">$</span>
-                      <input type="number" step="0.01" placeholder="0.00" value={editData.otherCosts} onChange={(e) => setEditData({ ...editData, otherCosts: e.target.value })} className="w-full py-2 bg-transparent outline-none text-sm" />
+                      <input type="number" step="0.01" placeholder="0.00" value={editData.otherCosts} onChange={(e) => setEditData({ ...editData, otherCosts: e.target.value })} className="input-nested w-full py-2 bg-transparent outline-none text-sm" />
                     </div>
                   </div>
                   <div>
@@ -381,38 +381,23 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                   <div className="grid grid-cols-5 gap-3">
                     <div>
                       <label className="block text-[9px] font-bold text-slate-400 mb-1">Cash</label>
-                      <div className="flex items-center gap-1 px-2 border rounded-lg">
-                        <span className="text-slate-400 font-bold text-sm">$</span>
-                        <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.cash || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, cash: e.target.value } })} className="w-full py-2 bg-transparent outline-none text-sm" />
-                      </div>
+                      <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.cash || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, cash: e.target.value } })} className="w-full" />
                     </div>
                     <div>
                       <label className="block text-[9px] font-bold text-slate-400 mb-1">Card</label>
-                      <div className="flex items-center gap-1 px-2 border rounded-lg">
-                        <span className="text-slate-400 font-bold text-sm">$</span>
-                        <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.card || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, card: e.target.value } })} className="w-full py-2 bg-transparent outline-none text-sm" />
-                      </div>
+                      <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.card || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, card: e.target.value } })} className="w-full" />
                     </div>
                     <div>
                       <label className="block text-[9px] font-bold text-slate-400 mb-1">Venmo</label>
-                      <div className="flex items-center gap-1 px-2 border rounded-lg">
-                        <span className="text-slate-400 font-bold text-sm">$</span>
-                        <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.venmo || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, venmo: e.target.value } })} className="w-full py-2 bg-transparent outline-none text-sm" />
-                      </div>
+                      <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.venmo || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, venmo: e.target.value } })} className="w-full" />
                     </div>
                     <div>
                       <label className="block text-[9px] font-bold text-slate-400 mb-1">PayPal</label>
-                      <div className="flex items-center gap-1 px-2 border rounded-lg">
-                        <span className="text-slate-400 font-bold text-sm">$</span>
-                        <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.paypal || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, paypal: e.target.value } })} className="w-full py-2 bg-transparent outline-none text-sm" />
-                      </div>
+                      <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.paypal || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, paypal: e.target.value } })} className="w-full" />
                     </div>
                     <div>
                       <label className="block text-[9px] font-bold text-slate-400 mb-1">Other</label>
-                      <div className="flex items-center gap-1 px-2 border rounded-lg">
-                        <span className="text-slate-400 font-bold text-sm">$</span>
-                        <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.other || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, other: e.target.value } })} className="w-full py-2 bg-transparent outline-none text-sm" />
-                      </div>
+                      <input type="number" step="0.01" placeholder="0" value={editData.manualSales?.other || ''} onChange={(e) => setEditData({ ...editData, manualSales: { ...editData.manualSales, other: e.target.value } })} className="w-full" />
                     </div>
                   </div>
                 </div>
@@ -655,7 +640,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Booth Fee</label>
-                    <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                    <div className="flex items-center gap-2 px-4 bg-white border border-slate-200 rounded-2xl">
                       <span className="text-slate-400 font-bold">$</span>
                       <input
                         type="number"
@@ -663,13 +648,13 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                         placeholder="0.00"
                         value={newEvent.boothFee}
                         onChange={(e) => setNewEvent({ ...newEvent, boothFee: e.target.value })}
-                        className="w-full py-4 bg-transparent outline-none font-bold text-sm"
+                        className="input-nested w-full py-4 bg-transparent outline-none font-bold text-sm"
                       />
                     </div>
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Other Costs <span className="text-slate-300 normal-case">(travel, parking, etc.)</span></label>
-                    <div className="flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                    <div className="flex items-center gap-2 px-4 bg-white border border-slate-200 rounded-2xl">
                       <span className="text-slate-400 font-bold">$</span>
                       <input
                         type="number"
@@ -677,7 +662,7 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                         placeholder="0.00"
                         value={newEvent.otherCosts}
                         onChange={(e) => setNewEvent({ ...newEvent, otherCosts: e.target.value })}
-                        className="w-full py-4 bg-transparent outline-none font-bold text-sm"
+                        className="input-nested w-full py-4 bg-transparent outline-none font-bold text-sm"
                       />
                     </div>
                   </div>

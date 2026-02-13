@@ -24,7 +24,7 @@ const InputBlock = ({ label, icon: Icon, type = "text", value, onChange, prefix 
     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 flex items-center gap-2">
       {Icon && <Icon size={12} />} {label}
     </label>
-    <div className="flex items-center bg-slate-50 border border-slate-100 rounded-2xl focus-within:ring-2 focus-within:ring-blue-500">
+    <div className="flex items-center bg-white border border-slate-200 rounded-2xl focus-within:ring-2 focus-within:ring-blue-500">
       {prefix && (
         <span className="px-4 font-bold text-slate-400 text-sm">
           {prefix}
@@ -34,7 +34,7 @@ const InputBlock = ({ label, icon: Icon, type = "text", value, onChange, prefix 
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full ${prefix ? '' : 'px-6'} py-4 bg-transparent outline-none font-bold text-sm`}
+        className={`input-nested w-full ${prefix ? '' : 'px-6'} py-4 bg-transparent outline-none font-bold text-sm`}
       />
     </div>
   </div>
@@ -103,7 +103,7 @@ const HardwareFleet = ({ library, saveToDisk }) => {
                   <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-xl border border-slate-200">
                     <span className="text-slate-300 font-bold">$</span>
                     <Tooltip text="The initial purchase cost of this printer. Used for calculating depreciation.">
-                      <input type="number" className="w-20 py-2 bg-transparent font-bold text-sm" value={editData.cost} onChange={e => setEditData({...editData, cost: e.target.value})} placeholder="Cost" />
+                      <input type="number" className="input-nested w-20 py-2 bg-transparent font-bold text-sm" value={editData.cost} onChange={e => setEditData({...editData, cost: e.target.value})} placeholder="Cost" />
                     </Tooltip>
                   </div>
                   <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-xl border border-slate-200">
@@ -183,33 +183,33 @@ const HardwareFleet = ({ library, saveToDisk }) => {
             </div>
             {/* Line 2: Wattage | Price | Lifespan | Add */}
             <div className="flex gap-2 items-center">
-              <div className="flex-1 flex items-center gap-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl">
+              <div className="flex-1 flex items-center gap-1 px-3 py-2 bg-white border border-slate-200 rounded-xl">
                 <Zap size={12} className="text-slate-400" />
                 <input
                   type="number"
                   placeholder="Watts"
                   value={newPrinter.watts}
                   onChange={(e) => setNewPrinter({...newPrinter, watts: e.target.value})}
-                  className="w-full bg-transparent outline-none font-bold text-sm"
+                  className="input-nested w-full bg-transparent outline-none font-bold text-sm"
                 />
               </div>
-              <div className="flex-1 flex items-center gap-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl">
+              <div className="flex-1 flex items-center gap-1 px-3 py-2 bg-white border border-slate-200 rounded-xl">
                 <span className="text-slate-400 font-bold text-sm">$</span>
                 <input
                   type="number"
                   placeholder="Price"
                   value={newPrinter.cost}
                   onChange={(e) => setNewPrinter({...newPrinter, cost: e.target.value})}
-                  className="w-full bg-transparent outline-none font-bold text-sm"
+                  className="input-nested w-full bg-transparent outline-none font-bold text-sm"
                 />
               </div>
-              <div className="flex-1 flex items-center gap-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl">
+              <div className="flex-1 flex items-center gap-1 px-3 py-2 bg-white border border-slate-200 rounded-xl">
                 <input
                   type="number"
                   placeholder="Lifespan"
                   value={newPrinter.hoursOfLife}
                   onChange={(e) => setNewPrinter({...newPrinter, hoursOfLife: e.target.value})}
-                  className="w-full bg-transparent outline-none font-bold text-sm"
+                  className="input-nested w-full bg-transparent outline-none font-bold text-sm"
                 />
                 <span className="text-slate-400 font-bold text-xs">hrs</span>
               </div>

@@ -220,16 +220,16 @@ const FilamentTab = ({ library, saveToDisk }) => {
                   <input placeholder="Color Name" value={newFilament.colorName} onChange={(e) => setNewFilament({...newFilament, colorName: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
                 </Tooltip>
               </div>
-              <div className="w-[20%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <div className="w-[20%] flex items-center gap-2 px-4 bg-white border border-slate-200 rounded-2xl">
                 <span className="text-slate-400 font-bold">$</span>
                 <Tooltip text="The cost of the entire spool of filament in your local currency.">
-                  <input type="number" placeholder="Price" value={newFilament.price} onChange={(e) => setNewFilament({...newFilament, price: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+                  <input type="number" placeholder="Price" value={newFilament.price} onChange={(e) => setNewFilament({...newFilament, price: e.target.value})} className="input-nested w-full py-4 bg-transparent outline-none font-bold text-sm" />
                 </Tooltip>
               </div>
-              <div className="w-[20%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <div className="w-[20%] flex items-center gap-2 px-4 bg-white border border-slate-200 rounded-2xl">
                 <span className="text-slate-400 font-bold">g</span>
                 <Tooltip text="The total weight of the filament spool in grams (e.g., 1000g, 750g).">
-                  <input type="number" placeholder="Weight" value={newFilament.grams} onChange={(e) => setNewFilament({...newFilament, grams: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+                  <input type="number" placeholder="Weight" value={newFilament.grams} onChange={(e) => setNewFilament({...newFilament, grams: e.target.value})} className="input-nested w-full py-4 bg-transparent outline-none font-bold text-sm" />
                 </Tooltip>
               </div>
             </div>
@@ -305,16 +305,16 @@ const FilamentTab = ({ library, saveToDisk }) => {
                   <input placeholder="Item Name (e.g. 6mm Magnets)" value={newConsumable.name} onChange={(e) => setNewConsumable({...newConsumable, name: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
                 </Tooltip>
               </div>
-              <div className="w-[25%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <div className="w-[25%] flex items-center gap-2 px-4 bg-white border border-slate-200 rounded-2xl">
                 <span className="text-slate-400 font-bold">#</span>
                 <Tooltip text="Current quantity in stock.">
-                  <input type="number" placeholder="Qty" value={newConsumable.qty} onChange={(e) => setNewConsumable({...newConsumable, qty: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+                  <input type="number" placeholder="Qty" value={newConsumable.qty} onChange={(e) => setNewConsumable({...newConsumable, qty: e.target.value})} className="input-nested w-full py-4 bg-transparent outline-none font-bold text-sm" />
                 </Tooltip>
               </div>
-              <div className="w-[25%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <div className="w-[25%] flex items-center gap-2 px-4 bg-white border border-slate-200 rounded-2xl">
                 <span className="text-slate-400 font-bold">$</span>
                 <Tooltip text="Total cost for the entire order (unit cost will be calculated automatically).">
-                  <input type="number" step="0.01" placeholder="Total Cost" value={newConsumable.totalCost} onChange={(e) => setNewConsumable({...newConsumable, totalCost: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+                  <input type="number" step="0.01" placeholder="Total Cost" value={newConsumable.totalCost} onChange={(e) => setNewConsumable({...newConsumable, totalCost: e.target.value})} className="input-nested w-full py-4 bg-transparent outline-none font-bold text-sm" />
                 </Tooltip>
               </div>
             </div>
@@ -389,10 +389,10 @@ const FilamentTab = ({ library, saveToDisk }) => {
                   <input placeholder="Subscription Name" value={newSubscription.name} onChange={(e) => setNewSubscription({...newSubscription, name: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm" />
                 </Tooltip>
               </div>
-              <div className="w-[20%] flex items-center gap-2 px-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <div className="w-[20%] flex items-center gap-2 px-4 bg-white border border-slate-200 rounded-2xl">
                 <span className="text-slate-400 font-bold">$</span>
                 <Tooltip text="Cost per billing cycle.">
-                  <input type="number" step="0.01" placeholder="Cost" value={newSubscription.monthlyCost} onChange={(e) => setNewSubscription({...newSubscription, monthlyCost: e.target.value})} className="w-full py-4 bg-transparent outline-none font-bold text-sm" />
+                  <input type="number" step="0.01" placeholder="Cost" value={newSubscription.monthlyCost} onChange={(e) => setNewSubscription({...newSubscription, monthlyCost: e.target.value})} className="input-nested w-full py-4 bg-transparent outline-none font-bold text-sm" />
                 </Tooltip>
               </div>
               <div className="w-[20%]">
@@ -578,7 +578,7 @@ const FilamentTab = ({ library, saveToDisk }) => {
                                           placeholder="0.00"
                                           value={newPriceEntry.price}
                                           onChange={e => setNewPriceEntry({...newPriceEntry, price: e.target.value})}
-                                          className="w-24 py-2 bg-transparent outline-none text-sm font-bold"
+                                          className="input-nested w-24 py-2 bg-transparent outline-none text-sm font-bold"
                                         />
                                       </div>
                                       <span className="text-[10px] font-bold text-slate-400 uppercase">Starting:</span>

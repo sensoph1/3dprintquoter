@@ -139,25 +139,25 @@ const CalculatorTab = ({ job, setJob, library, stats, requests = [] }) => {
         <div className="grid grid-cols-4 gap-6">
           <div>
             <Tooltip text="Override the global print hour multiplier from settings for this specific job. Used in the time-based pricing strategy.">
-              <label>Print Hour Multiplier ($)</label>
+              <label>Print Hour<br />Multiplier ($)</label>
             </Tooltip>
             <input type="number" className="w-full shadow-sm" value={job.overrideShopHourlyRate} onChange={(e) => update('overrideShopHourlyRate', parseFloat(e.target.value) || 0)} />
           </div>
           <div>
             <Tooltip text="A multiplier applied to the material cost to determine the final price using the 'Material Cost' pricing strategy. Useful for covering material waste, handling, or desired markup.">
-              <label>Material Multiplier</label>
+              <label>Material<br />Multiplier</label>
             </Tooltip>
             <input type="number" className="w-full shadow-sm" value={job.materialCostMultiplier} onChange={(e) => update('materialCostMultiplier', parseFloat(e.target.value) || 0)} />
           </div>
           <div>
             <Tooltip text="Your desired profit margin as a percentage for this specific job. This is used in the 'Profit Margin' pricing strategy.">
-              <label>Profit Margin (%)</label>
+              <label>Profit<br />Margin (%)</label>
             </Tooltip>
             <input type="number" className="w-full shadow-sm" value={job.profitMargin} onChange={(e) => update('profitMargin', parseFloat(e.target.value) || 0)} />
           </div>
           <div>
             <Tooltip text="Override the global price rounding setting for this specific job. Prices will be rounded up to the nearest value entered here (e.g., 1 for nearest dollar, 5 for nearest five dollars).">
-              <label>Rounding ($)</label>
+              <label>Rounding<br />Up ($)</label>
             </Tooltip>
             <input type="number" className="w-full shadow-sm" value={job.rounding} onChange={(e) => update('rounding', parseFloat(e.target.value) || 0)} />
           </div>

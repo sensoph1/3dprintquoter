@@ -214,7 +214,7 @@ const SalesTab = ({ library, saveToDisk }) => {
               </div>
               <div>
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 block mb-2">Unit Price</label>
-                <div className="flex items-center bg-slate-50 border border-slate-100 rounded-2xl">
+                <div className="flex items-center bg-white border border-slate-200 rounded-2xl">
                   <span className="px-4 font-bold text-slate-400 text-sm">$</span>
                   <input
                     type="number"
@@ -222,7 +222,7 @@ const SalesTab = ({ library, saveToDisk }) => {
                     min="0"
                     value={newSale.unitPrice}
                     onChange={(e) => setNewSale({ ...newSale, unitPrice: e.target.value })}
-                    className="w-full py-4 pr-4 bg-transparent outline-none font-bold text-sm"
+                    className="input-nested w-full py-4 pr-4 bg-transparent outline-none font-bold text-sm"
                   />
                 </div>
               </div>
