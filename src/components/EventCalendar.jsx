@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+// Status colors for events
+const STATUS_COLORS = {
+  watching: { bg: 'bg-blue-100', text: 'text-blue-700', pastBg: 'bg-blue-50', pastText: 'text-blue-500' },
+  applied: { bg: 'bg-amber-100', text: 'text-amber-700', pastBg: 'bg-amber-50', pastText: 'text-amber-500' },
+  confirmed: { bg: 'bg-green-100', text: 'text-green-700', pastBg: 'bg-green-50', pastText: 'text-green-500' },
+};
+
 const EventCalendar = ({ events, onDateClick, onEventClick }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showTwoMonths, setShowTwoMonths] = useState(false);
@@ -23,6 +30,13 @@ const EventCalendar = ({ events, onDateClick, onEventClick }) => {
       const endDate = e.endDate ? new Date(e.endDate + 'T00:00:00') : startDate;
       return checkDate >= startDate && checkDate <= endDate;
     });
+  };
+
+  const getDeadlinesForDate = (year, month, day) => {
+    if (!day) return [];
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    return events.filter(e => e.signupDeadline === dateStr);
   };
 
   const isToday = (year, month, day) => {
@@ -93,7 +107,9 @@ const EventCalendar = ({ events, onDateClick, onEventClick }) => {
         <div className="grid grid-cols-7 gap-1">
           {days.map((day, index) => {
             const dayEvents = getEventsForDate(year, month, day);
+            const dayDeadlines = getDeadlinesForDate(year, month, day);
             const hasEvents = dayEvents.length > 0;
+            const hasDeadlines = dayDeadlines.length > 0;
             const past = isPast(year, month, day);
             const isTodayDate = isToday(year, month, day);
 
@@ -113,24 +129,47 @@ const EventCalendar = ({ events, onDateClick, onEventClick }) => {
                     <div className={`text-sm font-bold ${isTodayDate ? 'text-blue-600' : 'text-slate-600'}`}>
                       {day}
                     </div>
-                    {hasEvents && (
+                    {/* Signup Deadlines */}
+                    {hasDeadlines && (
                       <div className="mt-1 space-y-1">
-                        {dayEvents.slice(0, showTwoMonths ? 1 : 2).map(event => (
+                        {dayDeadlines.slice(0, showTwoMonths ? 1 : 1).map(event => (
                           <div
-                            key={event.id}
+                            key={`deadline-${event.id}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               onEventClick && onEventClick(event);
                             }}
-                            className={`
-                              text-[9px] font-bold px-1.5 py-0.5 rounded truncate
-                              ${past ? 'bg-slate-200 text-slate-600' : 'bg-blue-100 text-blue-700'}
-                            `}
-                            title={event.name}
+                            className="text-[8px] font-bold px-1.5 py-0.5 rounded truncate bg-red-100 text-red-700 border border-red-200"
+                            title={`Signup deadline: ${event.name}`}
                           >
-                            {event.name}
+                            📅 {event.name}
                           </div>
                         ))}
+                      </div>
+                    )}
+                    {/* Events */}
+                    {hasEvents && (
+                      <div className="mt-1 space-y-1">
+                        {dayEvents.slice(0, showTwoMonths ? 1 : 2).map(event => {
+                          const status = event.status || 'confirmed';
+                          const colors = STATUS_COLORS[status] || STATUS_COLORS.confirmed;
+                          return (
+                            <div
+                              key={event.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEventClick && onEventClick(event);
+                              }}
+                              className={`
+                                text-[9px] font-bold px-1.5 py-0.5 rounded truncate
+                                ${past ? `${colors.pastBg} ${colors.pastText}` : `${colors.bg} ${colors.text}`}
+                              `}
+                              title={`${event.name} (${status})`}
+                            >
+                              {event.name}
+                            </div>
+                          );
+                        })}
                         {dayEvents.length > (showTwoMonths ? 1 : 2) && (
                           <div className="text-[9px] font-bold text-slate-400">
                             +{dayEvents.length - (showTwoMonths ? 1 : 2)} more
@@ -175,21 +214,30 @@ const EventCalendar = ({ events, onDateClick, onEventClick }) => {
             </h3>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowTwoMonths(!showTwoMonths)}
-            className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
-              showTwoMonths ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            2 Month
-          </button>
-          <button
-            onClick={goToToday}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
-          >
-            Today
-          </button>
+        <div className="flex items-center gap-4">
+          {/* Status Legend */}
+          <div className="flex items-center gap-3 text-[10px] font-bold">
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-100 border border-red-200"></span> Deadline</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-100"></span> Watching</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-100"></span> Applied</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-100"></span> Confirmed</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowTwoMonths(!showTwoMonths)}
+              className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
+                showTwoMonths ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              2 Month
+            </button>
+            <button
+              onClick={goToToday}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
+            >
+              Today
+            </button>
+          </div>
         </div>
       </div>
 

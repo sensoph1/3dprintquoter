@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { Calendar, MapPin, DollarSign, Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronRight, TrendingUp, BarChart3 } from 'lucide-react';
+import { Calendar, MapPin, DollarSign, Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronRight, TrendingUp, BarChart3, Link, Eye, Send, CheckCircle } from 'lucide-react';
+
+const EVENT_STATUSES = [
+  { value: 'watching', label: 'Watching', icon: Eye, color: 'blue' },
+  { value: 'applied', label: 'Applied', icon: Send, color: 'amber' },
+  { value: 'confirmed', label: 'Confirmed', icon: CheckCircle, color: 'green' },
+];
 import Accordion from './Accordion';
 import Tooltip from './Tooltip';
 import EventCalendar from './EventCalendar';
@@ -30,7 +36,7 @@ const getEventDays = (event) => {
 };
 
 const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick }) => {
-  const [newEvent, setNewEvent] = useState({ name: '', date: '', endDate: '', location: '', boothFee: '', otherCosts: '', notes: '' });
+  const [newEvent, setNewEvent] = useState({ name: '', date: '', endDate: '', location: '', boothFee: '', otherCosts: '', notes: '', status: 'watching', signupUrl: '', signupDeadline: '' });
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
   const [activeView, setActiveView] = useState('list');
@@ -63,11 +69,14 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
         location: newEvent.location,
         boothFee: parseFloat(newEvent.boothFee) || 0,
         otherCosts: parseFloat(newEvent.otherCosts) || 0,
-        notes: newEvent.notes
+        notes: newEvent.notes,
+        status: newEvent.status || 'watching',
+        signupUrl: newEvent.signupUrl || '',
+        signupDeadline: newEvent.signupDeadline || null
       }
     ];
     saveToDisk({ ...library, events: updated });
-    setNewEvent({ name: '', date: '', endDate: '', location: '', boothFee: '', otherCosts: '', notes: '' });
+    setNewEvent({ name: '', date: '', endDate: '', location: '', boothFee: '', otherCosts: '', notes: '', status: 'watching', signupUrl: '', signupDeadline: '' });
   };
 
   const handleDeleteEvent = (id) => {
@@ -89,10 +98,19 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
       ...editData,
       endDate: editData.endDate || null,
       boothFee: parseFloat(editData.boothFee) || 0,
-      otherCosts: parseFloat(editData.otherCosts) || 0
+      otherCosts: parseFloat(editData.otherCosts) || 0,
+      status: editData.status || 'watching',
+      signupUrl: editData.signupUrl || '',
+      signupDeadline: editData.signupDeadline || null
     } : e);
     saveToDisk({ ...library, events: updated });
     setEditingId(null);
+  };
+
+  // Quick status update without entering edit mode
+  const updateEventStatus = (eventId, newStatus) => {
+    const updated = events.map(e => e.id === eventId ? { ...e, status: newStatus } : e);
+    saveToDisk({ ...library, events: updated });
   };
 
   const cancelEdit = () => {
@@ -184,7 +202,36 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                   className="font-black text-slate-800 bg-slate-100 px-2 py-1 rounded"
                 />
               ) : (
-                <div className="font-black text-slate-800">{event.name}</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-black text-slate-800">{event.name}</span>
+                  {(() => {
+                    const status = EVENT_STATUSES.find(s => s.value === (event.status || 'confirmed'));
+                    const StatusIcon = status?.icon || CheckCircle;
+                    const colorClasses = {
+                      amber: 'bg-amber-100 text-amber-700',
+                      blue: 'bg-blue-100 text-blue-700',
+                      green: 'bg-green-100 text-green-700'
+                    };
+                    return (
+                      <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${colorClasses[status?.color || 'green']}`}>
+                        <StatusIcon size={10} />
+                        {status?.label || 'Confirmed'}
+                      </span>
+                    );
+                  })()}
+                  {event.signupUrl && (
+                    <a
+                      href={event.signupUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-blue-500 hover:text-blue-700"
+                      title="Open signup link"
+                    >
+                      <Link size={14} />
+                    </a>
+                  )}
+                </div>
               )}
               <div className="text-xs text-slate-400 flex items-center gap-2">
                 <Calendar size={12} /> {formatDateRange(event.date, event.endDate)}
@@ -197,6 +244,31 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                   <>
                     <span className="mx-1">•</span>
                     <MapPin size={12} /> {event.location}
+                  </>
+                )}
+                {/* Show deadline for watching, status badge for applied/confirmed */}
+                {event.status === 'watching' && event.signupDeadline && (
+                  <>
+                    <span className="mx-1">•</span>
+                    {event.signupUrl ? (
+                      <a
+                        href={event.signupUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-red-500 font-bold hover:text-red-700 hover:underline"
+                      >
+                        📅 Apply by {new Date(event.signupDeadline + 'T00:00:00').toLocaleDateString()}
+                      </a>
+                    ) : (
+                      <span className="text-red-500 font-bold">📅 Apply by {new Date(event.signupDeadline + 'T00:00:00').toLocaleDateString()}</span>
+                    )}
+                  </>
+                )}
+                {event.status === 'applied' && (
+                  <>
+                    <span className="mx-1">•</span>
+                    <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[10px] font-bold">Awaiting Response</span>
                   </>
                 )}
               </div>
@@ -249,7 +321,19 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                     <input type="text" placeholder="Location" value={editData.location || ''} onChange={(e) => setEditData({ ...editData, location: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Status</label>
+                    <select
+                      value={editData.status || 'watching'}
+                      onChange={(e) => setEditData({ ...editData, status: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg text-sm"
+                    >
+                      {EVENT_STATUSES.map(s => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Booth Fee</label>
                     <div className="flex items-center gap-2 px-3 border rounded-lg">
@@ -264,6 +348,14 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                       <input type="number" step="0.01" placeholder="0.00" value={editData.otherCosts} onChange={(e) => setEditData({ ...editData, otherCosts: e.target.value })} className="w-full py-2 bg-transparent outline-none text-sm" />
                     </div>
                   </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Signup URL</label>
+                    <input type="url" placeholder="https://..." value={editData.signupUrl || ''} onChange={(e) => setEditData({ ...editData, signupUrl: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Signup Deadline</label>
+                  <input type="date" value={editData.signupDeadline || ''} onChange={(e) => setEditData({ ...editData, signupDeadline: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
               </div>
             )}
@@ -413,15 +505,50 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Location <span className="text-slate-300 normal-case">(optional)</span></label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Convention Center, 123 Main St"
-                    value={newEvent.location}
-                    onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Location <span className="text-slate-300 normal-case">(optional)</span></label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Convention Center, 123 Main St"
+                      value={newEvent.location}
+                      onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                      className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Status</label>
+                    <select
+                      value={newEvent.status}
+                      onChange={(e) => setNewEvent({ ...newEvent, status: e.target.value })}
+                      className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
+                    >
+                      {EVENT_STATUSES.map(s => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Signup Deadline <span className="text-slate-300 normal-case">(optional)</span></label>
+                    <input
+                      type="date"
+                      value={newEvent.signupDeadline}
+                      onChange={(e) => setNewEvent({ ...newEvent, signupDeadline: e.target.value })}
+                      className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Signup URL <span className="text-slate-300 normal-case">(optional)</span></label>
+                    <input
+                      type="url"
+                      placeholder="https://example.com/apply"
+                      value={newEvent.signupUrl}
+                      onChange={(e) => setNewEvent({ ...newEvent, signupUrl: e.target.value })}
+                      className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm"
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
