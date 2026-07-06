@@ -86,7 +86,7 @@ const LandingPage = ({ onGetStarted, onTryDemo }) => {
           <div className="bg-blue-600 p-2 rounded-xl text-white">
             <Calculator size={24} />
           </div>
-          <span className="font-black text-xl tracking-tight">PrintPrice Pro</span>
+          <span className="font-black text-xl tracking-tight">3DPrintCalc</span>
         </div>
         <button
           onClick={onGetStarted}
@@ -281,7 +281,7 @@ const LandingPage = ({ onGetStarted, onTryDemo }) => {
       {/* Footer */}
       <footer className="border-t border-slate-100 py-8">
         <div className="max-w-6xl mx-auto px-4 text-center text-slate-400 text-sm">
-          <p>&copy; {new Date().getFullYear()} PrintPrice Pro. Built for makers, by makers.</p>
+          <p>&copy; {new Date().getFullYear()} 3DPrintCalc. Built for makers, by makers.</p>
         </div>
       </footer>
     </div>

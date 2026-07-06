@@ -217,7 +217,7 @@ const AnnualSummaryPDF = ({ data, year, shopName }) => {
 
         {/* Footer */}
         <Text style={styles.footer}>
-          Generated {new Date().toLocaleDateString()} by PrintPrice Pro
+          Generated {new Date().toLocaleDateString()} by 3DPrintCalc
         </Text>
       </Page>
     </Document>
