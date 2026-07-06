@@ -733,7 +733,7 @@ const App = () => {
         <div className="flex items-center gap-4">
           <div className="bg-slate-900 p-2.5 rounded-2xl text-white shadow-lg"><tabs.calculator.icon size={22} /></div>
           <h1 className="text-xl font-black tracking-tight">
-            3DPrintCalc
+            3DPrintCompanion
           </h1>
         </div>
 

@@ -43,7 +43,7 @@ const AuthGate = ({ onBack, onOfflineMode }) => {
       <div className="max-w-md w-full bg-white rounded-[2.5rem] p-10 shadow-2xl border border-slate-100">
         <div className="flex flex-col items-center mb-8">
           <div className="bg-blue-600 p-4 rounded-2xl text-white mb-4"><Layers size={32} /></div>
-          <h1 className="text-2xl font-black uppercase tracking-tight">3DPrintCalc</h1>
+          <h1 className="text-2xl font-black uppercase tracking-tight">3DPrintCompanion</h1>
         </div>
 
         <div className="space-y-4">
