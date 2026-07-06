@@ -636,9 +636,17 @@ const App = () => {
     return <QuoteRequestForm userId={requestUserId} shopName={library.shopName} />;
   }
 
+  const enterOfflineMode = () => {
+    const savedLib = localStorage.getItem('studio_db');
+    const savedHist = localStorage.getItem('studio_history');
+    if (savedLib) setLibrary(JSON.parse(savedLib));
+    if (savedHist) setHistory(JSON.parse(savedHist));
+    setGuestMode(true);
+  };
+
   if (!session && !guestMode) {
     if (showAuth) {
-      return <AuthGate onBack={() => setShowAuth(false)} />;
+      return <AuthGate onBack={() => setShowAuth(false)} onOfflineMode={enterOfflineMode} />;
     }
     return <LandingPage onGetStarted={() => setShowAuth(true)} onTryDemo={() => {
       // Load sample data for demo
@@ -725,7 +733,7 @@ const App = () => {
         <div className="flex items-center gap-4">
           <div className="bg-slate-900 p-2.5 rounded-2xl text-white shadow-lg"><tabs.calculator.icon size={22} /></div>
           <h1 className="text-xl font-black tracking-tight">
-            PrintPrice Pro
+            3DPrintCalc
           </h1>
         </div>
 
