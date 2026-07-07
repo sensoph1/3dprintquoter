@@ -19,13 +19,11 @@
   - Consumables already had threshold support, now consistent across both
 
 ### Business Insights
-- [ ] Dashboard/analytics - Total revenue, best sellers, profit margins over time
-  - New Dashboard tab or section on Calculator tab
-  - Cards: Total Revenue, Total Profit, Jobs This Month, Avg Margin
+- [x] Dashboard/analytics - Total revenue, best sellers, profit margins over time
+  - Dashboard tab with recharts
+  - Cards: Total Revenue, Total Profit, Avg Margin, Items Sold
   - Charts: Revenue over time (line), Top sellers (bar), Profit by category (pie)
-  - Date range picker: This week, This month, This year, Custom
-  - Use existing history data, calculate aggregates client-side
-  - Library: recharts or chart.js for visualizations
+  - Data from library.sales + history (sold estimates)
 
 - [ ] Print failure tracking - Factor failed prints into true costs
   - Option A: Simple failure rate % per printer, auto-factor into cost calculations
@@ -44,6 +42,18 @@
   - Could integrate with OctoPrint/Bambu API for automatic tracking (advanced)
 
 ### Workflow
+- [ ] Bulk event import - Mass add events quickly
+  - Simple form: just title + date (minimal required fields)
+  - Options: paste list (one per line), CSV upload, or multi-row form
+  - Fill in details (location, booth fee, etc.) later as needed
+  - Good for importing a season's worth of craft fairs at once
+
+- [ ] Calendar integration - Export events to external calendars
+  - Easy: .ics file download buttons (works with Google, Apple, Outlook)
+  - Medium: Google Calendar API (OAuth, two-way sync)
+  - Hard: Apple Calendar via CalDAV
+  - Recommended: Start with .ics downloads for universal compatibility
+
 - [ ] Print queue - Track what's currently printing, what's queued
   - New section or tab: Print Queue
   - Add jobs from Calculator: "Add to Queue" button
@@ -78,13 +88,13 @@
   - Supabase table: `customers` with user_id foreign key
 
 ### Export/Integration
-- [ ] Square POS integration - Automatic sales data sync
-  - OAuth2 flow ("Connect to Square" button)
+- [x] Square POS integration - Automatic sales data sync
+  - OAuth2 flow with production Square
   - Sync Square catalog with app inventory
-  - Pull transaction/sales history
+  - Pull transaction/sales history with configurable date range (30/60/90/180 days or 1 year)
   - Auto-link sales to events, decrement inventory
-  - Supabase Edge Functions for backend
-  - Docs: https://developer.squareup.com/
+  - Full re-sync option, manual event linking
+  - Square badge on imported sales
 
 - [ ] CSV export - For taxes/accounting
   - Export buttons in relevant tabs
@@ -151,6 +161,12 @@ No code changes needed — config only:
 ## Completed
 
 ### Recent
+- [x] Rebranded to 3DPrintCompanion (was PrintPrice Pro, then 3DPrintCalc)
+- [x] Offline mode when Supabase is unreachable
+- [x] Stripe subscription integration (monthly $6, yearly $60 Pro plans)
+- [x] Multi-day events with date ranges and per-day metrics
+- [x] Link estimates to quote requests
+- [x] Event status pipeline (watching → applied → confirmed) with signup deadlines
 - [x] Fixed Material Multiplier pricing strategy
   - Was hardcoded to multiply by 3 instead of using the multiplier field
   - Now correctly calculates: (materialCost * multiplier) / quantity
@@ -210,6 +226,7 @@ No code changes needed — config only:
 - [x] Cloud data sync when logged in
 - [x] localStorage persistence for offline use
 - [x] Works without account (auth bypass)
+- [x] Offline mode - detects when Supabase is unreachable and offers "Continue Offline" option
 
 ---
 
