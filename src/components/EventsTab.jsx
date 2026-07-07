@@ -43,6 +43,8 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [compareEventIds, setCompareEventIds] = useState([]);
   const [expandedEventId, setExpandedEventId] = useState(null);
+  const [bulkInput, setBulkInput] = useState('');
+  const [bulkParsed, setBulkParsed] = useState([]);
 
   const events = library.events || [];
 
@@ -131,6 +133,68 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
   const cancelEdit = () => {
     setEditingId(null);
     setEditData({});
+  };
+
+  // Bulk import helpers
+  const parseBulkInput = (text) => {
+    const lines = text.split('\n').filter(line => line.trim());
+    return lines.map(line => {
+      const parts = line.split(',').map(p => p.trim());
+      if (parts.length < 2) return { raw: line, valid: false, error: 'Missing date' };
+
+      const name = parts[0];
+      const dateStr = parts[1];
+      const url = parts[2] || '';
+
+      // Try to parse date - accepts YYYY-MM-DD or M/D/YYYY
+      let date = null;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        date = dateStr;
+      } else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+        const [m, d, y] = dateStr.split('/');
+        date = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+      }
+
+      if (!date) return { raw: line, valid: false, error: 'Invalid date format' };
+      if (!name) return { raw: line, valid: false, error: 'Missing name' };
+
+      return { name, date, signupUrl: url, valid: true };
+    });
+  };
+
+  const handleBulkInputChange = (text) => {
+    setBulkInput(text);
+    setBulkParsed(parseBulkInput(text));
+  };
+
+  const handleBulkImport = () => {
+    const validEvents = bulkParsed.filter(e => e.valid);
+    if (validEvents.length === 0) return;
+
+    // Check tier limit
+    if (tierLimits && events.length + validEvents.length > tierLimits.maxEvents) {
+      onUpgradeClick?.();
+      return;
+    }
+
+    const newEvents = validEvents.map(e => ({
+      id: generateUniqueId(),
+      name: e.name,
+      date: e.date,
+      endDate: null,
+      location: '',
+      boothFee: 0,
+      otherCosts: 0,
+      notes: '',
+      status: 'watching',
+      signupUrl: e.signupUrl || '',
+      signupDeadline: null,
+      manualSales: { cash: 0, card: 0, venmo: 0, paypal: 0, other: 0 }
+    }));
+
+    saveToDisk({ ...library, events: [...events, ...newEvents] });
+    setBulkInput('');
+    setBulkParsed([]);
   };
 
   // Link/unlink — handles both sales records and history entries
@@ -683,6 +747,67 @@ const EventsTab = ({ library, history, saveToDisk, tierLimits, onUpgradeClick })
                   className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all"
                 >
                   Add Event
+                </button>
+              </div>
+            </Accordion>
+
+            <Accordion title="Bulk Import Events">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                    Paste Events <span className="text-slate-300 normal-case">(one per line: Name, Date)</span>
+                  </label>
+                  <textarea
+                    placeholder={"Craft Fair Downtown, 2026-08-15\nMaker Market, 8/22/2026, https://makermarket.com/apply\nHoliday Pop-Up, 12/5/2026"}
+                    value={bulkInput}
+                    onChange={(e) => handleBulkInputChange(e.target.value)}
+                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-mono text-sm resize-y min-h-[120px]"
+                    rows={5}
+                  />
+                  <p className="text-[10px] text-slate-400 mt-2">
+                    Format: Name, Date, URL (optional). Dates as YYYY-MM-DD or M/D/YYYY.
+                  </p>
+                </div>
+
+                {bulkParsed.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      Preview ({bulkParsed.filter(e => e.valid).length} valid, {bulkParsed.filter(e => !e.valid).length} invalid)
+                    </div>
+                    <div className="max-h-48 overflow-y-auto space-y-1">
+                      {bulkParsed.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className={`px-3 py-2 rounded-lg text-sm flex justify-between items-center ${
+                            item.valid ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+                          }`}
+                        >
+                          {item.valid ? (
+                            <>
+                              <span className="font-bold">{item.name}</span>
+                              <span className="text-xs flex items-center gap-2">
+                                {new Date(item.date + 'T00:00:00').toLocaleDateString()}
+                                {item.signupUrl && <span className="text-green-500">+ URL</span>}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="font-mono text-xs truncate">{item.raw}</span>
+                              <span className="text-xs font-bold">{item.error}</span>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleBulkImport}
+                  disabled={bulkParsed.filter(e => e.valid).length === 0}
+                  className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Import {bulkParsed.filter(e => e.valid).length} Events
                 </button>
               </div>
             </Accordion>
