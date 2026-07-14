@@ -42,7 +42,7 @@
   - Could integrate with OctoPrint/Bambu API for automatic tracking (advanced)
 
 ### Workflow
-- [ ] Bulk event import - Mass add events quickly
+- [x] Bulk event import - Mass add events quickly
   - Simple form: just title + date (minimal required fields)
   - Options: paste list (one per line), CSV upload, or multi-row form
   - Fill in details (location, booth fee, etc.) later as needed
