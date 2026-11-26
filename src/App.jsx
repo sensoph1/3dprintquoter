@@ -247,6 +247,7 @@ const App = () => {
     hours: 0,
     laborMinutes: 0,
     extraCosts: 0,
+    extras: [],
     infill: "15%",
     walls: "3",
     layerHeight: "0.2mm",
@@ -453,8 +454,14 @@ const App = () => {
   
   const hourlyAmortization = (ensureNumber(printer.cost) / Math.max(1, ensureNumber(printer.hoursOfLife)));
   const depreciationCost = hourlyAmortization * ensureNumber(job.hours);
-  
-  const baseCost = matCost + energy + labor + ensureNumber(job.extraCosts) + depreciationCost;
+
+  const extrasItemCost = (job.extras || []).reduce((sum, ex) => {
+    const item = (library.inventory || []).find(i => String(i.id) === String(ex.itemId));
+    return sum + (item ? ensureNumber(ex.qty) * ensureNumber(item.unitCost) : 0);
+  }, 0);
+  const extraCostsTotal = extrasItemCost + ensureNumber(job.extraCosts);
+
+  const baseCost = matCost + energy + labor + extraCostsTotal + depreciationCost;
 
   const qty = Math.max(1, ensureNumber(job.qty));
   const rounding = Math.max(0.01, ensureNumber(job.rounding));
@@ -470,6 +477,7 @@ const App = () => {
     energy,
     depreciationCost,
     matCost,
+    extraCosts: extraCostsTotal,
     hourlyAmortization,
     priceByProfitMargin: Math.ceil(unroundedPriceByProfitMargin / rounding) * rounding,
     priceByHourlyRate: Math.ceil(unroundedPriceByHourlyRate / rounding) * rounding,

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Calculator, FileText } from 'lucide-react';
 import ComboBox from './ComboBox';
 import Tooltip from './Tooltip';
 
 const CalculatorTab = ({ job, setJob, library, stats, requests = [] }) => {
+  const [costView, setCostView] = useState('total');
   const update = (field, val) => setJob({ ...job, [field]: val });
   
   const updateMat = (index, field, val) => {
@@ -11,6 +12,15 @@ const CalculatorTab = ({ job, setJob, library, stats, requests = [] }) => {
     newMats[index][field] = val;
     setJob({ ...job, materials: newMats });
   };
+
+  const updateExtra = (index, field, val) => {
+    const newExtras = [...(job.extras || [])];
+    newExtras[index] = { ...newExtras[index], [field]: val };
+    setJob({ ...job, extras: newExtras });
+  };
+
+  const inventoryItems = library.inventory || [];
+  const jobExtras = job.extras || [];
 
   return (
     <div className="space-y-8">
@@ -111,8 +121,8 @@ const CalculatorTab = ({ job, setJob, library, stats, requests = [] }) => {
 
       {/* SECTION 2: HARDWARE & EXTRAS */}
       <div className="space-y-6">
-        {/* Printer, Labor, Extras - same line */}
-        <div className="grid grid-cols-3 gap-6">
+        {/* Printer & Labor */}
+        <div className="grid grid-cols-2 gap-6">
           <div>
             <Tooltip text="The 3D printer that will be used for this print job. Select from your configured hardware list.">
               <label>Printer</label>
@@ -127,12 +137,81 @@ const CalculatorTab = ({ job, setJob, library, stats, requests = [] }) => {
             </Tooltip>
             <input type="number" className="w-full shadow-sm" value={job.laborMinutes} onChange={(e) => update('laborMinutes', parseFloat(e.target.value) || 0)} />
           </div>
+        </div>
+
+        {/* Extra Items from Cost Management Inventory */}
+        <div>
+          {jobExtras.map((extra, index) => {
+            const selectedItem = inventoryItems.find(i => String(i.id) === String(extra.itemId));
+            const lineCost = selectedItem ? (parseFloat(extra.qty) || 0) * (parseFloat(selectedItem.unitCost) || 0) : 0;
+            return (
+              <div key={index} className="grid grid-cols-2 gap-x-6 gap-y-4 mb-4">
+                <div>
+                  <Tooltip text="Select an item from your Cost Management (Consumables & Shipping) inventory.">
+                    <label>Select Extra Item</label>
+                  </Tooltip>
+                  <ComboBox
+                    items={inventoryItems}
+                    value={extra.itemId}
+                    onChange={(value) => updateExtra(index, 'itemId', value)}
+                    placeholder="Search for an inventory item..."
+                    formatLabel={(item) => `${item.name} ($${(parseFloat(item.unitCost) || 0).toFixed(2)})`}
+                  />
+                </div>
+                <div className="flex items-end">
+                  <div className="flex-grow">
+                    <Tooltip text="Total quantity of this inventory item used for this job.">
+                      <label>
+                        Quantity {selectedItem ? <span className="text-blue-600">(${lineCost.toFixed(2)})</span> : ''}
+                      </label>
+                    </Tooltip>
+                    <input
+                      type="number"
+                      min="0"
+                      className="w-full shadow-sm"
+                      value={extra.qty}
+                      onChange={(e) => updateExtra(index, 'qty', parseFloat(e.target.value) || 0)}
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      const newExtras = [...jobExtras];
+                      newExtras.splice(index, 1);
+                      setJob({ ...job, extras: newExtras });
+                    }}
+                    className="ml-2 mb-1 px-3 py-2 text-red-500 hover:bg-red-100 rounded-lg"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            );
+          })}
           <div>
-            <Tooltip text="Any additional costs associated with this job not covered by material, energy, labor, or machine time (e.g., magnets, special components, packaging).">
-              <label>Extra ($)</label>
-            </Tooltip>
-            <input type="number" className="w-full shadow-sm" value={job.extraCosts} onChange={(e) => update('extraCosts', parseFloat(e.target.value) || 0)} />
+            <button
+              onClick={() => {
+                if (inventoryItems.length === 0) return;
+                const newExtras = [...jobExtras, { itemId: inventoryItems[0].id, qty: 1 }];
+                setJob({ ...job, extras: newExtras });
+              }}
+              disabled={inventoryItems.length === 0}
+              className="w-full py-3 bg-blue-50 text-blue-600 rounded-xl font-bold text-sm hover:bg-blue-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {inventoryItems.length === 0
+                ? 'No items in Cost Management inventory'
+                : jobExtras.length > 0
+                  ? '+ Add another extra item'
+                  : '+ Add extra item from inventory'}
+            </button>
           </div>
+          {job.extraCosts > 0 && (
+            <div className="mt-4">
+              <Tooltip text="Manual extra cost carried over from an earlier estimate.">
+                <label>Legacy Extra ($)</label>
+              </Tooltip>
+              <input type="number" className="w-full shadow-sm" value={job.extraCosts} onChange={(e) => update('extraCosts', parseFloat(e.target.value) || 0)} />
+            </div>
+          )}
         </div>
 
         {/* Hourly Rate, Material Multiplier, Profit Margin, Rounding - same line */}
@@ -235,41 +314,95 @@ const CalculatorTab = ({ job, setJob, library, stats, requests = [] }) => {
       </div>
 
       {/* COST BREAKDOWN */}
-      <div className="p-6 sm:p-8 bg-blue-50 rounded-[2rem] border border-blue-100 shadow-inner">
-        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-6">Cost Breakdown</h4>
-        <div className="space-y-4">
-          <Tooltip text="Calculated as: Filament Used (g) * Filament Cost/g">
-            <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
-              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Material Cost</span>
-              <span className="text-xl font-black text-blue-800">${stats.matCost.toFixed(2)}</span>
+      {(() => {
+        const qty = Math.max(1, parseFloat(job.qty) || 1);
+        const isPerItem = costView === 'perItem';
+        const divisor = isPerItem ? qty : 1;
+        return (
+          <div className="p-6 sm:p-8 bg-blue-50 rounded-[2rem] border border-blue-100 shadow-inner">
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Cost Breakdown</h4>
+              <div className="inline-flex bg-white/80 p-1 rounded-full border border-blue-100 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setCostView('total')}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
+                    !isPerItem ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-600 hover:bg-blue-100/60'
+                  }`}
+                >
+                  Total Cost
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCostView('perItem')}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
+                    isPerItem ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-600 hover:bg-blue-100/60'
+                  }`}
+                >
+                  Cost Per Item
+                </button>
+              </div>
             </div>
-          </Tooltip>
-          <Tooltip text="Calculated as: (Print Time in Hours * (Printer Wattage / 1000)) * kWh Rate">
-            <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
-              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Energy Cost</span>
-              <span className="text-xl font-black text-blue-800">${stats.energy.toFixed(2)}</span>
+            <div className="space-y-4">
+              <Tooltip text={isPerItem ? "Calculated as: (Filament Used (g) * Filament Cost/g) / Quantity" : "Calculated as: Filament Used (g) * Filament Cost/g"}>
+                <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+                  <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Filament</span>
+                  <span className="text-xl font-black text-blue-800">${(stats.matCost / divisor).toFixed(2)}</span>
+                </div>
+              </Tooltip>
+              <Tooltip text={isPerItem ? "Calculated as: ((Print Time in Hours * (Printer Wattage / 1000)) * kWh Rate) / Quantity" : "Calculated as: (Print Time in Hours * (Printer Wattage / 1000)) * kWh Rate"}>
+                <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+                  <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Energy Cost</span>
+                  <span className="text-xl font-black text-blue-800">${(stats.energy / divisor).toFixed(2)}</span>
+                </div>
+              </Tooltip>
+              <Tooltip text={isPerItem ? "Calculated as: ((Printer Cost / Printer Lifespan in Hours) * Print Time in Hours) / Quantity" : "Calculated as: (Printer Cost / Printer Lifespan in Hours) * Print Time in Hours"}>
+                <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+                  <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Depreciation</span>
+                  <span className="text-xl font-black text-blue-800">${(stats.depreciationCost / divisor).toFixed(2)}</span>
+                </div>
+              </Tooltip>
+              <Tooltip text={isPerItem ? "Calculated as: Sum of (Extra Item Quantity * Unit Cost) / Quantity" : "Calculated as: Sum of (Extra Item Quantity * Unit Cost) from Cost Management inventory"}>
+                <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+                  <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Extra Costs</span>
+                  <span className="text-xl font-black text-blue-800">${((stats.extraCosts || 0) / divisor).toFixed(2)}</span>
+                </div>
+              </Tooltip>
+              {isPerItem ? (
+                <>
+                  <Tooltip text="Calculated as: Total Base Cost / Quantity">
+                    <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+                      <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Cost Per Item</span>
+                      <span className="text-xl font-black text-blue-800">${stats.costPerItem.toFixed(2)}</span>
+                    </div>
+                  </Tooltip>
+                  <Tooltip text="Calculated as: Filament + Energy Cost + Labor Cost + Extra Costs + Depreciation Cost">
+                    <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+                      <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Total Item Cost</span>
+                      <span className="text-xl font-black text-blue-800">${stats.baseCost.toFixed(2)}</span>
+                    </div>
+                  </Tooltip>
+                </>
+              ) : (
+                <>
+                  <Tooltip text="Calculated as: Material Cost + Energy Cost + Labor Cost + Extra Costs + Depreciation Cost">
+                    <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+                      <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Base Cost</span>
+                      <span className="text-xl font-black text-blue-800">${stats.baseCost.toFixed(2)}</span>
+                    </div>
+                  </Tooltip>
+                  <Tooltip text="Calculated as: Total Base Cost / Quantity">
+                    <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
+                      <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Cost Per Item</span>
+                      <span className="text-xl font-black text-blue-800">${stats.costPerItem.toFixed(2)}</span>
+                    </div>
+                  </Tooltip>
+                </>
+              )}
             </div>
-          </Tooltip>
-          <Tooltip text="Calculated as: (Printer Cost / Printer Lifespan in Hours) * Print Time in Hours">
-            <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
-              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Depreciation</span>
-              <span className="text-xl font-black text-blue-800">${stats.depreciationCost.toFixed(2)}</span>
-            </div>
-          </Tooltip>
-          <Tooltip text="Calculated as: Material Cost + Energy Cost + Labor Cost + Extra Costs + Depreciation Cost">
-            <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
-              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Base Cost</span>
-              <span className="text-xl font-black text-blue-800">${stats.baseCost.toFixed(2)}</span>
-            </div>
-          </Tooltip>
-          <Tooltip text="Calculated as: Total Base Cost / Quantity">
-            <div className="flex justify-between items-center bg-white/60 rounded-xl py-4 px-6">
-              <span className="text-[11px] uppercase font-bold text-blue-600 tracking-wide">Cost Per Item</span>
-              <span className="text-xl font-black text-blue-800">${stats.costPerItem.toFixed(2)}</span>
-            </div>
-          </Tooltip>
-                  </div>
-      </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
